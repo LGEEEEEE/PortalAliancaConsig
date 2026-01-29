@@ -2,25 +2,25 @@
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PDF Optimizer</title>
+    <title>PDF Optimizer Pro</title>
     <link rel="stylesheet" href="style.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.min.js"></script>
+    <script src="https://unpkg.com/pdf-lib/dist/pdf-lib.min.js"></script>
 </head>
 <body>
     <div class="container">
-        <h2>Compressor de PDF</h2>
+        <h2>Compressor de PDF (Real)</h2>
         <div id="drop-area">
-            <p>Arraste seu PDF aqui ou clique para selecionar</p>
+            <p id="drop-text">Arraste seu PDF aqui ou clique para selecionar</p>
             <input type="file" id="file-input" accept="application/pdf" hidden>
         </div>
+        
         <div id="file-info" class="hidden">
             <p id="file-name"></p>
             <button id="compress-btn">Otimizar e Baixar</button>
         </div>
         <div id="status"></div>
     </div>
-
-    <script src="https://unpkg.com/pdf-lib/dist/pdf-lib.min.js"></script>
     <script src="script.js"></script>
 </body>
 </html>

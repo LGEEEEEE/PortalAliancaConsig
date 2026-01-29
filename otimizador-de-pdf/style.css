@@ -40,3 +40,7 @@ button {
 }
 
 .hidden { display: none; }
+#drop-area.highlight {
+    border-color: #28a745;
+    background-color: #f0fff4;
+}

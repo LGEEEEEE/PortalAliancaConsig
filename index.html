@@ -1,35 +1,47 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Portal Grupo Aliança Consig</title>
-    
+
     <link rel="shortcut icon" href="icone.ico" type="image/x-icon">
     <link rel="icon" href="icone.ico" type="image/x-icon">
 
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    
+
     <style>
         :root {
-            --primary: #0f2a4a;       
-            --primary-dark: #081a30;  
-            --accent: #0056b3;        
-            --restricted: #851e3e;    
+            --primary: #0f2a4a;
+            --primary-dark: #081a30;
+            --accent: #0056b3;
+            --restricted: #851e3e;
             --bg: #f4f6f8;
             --card-bg: #ffffff;
             --text: #333;
         }
 
-        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Inter', sans-serif;
+        }
 
-        body { background-color: var(--bg); color: var(--text); min-height: 100vh; display: flex; flex-direction: column; }
+        body {
+            background-color: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
 
         /* --- Top Bar --- */
         .top-bar {
             background-color: var(--primary-dark);
-            color: rgba(255,255,255,0.7);
+            color: rgba(255, 255, 255, 0.7);
             font-size: 0.8rem;
             padding: 8px 0;
             text-align: center;
@@ -43,87 +55,234 @@
             background: linear-gradient(135deg, var(--primary) 0%, #163b63 100%);
             color: white;
             padding: 1.5rem 0;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
             position: relative;
             overflow: hidden;
         }
 
         header::before {
-            content: ''; position: absolute; top: -50%; left: -50%; width: 200%; height: 200%;
-            background: radial-gradient(circle, rgba(255,255,255,0.05) 0%, transparent 60%); pointer-events: none;
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(255, 255, 255, 0.05) 0%, transparent 60%);
+            pointer-events: none;
         }
 
         .header-container {
-            max-width: 1200px; margin: 0 auto; padding: 0 20px;
-            display: flex; align-items: center; justify-content: space-between; position: relative; z-index: 1;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            position: relative;
+            z-index: 1;
         }
 
-        .logo-area { display: flex; align-items: center; gap: 20px; }
-        
+        .logo-area {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
         .logo-img {
-            width: 65px; height: 65px; object-fit: contain; background: white;
-            border-radius: 12px; padding: 5px; box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+            width: 65px;
+            height: 65px;
+            object-fit: contain;
+            background: white;
+            border-radius: 12px;
+            padding: 5px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
         }
 
-        .brand-text h1 { font-size: 1.6rem; font-weight: 800; letter-spacing: -0.5px; margin: 0; line-height: 1.1; }
-        .brand-text .subtitle { font-size: 0.85rem; opacity: 0.9; font-weight: 300; display: block; margin-top: 4px; }
-        .brand-badges { display: flex; gap: 8px; margin-top: 5px; }
-        .brand-badge { background: rgba(255,255,255,0.15); font-size: 0.7rem; padding: 2px 8px; border-radius: 4px; font-weight: 600; }
+        .brand-text h1 {
+            font-size: 1.6rem;
+            font-weight: 800;
+            letter-spacing: -0.5px;
+            margin: 0;
+            line-height: 1.1;
+        }
+
+        .brand-text .subtitle {
+            font-size: 0.85rem;
+            opacity: 0.9;
+            font-weight: 300;
+            display: block;
+            margin-top: 4px;
+        }
+
+        .brand-badges {
+            display: flex;
+            gap: 8px;
+            margin-top: 5px;
+        }
+
+        .brand-badge {
+            background: rgba(255, 255, 255, 0.15);
+            font-size: 0.7rem;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-weight: 600;
+        }
 
         /* --- Banner --- */
-        .welcome-banner { background: white; border-bottom: 1px solid #e0e0e0; padding: 20px 0; margin-bottom: 20px; }
-        .banner-content {
-            max-width: 1200px; margin: 0 auto; padding: 0 20px;
-            display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 15px;
+        .welcome-banner {
+            background: white;
+            border-bottom: 1px solid #e0e0e0;
+            padding: 20px 0;
+            margin-bottom: 20px;
         }
-        .group-logos { display: flex; gap: 15px; opacity: 0.7; font-weight: 700; color: var(--primary); text-transform: uppercase; font-size: 0.9rem; align-items: center; }
-        .divider { width: 1px; height: 20px; background: #ccc; }
+
+        .banner-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .group-logos {
+            display: flex;
+            gap: 15px;
+            opacity: 0.7;
+            font-weight: 700;
+            color: var(--primary);
+            text-transform: uppercase;
+            font-size: 0.9rem;
+            align-items: center;
+        }
+
+        .divider {
+            width: 1px;
+            height: 20px;
+            background: #ccc;
+        }
 
         /* --- Main --- */
-        main { flex: 1; padding: 20px; max-width: 1200px; margin: 0 auto; width: 100%; }
+        main {
+            flex: 1;
+            padding: 20px;
+            max-width: 1200px;
+            margin: 0 auto;
+            width: 100%;
+        }
 
         .section-title {
-            margin-bottom: 25px; display: flex; align-items: center; gap: 10px;
-            color: var(--primary); font-weight: 700; font-size: 1.3rem; position: relative; padding-left: 15px;
+            margin-bottom: 25px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: var(--primary);
+            font-weight: 700;
+            font-size: 1.3rem;
+            position: relative;
+            padding-left: 15px;
         }
-        .section-title::before { content: ''; position: absolute; left: 0; top: 5px; bottom: 5px; width: 5px; background: var(--accent); border-radius: 4px; }
 
-        .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 35px; /* Aumentei o gap para caber melhor os icones maiores */ }
+        .section-title::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 5px;
+            bottom: 5px;
+            width: 5px;
+            background: var(--accent);
+            border-radius: 4px;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 35px;
+            /* Aumentei o gap para caber melhor os icones maiores */
+        }
 
         /* --- Card Design --- */
         .card {
-            background: var(--card-bg); border-radius: 16px; overflow: hidden;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.05); transition: all 0.3s ease;
-            display: flex; flex-direction: column; border: 1px solid rgba(0,0,0,0.04); height: 100%; position: relative;
+            background: var(--card-bg);
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+            transition: all 0.3s ease;
+            display: flex;
+            flex-direction: column;
+            border: 1px solid rgba(0, 0, 0, 0.04);
+            height: 100%;
+            position: relative;
         }
-        .card:hover { transform: translateY(-5px); box-shadow: 0 15px 30px rgba(0,0,0,0.1); border-color: rgba(0,86,179,0.3); }
 
-        .card.restricted { border: 1px solid rgba(133, 30, 62, 0.2); }
-        .card.restricted:hover { border-color: var(--restricted); box-shadow: 0 15px 30px rgba(133, 30, 62, 0.15); }
-        .card.restricted .card-header-img { background: linear-gradient(to right, #fff0f5, #fff); }
-        .card.restricted .card-icon { border-color: var(--restricted); color: var(--restricted); } /* Cor do ícone de fallback */
-        .card.restricted .card-title { color: var(--restricted); }
-        .card.restricted .btn-primary { background-color: var(--restricted); }
-        .card.restricted .btn-primary:hover { background-color: #5a142a; }
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.1);
+            border-color: rgba(0, 86, 179, 0.3);
+        }
+
+        .card.restricted {
+            border: 1px solid rgba(133, 30, 62, 0.2);
+        }
+
+        .card.restricted:hover {
+            border-color: var(--restricted);
+            box-shadow: 0 15px 30px rgba(133, 30, 62, 0.15);
+        }
+
+        .card.restricted .card-header-img {
+            background: linear-gradient(to right, #fff0f5, #fff);
+        }
+
+        .card.restricted .card-icon {
+            border-color: var(--restricted);
+            color: var(--restricted);
+        }
+
+        /* Cor do ícone de fallback */
+        .card.restricted .card-title {
+            color: var(--restricted);
+        }
+
+        .card.restricted .btn-primary {
+            background-color: var(--restricted);
+        }
+
+        .card.restricted .btn-primary:hover {
+            background-color: #5a142a;
+        }
 
         .card-header-img {
-            height: 110px; /* Aumentei um pouco */
+            height: 110px;
+            /* Aumentei um pouco */
             background: linear-gradient(to right, #f8f9fa, #e9ecef);
-            display: flex; align-items: center; justify-content: center; position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
         }
 
         /* Área da Imagem/Ícone */
         .card-icon {
-            width: 80px; height: 80px; /* Tamanho do círculo */
+            width: 80px;
+            height: 80px;
+            /* Tamanho do círculo */
             background: white;
             border-radius: 50%;
-            display: flex; align-items: center; justify-content: center;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
             position: absolute;
-            bottom: -40px; /* Metade da altura para ficar 'sangrado' */
+            bottom: -40px;
+            /* Metade da altura para ficar 'sangrado' */
             border: 4px solid white;
-            overflow: hidden; /* Garante que a imagem não saia do círculo */
-            color: var(--primary); /* Cor padrão do ícone se não tiver imagem */
+            overflow: hidden;
+            /* Garante que a imagem não saia do círculo */
+            color: var(--primary);
+            /* Cor padrão do ícone se não tiver imagem */
             font-size: 2.5rem;
         }
 
@@ -131,36 +290,194 @@
         .card-icon img {
             width: 100%;
             height: 100%;
-            object-fit: cover; /* Faz a imagem preencher todo o círculo sem distorcer */
+            object-fit: cover;
+            /* Faz a imagem preencher todo o círculo sem distorcer */
         }
 
-        .card-body { padding: 50px 25px 25px; text-align: center; flex: 1; display: flex; flex-direction: column; }
-        .card-title { font-size: 1.25rem; font-weight: 700; color: var(--primary); margin-bottom: 10px; }
-        .card-desc { font-size: 0.9rem; color: #666; line-height: 1.5; margin-bottom: 20px; flex: 1; }
-        .card-actions { display: flex; gap: 10px; justify-content: center; margin-top: auto; }
+        .card-body {
+            padding: 50px 25px 25px;
+            text-align: center;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
 
-        .btn { padding: 10px 18px; border-radius: 8px; text-decoration: none; font-size: 0.85rem; font-weight: 600; transition: 0.2s; cursor: pointer; border: none; display: inline-flex; align-items: center; gap: 6px; }
-        .btn-outline { border: 1px solid #ddd; background: transparent; color: #555; }
-        .btn-outline:hover { background: #f8f9fa; border-color: #bbb; color: #333; }
-        .btn-primary { background-color: var(--accent); color: white; flex-grow: 1; justify-content: center; }
-        .btn-primary:hover { background-color: #004494; box-shadow: 0 4px 10px rgba(0,86,179,0.3); }
+        .card-title {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: var(--primary);
+            margin-bottom: 10px;
+        }
 
-        .badge-restricted { position: absolute; top: 10px; right: 10px; background: var(--restricted); color: white; font-size: 0.65rem; padding: 4px 8px; border-radius: 20px; text-transform: uppercase; font-weight: 700; letter-spacing: 0.5px; z-index: 2; display: flex; align-items: center; gap: 4px; }
+        .card-desc {
+            font-size: 0.9rem;
+            color: #666;
+            line-height: 1.5;
+            margin-bottom: 20px;
+            flex: 1;
+        }
+
+        .card-actions {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            margin-top: auto;
+        }
+
+        .btn {
+            padding: 10px 18px;
+            border-radius: 8px;
+            text-decoration: none;
+            font-size: 0.85rem;
+            font-weight: 600;
+            transition: 0.2s;
+            cursor: pointer;
+            border: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .btn-outline {
+            border: 1px solid #ddd;
+            background: transparent;
+            color: #555;
+        }
+
+        .btn-outline:hover {
+            background: #f8f9fa;
+            border-color: #bbb;
+            color: #333;
+        }
+
+        .btn-primary {
+            background-color: var(--accent);
+            color: white;
+            flex-grow: 1;
+            justify-content: center;
+        }
+
+        .btn-primary:hover {
+            background-color: #004494;
+            box-shadow: 0 4px 10px rgba(0, 86, 179, 0.3);
+        }
+
+        .badge-restricted {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: var(--restricted);
+            color: white;
+            font-size: 0.65rem;
+            padding: 4px 8px;
+            border-radius: 20px;
+            text-transform: uppercase;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+            z-index: 2;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
 
         /* Modal */
-        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); display: none; align-items: center; justify-content: center; z-index: 2000; backdrop-filter: blur(4px); padding: 20px; }
-        .modal-content { background: white; width: 100%; max-width: 550px; border-radius: 16px; padding: 30px; position: relative; animation: slideUp 0.3s ease; box-shadow: 0 20px 50px rgba(0,0,0,0.2); }
-        @keyframes slideUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
-        .close-modal { position: absolute; top: 15px; right: 20px; font-size: 1.5rem; color: #999; cursor: pointer; }
-        .modal-title { color: var(--primary); font-size: 1.4rem; font-weight: 700; margin-bottom: 15px; display: flex; align-items: center; gap: 10px; }
-        .modal-text { font-size: 0.95rem; color: #444; line-height: 1.6; margin-bottom: 20px; }
-        .feature-list { list-style: none; background: #f8f9fa; border-radius: 8px; padding: 15px; border: 1px solid #eee; }
-        .feature-list li { margin-bottom: 10px; font-size: 0.9rem; display: flex; align-items: start; gap: 10px; }
-        .feature-list li i { color: #28a745; margin-top: 3px; }
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.6);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 2000;
+            backdrop-filter: blur(4px);
+            padding: 20px;
+        }
 
-        footer { text-align: center; padding: 30px; color: #888; font-size: 0.8rem; background: white; margin-top: auto; border-top: 1px solid #e0e0e0; }
+        .modal-content {
+            background: white;
+            width: 100%;
+            max-width: 550px;
+            border-radius: 16px;
+            padding: 30px;
+            position: relative;
+            animation: slideUp 0.3s ease;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.2);
+        }
+
+        @keyframes slideUp {
+            from {
+                transform: translateY(20px);
+                opacity: 0;
+            }
+
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        .close-modal {
+            position: absolute;
+            top: 15px;
+            right: 20px;
+            font-size: 1.5rem;
+            color: #999;
+            cursor: pointer;
+        }
+
+        .modal-title {
+            color: var(--primary);
+            font-size: 1.4rem;
+            font-weight: 700;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .modal-text {
+            font-size: 0.95rem;
+            color: #444;
+            line-height: 1.6;
+            margin-bottom: 20px;
+        }
+
+        .feature-list {
+            list-style: none;
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 15px;
+            border: 1px solid #eee;
+        }
+
+        .feature-list li {
+            margin-bottom: 10px;
+            font-size: 0.9rem;
+            display: flex;
+            align-items: start;
+            gap: 10px;
+        }
+
+        .feature-list li i {
+            color: #28a745;
+            margin-top: 3px;
+        }
+
+        footer {
+            text-align: center;
+            padding: 30px;
+            color: #888;
+            font-size: 0.8rem;
+            background: white;
+            margin-top: auto;
+            border-top: 1px solid #e0e0e0;
+        }
     </style>
 </head>
+
 <body>
 
     <div class="top-bar">
@@ -190,7 +507,8 @@
     <div class="welcome-banner">
         <div class="banner-content">
             <div style="font-size: 0.95rem; color: #555;">
-                <i class="fa-solid fa-circle-check" style="color: var(--accent);"></i> Bem-vindo ao ambiente corporativo unificado.
+                <i class="fa-solid fa-circle-check" style="color: var(--accent);"></i> Bem-vindo ao ambiente corporativo
+                unificado.
             </div>
             <div class="group-logos">
                 <span><i class="fa-solid fa-building"></i> Aliança Consig</span>
@@ -218,7 +536,8 @@
             <h4 style="font-size: 0.9rem; font-weight: 600; color: #666; margin-bottom: 10px;">Funcionalidades:</h4>
             <ul class="feature-list" id="m-features"></ul>
             <div style="margin-top: 25px;">
-                <a href="#" id="m-link" target="_blank" class="btn btn-primary" style="width: 100%; text-align: center;">
+                <a href="#" id="m-link" target="_blank" class="btn btn-primary"
+                    style="width: 100%; text-align: center;">
                     Acessar Agora <i class="fa-solid fa-arrow-up-right-from-square"></i>
                 </a>
             </div>
@@ -254,7 +573,7 @@
             {
                 titulo: "Calculadora Pro",
                 imagem: "", // Ex: "print_calculadora.jpg"
-                icone: "fa-calculator", 
+                icone: "fa-calculator",
                 link: "https://calculadora-consignado.vercel.app/calculadora-unificada.html",
                 resumo: "Simulação completa para SIAPE e Exército.",
                 detalhes: "Realiza cálculos de Compra, Portabilidade, Margem Nova e Refinanciamento. Integração direta com Polo/Corban.",
@@ -295,7 +614,7 @@
             {
                 titulo: "Contrato de Prestação",
                 imagem: "",
-                icone: "fa-file-signature", 
+                icone: "fa-file-signature",
                 link: "https://prestacaodeservico.netlify.app/",
                 resumo: "Geração de contratos de consultoria. (Contrato de Portabilidade, Equipe Michele)",
                 detalhes: "Sistema jurídico para formalização de consultoria. Gera o contrato da Pollo Promotora.",
@@ -318,23 +637,24 @@
                     "Geração de contrato jurídico."
                 ]
             },
-            {titulo: "Otimizador de PDF",
-             imagem: "",
-             icone: "fa-file-pdf",
-             link: "otimizador-de-pdf/index.html",
-             resumo: "Reduza o tamanho dos seus arquivos.", 
-             detalhes: "Compressor de PDF simples e eficiente. Reduza o tamanho dos seus arquivos PDF diretamente no navegador.", 
+            {
+                titulo: "Otimizador de PDF",
+                imagem: "",
+                icone: "fa-file-pdf",
+                link: "otimizador-de-pdf/index.html",
+                resumo: "Reduza o tamanho dos seus arquivos.",
+                detalhes: "Compressor de PDF simples e eficiente. Reduza o tamanho dos seus arquivos PDF diretamente no navegador.",
                 features: [
                     "Compressor 100% no navegador.",
                     "Suporte a múltiplas páginas.",
                     "Preserva qualidade do conteúdo.",
                     "Download imediato do arquivo otimizado."
-                ] 
+                ]
             },
             {
                 titulo: "Declaração de Residência",
-                imagem: "", 
-                icone: "fa-house-user", 
+                imagem: "",
+                icone: "fa-house-user",
                 link: "https://declaracao-residencia.vercel.app/",
                 resumo: "Gerador automático de declaração de residência.",
                 detalhes: "Ferramenta para emissão de declarações de residência com busca automática de CEP e preenchimento dinâmico de dados.",
@@ -409,7 +729,7 @@
                 const card = document.createElement('div');
                 card.className = sys.restrito ? 'card restricted' : 'card';
                 let badge = sys.restrito ? '<span class="badge-restricted"><i class="fa-solid fa-lock"></i> Restrito</span>' : '';
-                
+
                 // LÓGICA PARA USAR IMAGEM OU ÍCONE
                 let iconContent;
                 if (sys.imagem && sys.imagem.trim() !== "") {
@@ -447,7 +767,7 @@
         function abrirModal(index) {
             const sys = sistemas[index];
             document.getElementById('m-title').innerHTML = sys.imagem ? `${sys.titulo}` : `<i class="fa-solid ${sys.icone}"></i> ${sys.titulo}`;
-            
+
             document.getElementById('m-desc').textContent = sys.detalhes;
             document.getElementById('m-link').href = sys.link;
             const lista = document.getElementById('m-features');
@@ -459,7 +779,7 @@
         }
 
         function fecharModal() { modal.style.display = 'none'; }
-        window.onclick = function(event) { if (event.target == modal) fecharModal(); }
+        window.onclick = function (event) { if (event.target == modal) fecharModal(); }
 
         const options = { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' };
         document.getElementById('data-topo').textContent = new Date().toLocaleDateString('pt-BR', options);
@@ -467,4 +787,5 @@
         renderizarCartoes();
     </script>
 </body>
+
 </html>
