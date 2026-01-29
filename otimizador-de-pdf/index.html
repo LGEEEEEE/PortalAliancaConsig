@@ -1,26 +1,156 @@
 <!DOCTYPE html>
-<html lang="pt-br">
+<html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
-    <title>PDF Optimizer Pro</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Otimizador & Assinatura | Grupo Aliança</title>
+    <link rel="icon" href="../icone.ico" type="image/x-icon">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="style.css">
+
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.min.js"></script>
     <script src="https://unpkg.com/pdf-lib/dist/pdf-lib.min.js"></script>
+    <script src="https://unpkg.com/@pdf-lib/fontkit/dist/fontkit.umd.js"></script>
 </head>
+
 <body>
-    <div class="container">
-        <h2>Compressor de PDF (Real)</h2>
-        <div id="drop-area">
-            <p id="drop-text">Arraste seu PDF aqui ou clique para selecionar</p>
-            <input type="file" id="file-input" accept="application/pdf" hidden>
+
+    <div class="top-bar">
+        <div class="top-bar-content">
+            <span>Grupo Aliança</span>
+            <span class="separator">•</span>
+            <span>Pollo Promotora</span>
+            <span class="separator">•</span>
+            <span>Estilo Promotora</span>
         </div>
-        
-        <div id="file-info" class="hidden">
-            <p id="file-name"></p>
-            <button id="compress-btn">Otimizar e Baixar</button>
-        </div>
-        <div id="status"></div>
     </div>
+
+    <header class="main-header">
+        <div class="header-content">
+            <div class="logo-area">
+                <img src="../logoheader.png" alt="Logo Aliança" class="logo-img" onerror="this.style.display='none'">
+                <div class="brand-text">
+                    <h1>Portal de Documentos</h1>
+                    <span class="brand-subtitle">Otimização & Assinatura Digital</span>
+                </div>
+            </div>
+            <nav class="header-nav">
+                <a href="../index.html" class="btn-back">
+                    <i class="fa-solid fa-house"></i>
+                    <span>Início</span>
+                </a>
+            </nav>
+        </div>
+    </header>
+
+    <main class="container">
+        <div id="mode-selector" class="mode-grid">
+            <div class="mode-card" onclick="startFlow('optimize')">
+                <div class="icon-circle"><i class="fa-solid fa-file-export"></i></div>
+                <h3>Apenas Otimizar</h3>
+                <p>Reduz o tamanho do PDF para envio rápido no sistema.</p>
+            </div>
+            <div class="mode-card" onclick="startFlow('sign')">
+                <div class="icon-circle"><i class="fa-solid fa-pen-fancy"></i></div>
+                <h3>Assinar e Otimizar</h3>
+                <p>Adiciona a assinatura do cliente e comprime o arquivo.</p>
+            </div>
+        </div>
+
+        <div id="main-workspace" class="hidden">
+            <div class="workspace-header">
+                <button onclick="resetFlow()" class="btn-secondary"><i class="fa-solid fa-chevron-left"></i> Voltar / Reiniciar</button>
+            </div>
+
+            <div class="card">
+                <div class="section-title"><i class="fa-solid fa-cloud-arrow-up"></i> 1. Documento Original</div>
+                <div id="drop-area">
+                    <i class="fa-solid fa-file-pdf"></i>
+                    <p>Arraste o PDF aqui ou <span>clique para selecionar</span></p>
+                    <input type="file" id="file-input" accept="application/pdf" hidden>
+                </div>
+                <div id="file-info" class="hidden">
+                    <div class="file-card-info">
+                        <div class="file-icon-bg"><i class="fa-solid fa-file-pdf"></i></div>
+                        <div class="file-details">
+                            <strong id="file-name">arquivo.pdf</strong>
+                            <span id="file-size-original">0.00 MB</span>
+                        </div>
+                        <button onclick="resetFile()" class="btn-clear" title="Remover arquivo">
+                            <i class="fa-solid fa-trash-can"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <div id="signature-config" class="card mt-20 hidden">
+                <div class="section-title"><i class="fa-solid fa-pen-nib"></i> 2. Dados da Assinatura</div>
+                <div class="tab-container">
+                    <button id="tab-text" class="tab-btn active" onclick="switchTab('text')">Digitar Nome</button>
+                    <button id="tab-image" class="tab-btn" onclick="switchTab('image')">Subir Imagem</button>
+                </div>
+
+                <div id="area-text">
+                    <input type="text" id="sig-name" placeholder="Nome completo do cliente..." class="input-handwriting">
+
+                    <div class="control-group mt-20">
+                        <label class="helper-text"><i class="fa-solid fa-rotate"></i> Inclinação: <span id="angle-val">0</span>°</label>
+                        <input type="range" id="sig-rotate" min="-180" max="180" value="0" class="slider">
+                    </div>
+                    <div class="control-group mt-20">
+                        <label class="helper-text"><i class="fa-solid fa-text-height"></i> Tamanho: <span id="size-val">40</span>px</label>
+                        <input type="range" id="sig-size" min="12" max="100" value="40" class="slider">
+                    </div>
+
+                    <div class="control-group mt-20">
+                        <label class="helper-text"><i class="fa-solid fa-palette"></i> Cor da Caneta:</label>
+                        <div class="color-options">
+                            <button onclick="changeSigColor(0, 51, 128, '#003380')" class="dot azul" title="Azul"></button>
+                            <button onclick="changeSigColor(0, 0, 0, '#000000')" class="dot preto" title="Preto"></button>
+                            <button onclick="changeSigColor(204, 0, 0, '#cc0000')" class="dot vermelho" title="Vermelho"></button>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="area-image" class="hidden">
+                    <input type="file" id="sig-input-file" accept="image/png, image/jpeg">
+                    <p class="helper-text">Recomendado: PNG com fundo transparente.</p>
+                </div>
+            </div>
+
+            <div id="preview-section" class="card mt-20 hidden">
+                <div class="section-title"><i class="fa-solid fa-eye"></i> <span id="preview-title-text">3. Visualização Final</span></div>
+                
+                <p class="instruction-text" id="drag-instruction">Arraste a assinatura abaixo para a posição desejada no documento.</p>
+                
+                <div id="viewport-container" class="multi-page-viewer">
+                    <div id="pdf-pages-wrapper">
+                        </div>
+                    
+                    <div id="draggable-sig" class="hidden">
+                        <span id="sig-display-text">Assinatura</span>
+                        <img id="sig-display-img" src="" class="hidden" alt="Assinatura">
+                    </div>
+                </div>
+
+                <div id="progress-container" class="hidden mt-20">
+                    <div class="progress-bg">
+                        <div id="progress-bar"></div>
+                    </div>
+                    <p id="status-text">Processando documento...</p>
+                </div>
+                <button id="process-btn" class="btn-primary">Finalizar e Baixar PDF</button>
+            </div>
+        </div>
+    </main>
+
+    <footer class="tool-footer">
+        <div class="group-logos">
+           <p style="font-size: 0.8rem; opacity: 0.7;">Grupo Aliança Consig</p>
+        </div>
+        <p class="copyright">© 2026 Todos os direitos reservados</p>
+    </footer>
+
     <script src="script.js"></script>
 </body>
 </html>
