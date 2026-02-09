@@ -1,21 +1,27 @@
+// =========================================================================
+// CONFIGURAÇÃO INICIAL E BIBLIOTECAS
+// =========================================================================
+
+// Define o worker do PDF.js (Necessário para renderizar o PDF no navegador)
 pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.worker.min.js';
 
-// --- CONFIGURAÇÃO E ESTADO ---
+// Variáveis de Estado Global
 let currentFile = null;
-let currentMode = 'optimize';
-let sigMode = 'text';
-let pdfScaleRatio = 1; // Variável mágica para corrigir o tamanho
+let currentMode = 'optimize'; // 'optimize' ou 'sign'
+let sigMode = 'text'; // 'text' ou 'image'
+let pdfScaleRatio = 1; // Fator de correção visual (Tela vs PDF Real)
 
+// Configurações da Assinatura
 let sigParams = {
     text: '',
     imageSrc: null,
     rotation: 0,
     fontSize: 40,
-    color: { r: 0, g: 0.2, b: 0.5 },
-    finalPosition: null
+    color: { r: 0, g: 0.2, b: 0.5 }, // Azul padrão (#003380)
+    finalPosition: null // Onde a assinatura será colada { pageIndex, xRatio, yRatio }
 };
 
-// --- REFERÊNCIAS DOM ---
+// Referências aos elementos do HTML (Cache do DOM)
 const elements = {
     dropArea: document.getElementById('drop-area'),
     fileInput: document.getElementById('file-input'),
@@ -26,42 +32,53 @@ const elements = {
     processBtn: document.getElementById('process-btn'),
     progressBar: document.getElementById('progress-bar'),
     progressContainer: document.getElementById('progress-container'),
-    statusText: document.getElementById('status-text')
+    statusText: document.getElementById('status-text'),
+    modeSelector: document.getElementById('mode-selector'),
+    mainWorkspace: document.getElementById('main-workspace')
 };
 
-// --- INICIALIZAÇÃO ---
+// =========================================================================
+// EVENTOS DE INICIALIZAÇÃO E UI
+// =========================================================================
+
 window.addEventListener('load', () => {
+    // Recupera assinatura salva no navegador para facilitar
     const savedName = localStorage.getItem('assinatura_salva');
     if (savedName) {
         elements.sigNameInput.value = savedName;
         sigParams.text = savedName;
         elements.sigDisplayText.innerText = savedName;
     }
-    // Removemos o console de debug preto, pois já "Deu bom"
-    const debug = document.getElementById('debug-console');
-    if(debug) debug.remove();
 });
 
+// Captura digitação do nome
 elements.sigNameInput.oninput = (e) => {
     sigParams.text = e.target.value;
     elements.sigDisplayText.innerText = sigParams.text || "Assinatura";
     localStorage.setItem('assinatura_salva', sigParams.text);
 };
 
-// --- NAVEGAÇÃO E ARQUIVOS ---
+// --- NAVEGAÇÃO ENTRE TELAS ---
 window.startFlow = (mode) => {
     currentMode = mode;
-    document.getElementById('mode-selector').classList.add('hidden');
-    document.getElementById('main-workspace').classList.remove('hidden');
+    elements.modeSelector.classList.add('hidden');
+    elements.mainWorkspace.classList.remove('hidden');
 
     const title = document.getElementById('preview-title-text');
+    
     if (mode === 'optimize') {
+        // Modo Otimização: Esconde ferramentas de assinatura
         document.getElementById('signature-config').classList.add('hidden');
         elements.draggable.classList.add('hidden');
+        document.getElementById('drag-instruction').classList.add('hidden');
         title.innerText = "2. Prévia e Otimização";
+        elements.processBtn.innerText = "Comprimir e Baixar PDF";
     } else {
+        // Modo Assinatura: Mostra tudo
         document.getElementById('signature-config').classList.remove('hidden');
+        document.getElementById('drag-instruction').classList.remove('hidden');
         title.innerText = "3. Posicione e Processe";
+        elements.processBtn.innerText = "Assinar e Baixar PDF";
     }
 };
 
@@ -75,14 +92,30 @@ window.resetFile = () => {
     document.getElementById('pdf-pages-wrapper').innerHTML = "";
 };
 
+// =========================================================================
+// DRAG & DROP E LEITURA DE ARQUIVO
+// =========================================================================
+
 elements.dropArea.onclick = () => elements.fileInput.click();
-elements.dropArea.ondragover = (e) => { e.preventDefault(); elements.dropArea.style.borderColor = '#0056b3'; };
-elements.dropArea.ondragleave = () => { elements.dropArea.style.borderColor = '#cbd5e1'; };
+
+elements.dropArea.ondragover = (e) => { 
+    e.preventDefault(); 
+    elements.dropArea.style.borderColor = '#0056b3'; 
+    elements.dropArea.style.backgroundColor = '#f0f9ff';
+};
+
+elements.dropArea.ondragleave = () => { 
+    elements.dropArea.style.borderColor = '#cbd5e1'; 
+    elements.dropArea.style.backgroundColor = '#f8fafc';
+};
+
 elements.dropArea.ondrop = (e) => {
     e.preventDefault();
     elements.dropArea.style.borderColor = '#cbd5e1';
+    elements.dropArea.style.backgroundColor = '#f8fafc';
     if (e.dataTransfer.files[0]) handlePDF(e.dataTransfer.files[0]);
 };
+
 elements.fileInput.onchange = (e) => handlePDF(e.target.files[0]);
 
 async function handlePDF(file) {
@@ -91,42 +124,52 @@ async function handlePDF(file) {
         document.getElementById('file-name').innerText = file.name;
         document.getElementById('file-size-original').innerText = (file.size / 1024 / 1024).toFixed(2) + " MB";
         document.getElementById('file-info').classList.remove('hidden');
+        
+        // Renderiza a prévia visual
         await renderPreview();
     } else {
-        alert("Por favor, envie um arquivo PDF.");
+        alert("Por favor, envie apenas arquivos PDF.");
     }
 }
+
+// =========================================================================
+// RENDERIZAÇÃO DA PRÉVIA (VISUALIZAÇÃO)
+// =========================================================================
 
 async function renderPreview() {
     const previewSection = document.getElementById('preview-section');
     const wrapper = document.getElementById('pdf-pages-wrapper');
     
-    wrapper.innerHTML = "";
+    wrapper.innerHTML = ""; // Limpa anterior
     previewSection.classList.remove('hidden');
 
+    // Carrega o PDF na memória para visualização
     const arrayBuffer = await currentFile.arrayBuffer();
     const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
 
+    // Renderiza todas as páginas (limitado a um visualizador simples)
     for (let i = 1; i <= pdf.numPages; i++) {
         const page = await pdf.getPage(i);
         const viewport = page.getViewport({ scale: 1.0 });
         
-        // CÁLCULO MÁGICO DE ESCALA
-        // Definimos que a página na tela terá no máximo 500px de altura
-        // A escala é: Tamanho_Tela / Tamanho_Real_PDF
+        // CÁLCULO DE ESCALA VISUAL
+        // Limitamos a altura da página na tela a 500px para caber no monitor
         const scale = 500 / viewport.height;
-        pdfScaleRatio = scale; // Salvamos isso para usar na hora de salvar o PDF
+        pdfScaleRatio = scale; 
 
         const scaledViewport = page.getViewport({ scale: scale });
 
+        // Cria o container da página
         const pageDiv = document.createElement('div');
         pageDiv.className = "page-unit";
         pageDiv.dataset.pageNumber = i;
 
+        // Cria o Canvas
         const canvas = document.createElement('canvas');
         canvas.height = scaledViewport.height;
         canvas.width = scaledViewport.width;
 
+        // Desenha o PDF no Canvas
         await page.render({
             canvasContext: canvas.getContext('2d'),
             viewport: scaledViewport
@@ -136,15 +179,19 @@ async function renderPreview() {
         wrapper.appendChild(pageDiv);
     }
 
+    // Se estiver no modo assinar, ativa o elemento arrastável
     if (currentMode === 'sign') setupDraggable();
 }
 
-// --- DRAGGABLE (ARRASTAR) ---
+// =========================================================================
+// LÓGICA DE ARRASTAR ASSINATURA (DRAGGABLE)
+// =========================================================================
+
 function setupDraggable() {
     elements.draggable.classList.remove('hidden');
     const container = document.getElementById('viewport-container');
     
-    // Centraliza
+    // Centraliza assinatura inicialmente
     elements.draggable.style.left = (container.clientWidth / 2) - 50 + "px";
     elements.draggable.style.top = (container.clientHeight / 2) - 20 + "px";
 
@@ -158,7 +205,7 @@ function setupDraggable() {
         initialLeft = elements.draggable.offsetLeft;
         initialTop = elements.draggable.offsetTop;
         elements.draggable.style.cursor = 'grabbing';
-        e.preventDefault();
+        e.preventDefault(); // Evita selecionar texto
     };
 
     document.onmousemove = (e) => {
@@ -176,21 +223,29 @@ function setupDraggable() {
     };
 }
 
+// Calcula em qual página e em qual posição relativa (0-1) a assinatura soltou
 function calculateDropPosition() {
     const sigRect = elements.draggable.getBoundingClientRect();
+    
+    // Pega o ponto central da assinatura para maior precisão
     const sigCenterX = sigRect.left + sigRect.width / 2;
     const sigCenterY = sigRect.top + sigRect.height / 2;
+    
     const pages = document.querySelectorAll('.page-unit canvas');
     let bestMatch = null;
 
     pages.forEach((canvas) => {
         const rect = canvas.getBoundingClientRect();
+        
+        // Verifica colisão: O centro da assinatura está dentro desta página?
         if (sigCenterX >= rect.left && sigCenterX <= rect.right &&
             sigCenterY >= rect.top && sigCenterY <= rect.bottom) {
+            
             const pageNum = parseInt(canvas.parentElement.dataset.pageNumber);
+            
             bestMatch = {
                 pageIndex: pageNum,
-                // Posição relativa (0% a 100%) dentro da página
+                // Posição relativa (0% a 100%)
                 xRatio: Math.max(0, Math.min(1, (sigRect.left - rect.left) / rect.width)),
                 yRatio: Math.max(0, Math.min(1, (sigRect.top - rect.top) / rect.height))
             };
@@ -198,10 +253,15 @@ function calculateDropPosition() {
     });
 
     sigParams.finalPosition = bestMatch;
+    
+    // Feedback visual (Verde = OK, Vermelho = Fora)
     elements.draggable.style.borderColor = bestMatch ? "#22c55e" : "#ef4444";
 }
 
-// --- CONTROLES DA UI ---
+// =========================================================================
+// CONTROLES DE ESTILO (Rotação, Tamanho, Cor)
+// =========================================================================
+
 document.getElementById('sig-rotate').oninput = (e) => {
     sigParams.rotation = parseInt(e.target.value);
     document.getElementById('angle-val').innerText = sigParams.rotation;
@@ -212,11 +272,9 @@ document.getElementById('sig-size').oninput = (e) => {
     sigParams.fontSize = parseInt(e.target.value);
     document.getElementById('size-val').innerText = sigParams.fontSize;
     
-    // Atualiza visualmente na tela
     if (sigMode === 'text') {
         elements.sigDisplayText.style.fontSize = sigParams.fontSize + "px";
     } else {
-        // Para imagem, usamos uma altura baseada no font-size para manter proporção
         elements.sigDisplayImg.style.height = (sigParams.fontSize * 1.5) + "px";
     }
     
@@ -234,6 +292,7 @@ window.switchTab = (mode) => {
     document.getElementById('tab-image').classList.toggle('active', mode === 'image');
     document.getElementById('area-text').classList.toggle('hidden', mode !== 'text');
     document.getElementById('area-image').classList.toggle('hidden', mode !== 'image');
+    
     if (mode === 'image') {
         elements.sigDisplayText.classList.add('hidden');
         elements.sigDisplayImg.classList.remove('hidden');
@@ -250,36 +309,97 @@ document.getElementById('sig-input-file').onchange = (e) => {
         reader.onload = (evt) => {
             sigParams.imageSrc = evt.target.result;
             elements.sigDisplayImg.src = evt.target.result;
+            elements.sigDisplayImg.classList.remove('hidden');
+            elements.sigDisplayText.classList.add('hidden');
         };
         reader.readAsDataURL(file);
     }
 };
 
 // =========================================================================
-// PROCESSAMENTO FINAL (SEM PERDER O PROGRESSO)
+// FUNÇÃO MÁGICA: OTIMIZADOR DE IMAGEM (RASTERIZAÇÃO)
+// =========================================================================
+
+/**
+ * Converte cada página do PDF em imagem e recria um PDF novo.
+ * Ideal para documentos escaneados gigantes.
+ */
+async function compressAndRebuildPDF(file) {
+    const arrayBuffer = await file.arrayBuffer();
+    const pdfSrc = await pdfjsLib.getDocument(arrayBuffer).promise;
+    const newPdfDoc = await PDFLib.PDFDocument.create();
+    const totalPages = pdfSrc.numPages;
+    
+    // Configuração de qualidade
+    const scale = 2.0; // 2.0 garante boa leitura. 1.0 fica muito serrilhado.
+    const quality = 0.6; // 0.6 = 60% qualidade JPEG (Alta compressão)
+
+    for (let i = 1; i <= totalPages; i++) {
+        // Atualiza UI
+        elements.statusText.innerText = `Processando página ${i} de ${totalPages}...`;
+        const percent = Math.round((i / totalPages) * 90);
+        elements.progressBar.style.width = `${percent}%`;
+
+        // 1. Renderiza página em Canvas (Memória)
+        const page = await pdfSrc.getPage(i);
+        const viewport = page.getViewport({ scale: scale });
+        const canvas = document.createElement('canvas');
+        const context = canvas.getContext('2d');
+        canvas.width = viewport.width;
+        canvas.height = viewport.height;
+        
+        await page.render({ canvasContext: context, viewport: viewport }).promise;
+        
+        // 2. Converte Canvas para JPEG comprimido
+        const imgDataUrl = canvas.toDataURL('image/jpeg', quality);
+        
+        // 3. Insere no novo PDF
+        const jpgImage = await newPdfDoc.embedJpg(imgDataUrl);
+        const pageDims = jpgImage.scale(1 / scale); // Ajusta tamanho físico
+        
+        const newPage = newPdfDoc.addPage([pageDims.width, pageDims.height]);
+        newPage.drawImage(jpgImage, {
+            x: 0, y: 0,
+            width: pageDims.width,
+            height: pageDims.height,
+        });
+    }
+    
+    return await newPdfDoc.save();
+}
+
+// =========================================================================
+// PROCESSAMENTO FINAL (O GRANDE CLICK)
 // =========================================================================
 
 elements.processBtn.onclick = async () => {
+    // Validação inicial para modo de assinatura
     if (currentMode === 'sign' && !sigParams.finalPosition) {
-        alert("Atenção: A assinatura não está sobre nenhuma página.");
+        alert("Ops! A assinatura não está sobre nenhuma página. Arraste-a para onde deseja assinar.");
         return;
     }
 
+    // Trava UI
     elements.processBtn.disabled = true;
     elements.progressContainer.classList.remove('hidden');
-    elements.statusText.innerText = "Preparando arquivo...";
-    elements.progressBar.style.width = "10%";
+    elements.statusText.innerText = "Iniciando...";
+    elements.progressBar.style.width = "5%";
 
     try {
-        const fileBuffer = await currentFile.arrayBuffer();
+        let pdfBytes;
+
+        // --- CAMINHO 1: APENAS OTIMIZAR (RASTERIZAÇÃO) ---
+        if (currentMode === 'optimize') {
+            // Chama a função nova que refaz o PDF
+            pdfBytes = await compressAndRebuildPDF(currentFile);
         
-        // Carrega o documento
-        const pdfDoc = await PDFLib.PDFDocument.load(fileBuffer);
-        
-        if (currentMode === 'sign') {
-            elements.statusText.innerText = "Aplicando assinatura...";
-            
-            // Define a fonte que você gostou (Times Roman Italic)
+        // --- CAMINHO 2: ASSINAR (PRESERVA TEXTO) ---
+        } else {
+            elements.statusText.innerText = "Preparando documento...";
+            const fileBuffer = await currentFile.arrayBuffer();
+            const pdfDoc = await PDFLib.PDFDocument.load(fileBuffer);
+
+            // Carrega fontes/imagens
             let fontToUse = null;
             let imageToUse = null;
 
@@ -293,28 +413,25 @@ elements.processBtn.onclick = async () => {
                 }
             }
             
-            // Aplica a assinatura
+            // Aplica assinatura na página correta
             applySignatureToDoc(pdfDoc, fontToUse, imageToUse);
+            
+            elements.statusText.innerText = "Salvando arquivo...";
+            elements.progressBar.style.width = "90%";
+            pdfBytes = await pdfDoc.save();
         }
 
-        elements.statusText.innerText = "Finalizando e baixando...";
-        elements.progressBar.style.width = "90%";
-        
-        const pdfBytes = await pdfDoc.save();
-        downloadPDF(pdfBytes);
-
-        // SUCESSO!
-        elements.statusText.innerText = "Download iniciado! Pode editar novamente se quiser.";
+        // --- DOWNLOAD ---
         elements.progressBar.style.width = "100%";
+        elements.statusText.innerText = "Download pronto!";
+        downloadPDF(pdfBytes);
 
     } catch (e) {
         console.error(e);
-        alert("Erro inesperado: " + e.message);
+        alert("Erro no processamento: " + e.message);
     } finally {
-        // Reabilita o botão para que a pessoa possa tentar de novo sem recarregar a página
+        // Destrava UI
         elements.processBtn.disabled = false;
-        
-        // Esconde a barra de progresso após 3 segundos, mas mantendo a tela intacta
         setTimeout(() => {
             elements.progressContainer.classList.add('hidden');
             elements.progressBar.style.width = "0%";
@@ -322,48 +439,48 @@ elements.processBtn.onclick = async () => {
     }
 };
 
-// Função que desenha no PDF corrigindo o tamanho (Size Match)
+// Aplica a assinatura (Lógica vetorial do pdf-lib)
 function applySignatureToDoc(pdfDoc, font, image) {
     if (!sigParams.finalPosition) return;
     
     const pages = pdfDoc.getPages();
     const { pageIndex, xRatio, yRatio } = sigParams.finalPosition;
     
+    // Proteção contra índice inválido
     if (pageIndex > pages.length) return;
     
-    const targetPage = pages[pageIndex - 1];
+    const targetPage = pages[pageIndex - 1]; // Array começa em 0, páginas em 1
     const { width, height } = targetPage.getSize();
     
-    // Converte posição relativa para coordenadas do PDF
+    // Converte coordenadas relativas (%) para pontos PDF
     const pdfX = width * xRatio;
     let pdfY = height - (height * yRatio);
 
-    // CORREÇÃO DE TAMANHO:
-    // Dividimos o tamanho da tela (px) pela escala para obter o tamanho em pontos PDF
+    // Ajuste de escala (Tela -> PDF)
     const correctedFontSize = sigParams.fontSize / pdfScaleRatio;
 
     if (sigMode === 'text' && font) {
-        // Ajuste fino para o texto ficar alinhado verticalmente com o mouse
+        // Sobe um pouco o texto para alinhar com o cursor do mouse
         pdfY = pdfY - (correctedFontSize * 0.8);
         
         targetPage.drawText(sigParams.text, {
             x: pdfX,
             y: pdfY,
-            size: correctedFontSize, // Usando o tamanho corrigido
+            size: correctedFontSize,
             font: font,
             color: PDFLib.rgb(sigParams.color.r, sigParams.color.g, sigParams.color.b),
             rotate: PDFLib.degrees(-sigParams.rotation)
         });
     } else if (sigMode === 'image' && image) {
-        // Ajuste também para imagem
+        // Ajusta tamanho da imagem
         const imgHeightOnScreen = sigParams.fontSize * 1.5; 
-        const imgHeightOnPdf = imgHeightOnScreen / pdfScaleRatio; // Aplica correção
+        const imgHeightOnPdf = imgHeightOnScreen / pdfScaleRatio;
         
-        const imgDims = image.scaleToFit(10000, imgHeightOnPdf); // Escala mantendo proporção baseada na altura
+        const imgDims = image.scaleToFit(10000, imgHeightOnPdf);
         
         targetPage.drawImage(image, {
             x: pdfX,
-            y: pdfY - imgDims.height,
+            y: pdfY - imgDims.height, // Desenha de baixo para cima
             width: imgDims.width,
             height: imgDims.height,
             rotate: PDFLib.degrees(-sigParams.rotation)
@@ -375,6 +492,8 @@ function downloadPDF(pdfBytes) {
     const blob = new Blob([pdfBytes], { type: "application/pdf" });
     const link = document.createElement('a');
     link.href = URL.createObjectURL(blob);
-    link.download = `${currentFile.name.replace('.pdf', '')}_assinado.pdf`;
+    
+    const prefixo = currentMode === 'optimize' ? 'otimizado_' : 'assinado_';
+    link.download = `${prefixo}${currentFile.name}`;
     link.click();
 }
