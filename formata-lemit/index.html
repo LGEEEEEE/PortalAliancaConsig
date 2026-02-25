@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Processador Lemit - ETL</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #0f52ba; /* Azul corporativo */
+            --primary-hover: #0b3d8c;
+            --bg-color: #f0f4f8;
+            --card-bg: #ffffff;
+            --text-main: #333333;
+            --text-muted: #666666;
+            --border-color: #e1e8ed;
+        }
+
+        body { 
+            font-family: 'Inter', sans-serif; 
+            padding: 40px 20px; 
+            background-color: var(--bg-color); 
+            display: flex;
+            justify-content: center;
+            margin: 0;
+        }
+
+        .container { 
+            width: 100%;
+            max-width: 500px; 
+            background: var(--card-bg); 
+            padding: 40px; 
+            border-radius: 12px; 
+            box-shadow: 0 10px 25px rgba(0,0,0,0.05); 
+            text-align: center;
+        }
+
+        h2 { 
+            color: var(--primary-color); 
+            margin-top: 0; 
+            font-size: 24px;
+            margin-bottom: 8px;
+        }
+
+        p {
+            color: var(--text-muted);
+            font-size: 14px;
+            margin-bottom: 30px;
+        }
+
+        /* Estilo da área de upload */
+        .file-drop-area {
+            border: 2px dashed var(--border-color);
+            border-radius: 8px;
+            padding: 40px 20px;
+            background-color: #fafbfc;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: block;
+            margin-bottom: 20px;
+        }
+
+        .file-drop-area:hover {
+            border-color: var(--primary-color);
+            background-color: #f0f4f8;
+        }
+
+        .file-drop-area .icon {
+            font-size: 32px;
+            display: block;
+            margin-bottom: 10px;
+        }
+
+        .file-drop-area .file-msg {
+            color: var(--text-main);
+            font-weight: 600;
+            font-size: 15px;
+        }
+
+        input[type="file"] { 
+            display: none; /* Esconde o input original feio */
+        }
+
+        .btn-process { 
+            background-color: var(--primary-color); 
+            color: white; 
+            border: none; 
+            padding: 14px 24px; 
+            width: 100%;
+            cursor: pointer; 
+            border-radius: 8px; 
+            font-weight: 600; 
+            font-size: 16px;
+            transition: background 0.3s; 
+        }
+
+        .btn-process:hover { 
+            background-color: var(--primary-hover); 
+        }
+
+        .btn-process:disabled {
+            background-color: #a0b4d4;
+            cursor: not-allowed;
+        }
+
+        #status { 
+            margin-top: 25px; 
+            font-size: 14px; 
+            text-align: left;
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 6px;
+            display: none;
+            border: 1px solid var(--border-color);
+        }
+
+        .success { color: #10b981; font-weight: 600; margin-bottom: 5px; display: block;}
+        .error { color: #ef4444; font-weight: 600; margin-bottom: 5px; display: block;}
+        .loading { color: var(--text-muted); margin-bottom: 5px; display: block;}
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2>🛡️ Aliança Consig ETL</h2>
+    <p>Converta os relatórios do Lemit para o layout padrão.</p>
+    
+    <label for="csvFileInput" class="file-drop-area" id="dropArea">
+        <span class="icon">📄</span>
+        <span class="file-msg" id="fileMsg">Clique aqui para selecionar os CSVs</span>
+    </label>
+    <input type="file" id="csvFileInput" accept=".csv" multiple>
+
+    <button class="btn-process" id="btnProcess" onclick="processarArquivos()" disabled>Processar e Baixar</button>
+
+    <div id="status"></div>
+</div>
+
+<script>
+    // --- LÓGICA DE INTERFACE ---
+    const fileInput = document.getElementById('csvFileInput');
+    const fileMsg = document.getElementById('fileMsg');
+    const btnProcess = document.getElementById('btnProcess');
+    const statusDiv = document.getElementById('status');
+
+    // Atualiza o texto quando escolhe arquivos e libera o botão
+    fileInput.addEventListener('change', () => {
+        if (fileInput.files.length > 0) {
+            fileMsg.textContent = `${fileInput.files.length} arquivo(s) selecionado(s)`;
+            fileMsg.style.color = 'var(--primary-color)';
+            btnProcess.disabled = false;
+        } else {
+            fileMsg.textContent = 'Clique aqui para selecionar os CSVs';
+            fileMsg.style.color = 'var(--text-main)';
+            btnProcess.disabled = true;
+        }
+    });
+
+    // --- LÓGICA DE PROCESSAMENTO (A MESMA QUE FUNCIONOU PERFEITAMENTE) ---
+    function formatarNumero(ddd, telefone) {
+        if (ddd !== undefined && telefone !== undefined && ddd !== null && telefone !== null) {
+            let dStr = String(ddd).trim();
+            let fStr = String(telefone).trim();
+            
+            if (dStr !== '' && fStr !== '') {
+                let dddLimpo = parseInt(parseFloat(dStr));
+                let foneLimpo = parseInt(parseFloat(fStr));
+                if (!isNaN(dddLimpo) && !isNaN(foneLimpo)) {
+                    return `${dddLimpo}${foneLimpo}`;
+                }
+            }
+        }
+        return '';
+    }
+
+    function processarArquivos() {
+        const files = fileInput.files;
+        if (files.length === 0) return;
+
+        statusDiv.style.display = 'block';
+        statusDiv.innerHTML = `<span class="loading">⏳ Processando ${files.length} arquivo(s)...</span>`;
+
+        Array.from(files).forEach(file => {
+            Papa.parse(file, {
+                delimiter: ";", 
+                header: false,  
+                skipEmptyLines: true,
+                complete: function(results) {
+                    let data = results.data;
+                    if (data.length < 2) {
+                        statusDiv.innerHTML += `<span class="error">✖ Erro: Arquivo ${file.name} está vazio.</span>`;
+                        return;
+                    }
+
+                    let originalHeaders = data[0];
+                    let headerCounts = {};
+                    let mappedHeaders = [];
+
+                    originalHeaders.forEach(h => {
+                        let cleanH = h.trim();
+                        if (cleanH === "") {
+                            mappedHeaders.push(cleanH);
+                        } else if (headerCounts[cleanH] === undefined) {
+                            headerCounts[cleanH] = 0;
+                            mappedHeaders.push(cleanH);
+                        } else {
+                            headerCounts[cleanH]++;
+                            mappedHeaders.push(`${cleanH}.${headerCounts[cleanH]}`);
+                        }
+                    });
+
+                    let idxNome = mappedHeaders.indexOf('NOME');
+                    let idxCpf = mappedHeaders.indexOf('CPF/CNPJ');
+                    let idxUf = mappedHeaders.indexOf('UF');
+                    let idxDdd3 = mappedHeaders.indexOf('DDD.3');
+                    let idxFone3 = mappedHeaders.indexOf('FONE.3');
+                    let idxDdd4 = mappedHeaders.indexOf('DDD.4');
+                    let idxFone4 = mappedHeaders.indexOf('FONE.4');
+                    let idxDdd5 = mappedHeaders.indexOf('DDD.5');
+                    let idxFone5 = mappedHeaders.indexOf('FONE.5');
+                    let idxDdd6 = mappedHeaders.indexOf('DDD.6');
+                    let idxFone6 = mappedHeaders.indexOf('FONE.6');
+
+                    let newData = [];
+
+                    for (let i = 1; i < data.length; i++) {
+                        let row = data[i];
+                        const getVal = (idx) => (idx !== -1 && row[idx] !== undefined) ? row[idx] : '';
+
+                        newData.push({
+                            'nome': getVal(idxNome),
+                            'cpf': getVal(idxCpf),
+                            'uf': getVal(idxUf),
+                            'fone 1': formatarNumero(getVal(idxDdd3), getVal(idxFone3)),
+                            'fone 2': formatarNumero(getVal(idxDdd4), getVal(idxFone4)),
+                            'fone 3': formatarNumero(getVal(idxDdd5), getVal(idxFone5)),
+                            'fone 4': formatarNumero(getVal(idxDdd6), getVal(idxFone6))
+                        });
+                    }
+
+                    const csvOutput = Papa.unparse(newData, { delimiter: ";" });
+                    const blob = new Blob(["\uFEFF" + csvOutput], { type: 'text/csv;charset=utf-8;' });
+                    
+                    const link = document.createElement("a");
+                    const url = URL.createObjectURL(blob);
+                    link.setAttribute("href", url);
+                    
+                    // Adiciona "-formatado" no nome do arquivo novo para não confundir com o original
+                    let nomeFinal = file.name.replace('.csv', ' - formatado.csv');
+                    link.setAttribute("download", nomeFinal); 
+                    
+                    link.style.visibility = 'hidden';
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
+
+                    // Remove o aviso de "Processando" e mostra o sucesso
+                    let loadingMsg = statusDiv.querySelector('.loading');
+                    if(loadingMsg) loadingMsg.remove();
+                    
+                    statusDiv.innerHTML += `<span class="success">✔ ${file.name} formatado!</span>`;
+                },
+                error: function(err) {
+                    statusDiv.innerHTML += `<span class="error">✖ Erro no arquivo ${file.name}: ${err}</span>`;
+                }
+            });
+        });
+    }
+</script>
+
+</body>
+</html>
