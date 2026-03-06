@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gerador de Termo de Concessão SouGov</title>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/css/bootstrap.min.css" rel="stylesheet">
+
+
+    <style>
+        /* --- Estilos base --- */
+        body { zoom: 0.9; font-family: Arial, sans-serif; background-color: #f0f2f5; display: flex; align-items: flex-start; justify-content: center; gap: 20px; padding: 20px; font-size: 14px; flex-wrap: wrap; margin: 0; }
+
+        /* --- Formulário Lateral --- */
+        #form-container { flex: 0 0 450px; background: #ffffff; padding: 25px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05); position: sticky; top: 20px; max-height: 95vh; overflow-y: auto; }
+        #form-container h1 { text-align: center; margin-top: 0; margin-bottom: 25px; font-size: 1.4rem; color: #333; }
+        .form-section { margin-bottom: 20px; border-bottom: 1px solid #eee; padding-bottom: 15px; }
+        .form-section:last-of-type { border-bottom: none; }
+        .form-section h2 { font-size: 1.1rem; color: #0066cc; margin-top: 0; margin-bottom: 15px; }
+        .form-group { margin-bottom: 12px; }
+        .form-group label { display: block; margin-bottom: 5px; font-weight: bold; font-size: 0.85rem; color: #555; }
+        .form-group input { width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; box-sizing: border-box; }
+        .form-group input:focus { outline: none; border-color: #0066cc; }
+
+        .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+        .grid-3 { display: grid; grid-template-columns: 1fr 2fr 1fr; gap: 10px; }
+
+        #gerar-pdf { display: block; width: 100%; padding: 12px; color: white; border: none; border-radius: 4px; font-size: 1rem; font-weight: bold; cursor: pointer; transition: 0.3s ease; background-color: #28a745; margin-top: 10px; }
+        #gerar-pdf:hover { background-color: #218838; }
+
+        /* --- Preview do Contrato (Folha A4 na Tela) --- */
+        #preview-container { flex: 1; display: flex; justify-content: center; min-width: 210mm; }
+        #folha-contrato {
+            width: 210mm; min-height: 297mm; padding: 20mm; background: #ffffff;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1); box-sizing: border-box;
+            font-family: Arial, Helvetica, sans-serif; color: #000; font-size: 11pt; line-height: 1.5; text-align: justify;
+        }
+
+        .titulo { text-align: center; font-weight: bold; margin-bottom: 20px; }
+        .subtitulo { font-weight: bold; margin-top: 15px; margin-bottom: 5px; }
+        .texto-recuo { margin-bottom: 10px; }
+        .lista-alfa { margin-left: 20px; margin-bottom: 10px; }
+        .variavel { font-weight: bold; color: #0066cc; transition: color 0.3s ease; }
+        
+        .assinaturas { margin-top: 50px; text-align: center; }
+        .linha-assinatura { border-top: 1px solid #000; width: 60%; margin: 40px auto 5px auto; }
+        .nome-assinatura { font-weight: bold; }
+        .btn-voltar {
+            position: fixed;
+            top: 15px;
+            left: 15px;
+            z-index: 1030;
+        }
+    </style>
+</head>
+
+<body>
+    
+    <a href="/index.html" class="btn btn-secondary btn-voltar"><i class="bi bi-arrow-left"></i> Voltar</a>
+
+    <div id="form-container">
+        <h1>Preenchimento do Termo</h1>
+
+        <div class="form-section">
+            <h2>Dados da Concedente</h2>
+            <div class="form-group"><label>Nome Completo</label><input type="text" id="in-nome" placeholder="Ex: João da Silva"></div>
+            <div class="grid-2">
+                <div class="form-group"><label>Nacionalidade</label><input type="text" id="in-nacionalidade" placeholder="brasileiro(a)" value="brasileiro(a)"></div>
+                <div class="form-group"><label>Estado Civil</label><input type="text" id="in-estadocivil" placeholder="solteiro"></div>
+            </div>
+            <div class="grid-2">
+                <div class="form-group"><label>CPF</label><input type="text" id="in-cpf" placeholder="000.000.000-00"></div>
+                <div class="form-group"><label>Data de Nasc.</label><input type="text" id="in-datanasc" placeholder="DD/MM/AAAA"></div>
+            </div>
+            <div class="grid-2">
+                <div class="form-group"><label>RG</label><input type="text" id="in-rg" placeholder="M3.626.657"></div>
+                <div class="form-group"><label>Órgão Exp. (UF)</label><input type="text" id="in-orgao" placeholder="SSP/MG"></div>
+            </div>
+        </div>
+
+        <div class="form-section">
+            <h2>Endereço (Concedente)</h2>
+            <div class="form-group"><label>CEP (Busca automática)</label><input type="text" id="in-cep" placeholder="00000-000"></div>
+            <div class="grid-3">
+                <div class="form-group" style="grid-column: span 2;"><label>Logradouro</label><input type="text" id="in-logradouro" placeholder="Rua, Av..."></div>
+                <div class="form-group"><label>Número</label><input type="text" id="in-numero" placeholder="123"></div>
+            </div>
+            <div class="grid-2">
+                <div class="form-group"><label>Bairro</label><input type="text" id="in-bairro" placeholder="Bairro"></div>
+                <div class="form-group"><label>Complemento</label><input type="text" id="in-complemento" placeholder="Apto 101"></div>
+            </div>
+            <div class="grid-2">
+                <div class="form-group"><label>Cidade</label><input type="text" id="in-cidade" placeholder="Cidade"></div>
+                <div class="form-group"><label>UF</label><input type="text" id="in-uf" placeholder="MG"></div>
+            </div>
+        </div>
+
+        <div class="form-section">
+            <h2>Responsáveis Solidários</h2>
+            <label style="font-size: 0.8rem; color:#666; margin-bottom:10px; display:block;">Representantes da POLLO</label>
+            <div class="form-group"><label>Responsável 1 - Nome</label><input type="text" id="in-resp1-nome" placeholder="Kaira Greiza Gomides Duarte"></div>
+            <div class="form-group"><label>Responsável 1 - CPF</label><input type="text" id="in-resp1-cpf" placeholder="971.040.271-49"></div>
+            <div class="form-group" style="margin-top: 15px;"><label>Responsável 2 - Nome</label><input type="text" id="in-resp2-nome" placeholder="Francisco Eduardo Nunes Leal"></div>
+            <div class="form-group"><label>Responsável 2 - CPF</label><input type="text" id="in-resp2-cpf" placeholder="043.922.601-51"></div>
+        </div>
+
+        <div class="form-section">
+            <h2>Foro e Assinatura</h2>
+            <div class="form-group"><label>Comarca do Foro (Cidade/UF)</label><input type="text" id="in-foro" placeholder="Lagoa Santa/MG"></div>
+            <div class="grid-2">
+                <div class="form-group"><label>Local (Assinatura)</label><input type="text" id="in-localass" placeholder="Lagoa Santa/MG"></div>
+                <div class="form-group"><label>Data</label><input type="text" id="in-dataass" placeholder="08 de Janeiro de 2026"></div>
+            </div>
+        </div>
+
+        <button id="gerar-pdf">📥 Gerar PDF do Contrato</button>
+    </div>
+
+    <div id="preview-container">
+        <div id="folha-contrato">
+            <div class="titulo">TERMO DEFINITIVO DE CONCESSÃO DE ACESSO PARA MONITORAMENTO DE INFORMAÇÕES SOUGOV.BR</div>
+            
+            <div class="texto-recuo">Pelo presente instrumento particular, de um lado:</div>
+            
+            <div class="subtitulo">CONCEDENTE</div>
+            <div class="texto-recuo">
+                <span id="out-nome" class="variavel">[NOME]</span>, 
+                <span id="out-nacionalidade" class="variavel">[Nacionalidade]</span>, 
+                <span id="out-estadocivil" class="variavel">[Estado Civil]</span>, pessoa física, 
+                portador(a) do CPF nº <span id="out-cpf" class="variavel">[CPF]</span>, 
+                RG nº <span id="out-rg" class="variavel">[RG]</span>, expedido pela <span id="out-orgao" class="variavel">[Órgão]</span>, 
+                nascida em <span id="out-datanasc" class="variavel">[Data Nasc.]</span>, 
+                residente e domiciliado(a) na <span id="out-logradouro" class="variavel">[Logradouro]</span>, 
+                nº <span id="out-numero" class="variavel">[Nº]</span>, 
+                <span id="out-complemento" class="variavel"></span>
+                Bairro <span id="out-bairro" class="variavel">[Bairro]</span>, CEP <span id="out-cep" class="variavel">[CEP]</span>, 
+                <span id="out-cidade" class="variavel">[Cidade]</span>/<span id="out-uf" class="variavel">[UF]</span>, 
+                doravante denominada simplesmente <strong>CONCEDENTE</strong>;
+            </div>
+
+            <div class="texto-recuo">e, de outro lado:</div>
+
+            <div class="subtitulo">CONCESSIONÁRIA (RESPONSÁVEL PRINCIPAL)</div>
+            <div class="texto-recuo">
+                <strong>POLLO CONSULTORIA DE SEGUROS LTDA</strong>, pessoa jurídica de direito privado, inscrita no CNPJ nº 44.906.703/0001-59, com sede na CSE 06, Lote 30, Sala 204, Bairro Taguatinga Sul, CEP 72025-065, Brasília/DF, doravante denominada <strong>CONCESSIONÁRIA</strong>, neste ato representada por seus colaboradores designados,
+            </div>
+
+            <div class="subtitulo">bem como, na qualidade de RESPONSÁVEIS SOLIDÁRIOS E CORRESPONSÁVEIS DIRETOS PELO ACESSO CONCEDIDO:</div>
+            <div class="texto-recuo">
+                <span id="out-resp1-nome" class="variavel">[Nome Responsável 1]</span>, CPF nº <span id="out-resp1-cpf" class="variavel">[CPF Resp. 1]</span>, residente em Brasília/DF;<br>
+                <span id="out-resp2-nome" class="variavel">[Nome Responsável 2]</span>, CPF nº <span id="out-resp2-cpf" class="variavel">[CPF Resp. 2]</span>, residente em Brasília/DF;
+            </div>
+
+            <div class="texto-recuo">
+                doravante denominados, em conjunto, <strong>CONCESSIONÁRIOS</strong>, resolvem firmar o presente Termo, que se regerá pelas cláusulas e condições a seguir.
+            </div>
+
+            <div class="subtitulo">CLÁUSULA 1ª – DO OBJETO</div>
+            <div class="texto-recuo">1.1. O presente termo tem por objeto a concessão de acesso restrito a sistemas, plataformas, contas, ambientes digitais ou informações de titularidade do CONCEDENTE, única e exclusivamente para fins de monitoramento, acompanhamento e verificação de informações.</div>
+
+            <div class="subtitulo">CLÁUSULA 2ª – DA LIMITAÇÃO ABSOLUTA DO ACESSO</div>
+            <div class="texto-recuo">2.1. O acesso concedido é estritamente limitado à visualização, sendo expressamente proibida, sob qualquer pretexto, a prática de atos que impliquem em:<br>
+                a) alteração cadastral de qualquer natureza;<br>
+                b) movimentação financeira, direta ou indireta;<br>
+                c) exclusão, edição, inclusão ou manipulação de dados;<br>
+                d) alteração de configurações, permissões, integrações ou parâmetros técnicos;<br>
+                e) concessão, compartilhamento ou delegação de acesso a terceiros.
+            </div>
+            <div class="texto-recuo">2.2. Qualquer movimentação ou alteração somente poderá ocorrer mediante autorização prévia, expressa e por escrito do CONCEDENTE, sendo nulo qualquer consentimento presumido, verbal ou tácito.</div>
+
+            <div class="subtitulo">CLÁUSULA 3ª – DA RESPONSABILIDADE SOLIDÁRIA</div>
+            <div class="texto-recuo">3.1. A POLLO CONSULTORIA DE SEGUROS LTDA responde solidariamente por todos os atos praticados por seus colaboradores designados neste termo, independentemente de dolo ou culpa.<br>
+            3.2. Os colaboradores <span id="out-resp1-nome-txt" class="variavel">[Nome Responsável 1]</span> e <span id="out-resp2-nome-txt" class="variavel">[Nome Responsável 2]</span> assumem responsabilidade pessoal, direta, individual e solidária por qualquer violação dos limites aqui estabelecidos.<br>
+            3.3. A responsabilização da pessoa jurídica não exclui, não substitui e não atenua a responsabilização civil e criminal dos colaboradores.</div>
+
+            <div class="subtitulo">CLÁUSULA 4ª – DA CONFIDENCIALIDADE</div>
+            <div class="texto-recuo">4.1. Todas as informações acessadas são consideradas estritamente confidenciais, sendo vedada sua divulgação, cópia, compartilhamento ou utilização para finalidade diversa da prevista neste instrumento.</div>
+
+            <div class="subtitulo">CLÁUSULA 5ª – DA VIOLAÇÃO, ILICITUDE E PENALIDADES</div>
+            <div class="texto-recuo">5.1. A violação de qualquer cláusula deste termo caracterizará infração grave e quebra contratual imediata.<br>
+            5.2. As partes reconhecem expressamente que a utilização indevida do acesso poderá caracterizar ato ilícito e conduta criminosa, nos termos da legislação vigente, sujeitando os responsáveis às medidas cíveis e criminais cabíveis, incluindo, mas não se limitando, a: indenização por perdas e danos; lucros cessantes; danos morais; responsabilização criminal individual.<br>
+            5.3. O CONCEDENTE poderá revogar imediatamente o acesso em caso de descumprimento deste contrato, de forma unilateral, sem necessidade de aviso prévio ou justificativa.</div>
+
+            <div class="subtitulo">CLÁUSULA 6ª – DO FORO</div>
+            <div class="texto-recuo">6.1. Fica eleito o foro da comarca de <span id="out-foro" class="variavel">[Comarca/UF]</span>, com renúncia expressa a qualquer outro, por mais privilegiado que seja.</div>
+
+            <div class="texto-recuo" style="margin-top: 20px;">E, por estarem de pleno acordo, firmam o presente instrumento em vias de igual teor.<br><br>
+            <span id="out-localass" class="variavel">[Local]</span>, <span id="out-dataass" class="variavel">[Data]</span>.</div>
+
+            <div class="assinaturas">
+                <div class="linha-assinatura"></div>
+                <div class="nome-assinatura">CONCEDENTE - <span id="out-ass-nome" class="variavel">[NOME]</span></div>
+
+                <div class="linha-assinatura"></div>
+                <div class="nome-assinatura">RESPONSÁVEL DESIGNADO(A) - <span id="out-ass-resp1" class="variavel">[Resp 1]</span></div>
+
+                <div class="linha-assinatura"></div>
+                <div class="nome-assinatura">RESPONSÁVEL DESIGNADO(A) - <span id="out-ass-resp2" class="variavel">[Resp 2]</span></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- 1. LÓGICA DE PREVIEW NA TELA (MANTIDA) ---
+        const mapaCampos = {
+            'in-nome': ['out-nome', 'out-ass-nome'], 'in-nacionalidade': ['out-nacionalidade'],
+            'in-estadocivil': ['out-estadocivil'], 'in-cpf': ['out-cpf'], 'in-datanasc': ['out-datanasc'],
+            'in-rg': ['out-rg'], 'in-orgao': ['out-orgao'], 'in-logradouro': ['out-logradouro'],
+            'in-numero': ['out-numero'], 'in-bairro': ['out-bairro'], 'in-cep': ['out-cep'],
+            'in-cidade': ['out-cidade'], 'in-uf': ['out-uf'],
+            'in-resp1-nome': ['out-resp1-nome', 'out-resp1-nome-txt', 'out-ass-resp1'],
+            'in-resp1-cpf': ['out-resp1-cpf'],
+            'in-resp2-nome': ['out-resp2-nome', 'out-resp2-nome-txt', 'out-ass-resp2'],
+            'in-resp2-cpf': ['out-resp2-cpf'],
+            'in-foro': ['out-foro'], 'in-localass': ['out-localass'], 'in-dataass': ['out-dataass']
+        };
+
+        function atualizarPreview() {
+            for (const inputId in mapaCampos) {
+                const inputElement = document.getElementById(inputId);
+                const valor = inputElement.value.trim();
+                const placeholder = inputElement.getAttribute('placeholder');
+                mapaCampos[inputId].forEach(outId => {
+                    const outElement = document.getElementById(outId);
+                    if (outElement) outElement.textContent = valor || `[${placeholder}]`;
+                });
+            }
+            const compValue = document.getElementById('in-complemento').value.trim();
+            document.getElementById('out-complemento').textContent = compValue ? `Complemento: ${compValue}, ` : "";
+        }
+
+        document.querySelectorAll('#form-container input').forEach(input => {
+            input.addEventListener('input', atualizarPreview);
+        });
+
+        // --- BUSCA CEP ---
+        document.getElementById('in-cep').addEventListener('blur', async function() {
+            let cep = this.value.replace(/\D/g, '');
+            if (cep.length === 8) {
+                document.getElementById('in-cidade').value = "Buscando...";
+                document.getElementById('in-uf').value = "...";
+                atualizarPreview();
+                try {
+                    let response = await fetch(`https://viacep.com.br/ws/${cep}/json/`);
+                    let data = await response.json();
+                    if (!data.erro) {
+                        document.getElementById('in-logradouro').value = data.logradouro;
+                        document.getElementById('in-bairro').value = data.bairro;
+                        document.getElementById('in-cidade').value = data.localidade;
+                        document.getElementById('in-uf').value = data.uf;
+                        document.getElementById('in-numero').focus(); 
+                    } else { alert("CEP não encontrado."); limparEndereco(); }
+                } catch (error) { alert("Erro ao buscar CEP."); limparEndereco(); }
+                atualizarPreview();
+            }
+        });
+
+        function limparEndereco() {
+            document.getElementById('in-cidade').value = ""; document.getElementById('in-uf').value = "";
+            document.getElementById('in-logradouro').value = ""; document.getElementById('in-bairro').value = "";
+        }
+
+        // --- 2. GERAÇÃO NATIVA DO PDF (TEXTO PERFEITO) ---
+        document.getElementById('gerar-pdf').addEventListener('click', function() {
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+            
+            let y = 20;
+            const margemEsq = 20;
+            const larguraMax = 170;
+
+            function adicionarTexto(texto, negrito = false, centralizado = false, espacoAbaixo = 5) {
+                doc.setFont("helvetica", negrito ? "bold" : "normal");
+                doc.setFontSize(11);
+                
+                const linhas = doc.splitTextToSize(texto, larguraMax);
+                
+                for(let i = 0; i < linhas.length; i++) {
+                    if (y > 275) { doc.addPage(); y = 20; }
+                    
+                    if (centralizado) {
+                        doc.text(linhas[i], 105, y, { align: "center" });
+                    } else {
+                        // O segredo do alinhamento justificado nativo do jsPDF
+                        doc.text(linhas[i], margemEsq, y, { align: "justify", maxWidth: larguraMax });
+                    }
+                    y += 6; // Altura da linha
+                }
+                y += espacoAbaixo;
+            }
+
+            // Coleta os dados limpos ou usa placeholder
+            const val = (id) => document.getElementById(id).value.trim() || `[${document.getElementById(id).getAttribute('placeholder')}]`;
+            
+            const complemento = document.getElementById('in-complemento').value.trim() ? `Complemento: ${document.getElementById('in-complemento').value.trim()}, ` : "";
+
+            // --- Escrevendo o Documento ---
+            adicionarTexto("TERMO DEFINITIVO DE CONCESSÃO DE ACESSO PARA MONITORAMENTO DE INFORMAÇÕES SOUGOV.BR", true, true, 10);
+            adicionarTexto("Pelo presente instrumento particular, de um lado:", false, false, 5);
+            
+            adicionarTexto("CONCEDENTE", true, false, 2);
+            adicionarTexto(`${val('in-nome')}, ${val('in-nacionalidade')}, ${val('in-estadocivil')}, pessoa física, portadora do CPF nº ${val('in-cpf')}, RG nº ${val('in-rg')}, expedido pela ${val('in-orgao')}, nascida em ${val('in-datanasc')}, residente e domiciliada na ${val('in-logradouro')}, nº ${val('in-numero')}, ${complemento}Bairro ${val('in-bairro')}, CEP ${val('in-cep')}, ${val('in-cidade')}/${val('in-uf')}, doravante denominada simplesmente CONCEDENTE;`, false, false, 5);
+
+            adicionarTexto("e, de outro lado:", false, false, 5);
+            
+            adicionarTexto("CONCESSIONÁRIA (RESPONSÁVEL PRINCIPAL)", true, false, 2);
+            adicionarTexto("POLLO CONSULTORIA DE SEGUROS LTDA, pessoa jurídica de direito privado, inscrita no CNPJ nº 44.906.703/0001-59, com sede na CSE 06, Lote 30, Sala 204, Bairro Taguatinga Sul, CEP 72025-065, Brasília/DF, doravante denominada CONCESSIONÁRIA, neste ato representada por seus colaboradores designados,", false, false, 5);
+
+            adicionarTexto("bem como, na qualidade de RESPONSÁVEIS SOLIDÁRIOS E CORRESPONSÁVEIS DIRETOS PELO ACESSO CONCEDIDO:", true, false, 2);
+            adicionarTexto(`${val('in-resp1-nome')}, CPF nº ${val('in-resp1-cpf')}, residente em Brasília/DF;`, false, false, 0);
+            adicionarTexto(`${val('in-resp2-nome')}, CPF nº ${val('in-resp2-cpf')}, residente em Brasília/DF;`, false, false, 5);
+            
+            adicionarTexto("doravante denominados, em conjunto, CONCESSIONÁRIOS, resolvem firmar o presente Termo, que se regerá pelas cláusulas e condições a seguir.", false, false, 10);
+
+            adicionarTexto("CLÁUSULA 1ª – DO OBJETO", true, false, 2);
+            adicionarTexto("1.1. O presente termo tem por objeto a concessão de acesso restrito a sistemas, plataformas, contas, ambientes digitais ou informações de titularidade do CONCEDENTE, única e exclusivamente para fins de monitoramento, acompanhamento e verificação de informações.", false, false, 5);
+
+            adicionarTexto("CLÁUSULA 2ª – DA LIMITAÇÃO ABSOLUTA DO ACESSO", true, false, 2);
+            adicionarTexto("2.1. O acesso concedido é estritamente limitado à visualização, sendo expressamente proibida, sob qualquer pretexto, a prática de atos que impliquem em:", false, false, 2);
+            adicionarTexto("a) alteração cadastral de qualquer natureza;\nb) movimentação financeira, direta ou indireta;\nc) exclusão, edição, inclusão ou manipulação de dados;\nd) alteração de configurações, permissões, integrações ou parâmetros técnicos;\ne) concessão, compartilhamento ou delegação de acesso a terceiros.", false, false, 2);
+            adicionarTexto("2.2. Qualquer movimentação ou alteração somente poderá ocorrer mediante autorização prévia, expressa e por escrito do CONCEDENTE, sendo nulo qualquer consentimento presumido, verbal ou tácito.", false, false, 5);
+
+            adicionarTexto("CLÁUSULA 3ª – DA RESPONSABILIDADE SOLIDÁRIA", true, false, 2);
+            adicionarTexto("3.1. A POLLO CONSULTORIA DE SEGUROS LTDA responde solidariamente por todos os atos praticados por seus colaboradores designados neste termo, independentemente de dolo ou culpa.", false, false, 2);
+            adicionarTexto(`3.2. Os colaboradores ${val('in-resp1-nome')} e ${val('in-resp2-nome')} assumem responsabilidade pessoal, direta, individual e solidária por qualquer violação dos limites aqui estabelecidos.`, false, false, 2);
+            adicionarTexto("3.3. A responsabilização da pessoa jurídica não exclui, não substitui e não atenua a responsabilização civil e criminal dos colaboradores.", false, false, 5);
+
+            adicionarTexto("CLÁUSULA 4ª – DA CONFIDENCIALIDADE", true, false, 2);
+            adicionarTexto("4.1. Todas as informações acessadas são consideradas estritamente confidenciais, sendo vedada sua divulgação, cópia, compartilhamento ou utilização para finalidade diversa da prevista neste instrumento.", false, false, 5);
+
+            adicionarTexto("CLÁUSULA 5ª – DA VIOLAÇÃO, ILICITUDE E PENALIDADES", true, false, 2);
+            adicionarTexto("5.1. A violação de qualquer cláusula deste termo caracterizará infração grave e quebra contratual imediata.", false, false, 2);
+            adicionarTexto("5.2. As partes reconhecem expressamente que a utilização indevida do acesso poderá caracterizar ato ilícito e conduta criminosa, nos termos da legislação vigente, sujeitando os responsáveis às medidas cíveis e criminais cabíveis, incluindo, mas não se limitando, a: indenização por perdas e danos; lucros cessantes; danos morais; responsabilização criminal individual.", false, false, 2);
+            adicionarTexto("5.3. O CONCEDENTE poderá revogar imediatamente o acesso em caso de descumprimento deste contrato, de forma unilateral, sem necessidade de aviso prévio ou justificativa.", false, false, 5);
+
+            adicionarTexto("CLÁUSULA 6ª – DO FORO", true, false, 2);
+            adicionarTexto(`6.1. Fica eleito o foro da comarca de ${val('in-foro')}, com renúncia expressa a qualquer outro, por mais privilegiado que seja.`, false, false, 10);
+
+            adicionarTexto("E, por estarem de pleno acordo, firmam o presente instrumento em vias de igual teor.", false, false, 5);
+            adicionarTexto(`${val('in-localass')}, ${val('in-dataass')}.`, false, false, 20);
+
+            // Assinaturas
+            adicionarTexto("____________________________________________________", false, true, 2);
+            adicionarTexto("CONCEDENTE - " + val('in-nome'), true, true, 15);
+
+            adicionarTexto("____________________________________________________", false, true, 2);
+            adicionarTexto("RESPONSÁVEL DESIGNADO(A) - " + val('in-resp1-nome'), true, true, 15);
+
+            adicionarTexto("____________________________________________________", false, true, 2);
+            adicionarTexto("RESPONSÁVEL DESIGNADO(A) - " + val('in-resp2-nome'), true, true, 5);
+
+            doc.save(`Termo_${val('in-nome').replace(/\s+/g, '_')}.pdf`);
+        });
+
+        window.onload = atualizarPreview;
+    </script>
+</body>
+</html>
