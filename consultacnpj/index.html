@@ -193,8 +193,16 @@
         }
 
         // Adiciona suporte ao "Enter" no teclado
-        document.getElementById('cnpjInput').addEventListener('keypress', function (e) {
-            if (e.key === 'Enter') buscarCNPJ();
+        // Captura o campo de input
+        const inputCNPJ = document.getElementById('cnpjInput');
+
+        // Adiciona o "ouvinte" de eventos para teclas
+        inputCNPJ.addEventListener('keydown', function (e) {
+            // Verifica se a tecla apertada foi o Enter (código 13)
+            if (e.key === 'Enter') {
+                e.preventDefault(); // Impede que a página recarregue ou dê erro
+                buscarCNPJ();       // Chama a sua função de busca
+            }
         });
     </script>
 </body>
