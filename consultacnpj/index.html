@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Consulta CNPJ Profissional</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet"
+        integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous">
+    <style>
+        .animate-fade-in {
+            animation: fadeIn 0.5s ease-in-out;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .btn-voltar {
+            position: fixed;
+            top: 15px;
+            left: 15px;
+            z-index: 1030;
+        }
+    </style>
+</head>
+
+<body class="bg-slate-100 min-h-screen flex items-center justify-center p-4 font-sans text-slate-900">
+    <a href="/index.html" class="btn btn-secondary btn-voltar"><i class="bi bi-arrow-left"></i> Voltar</a>
+
+
+    <div class="bg-white p-6 md:p-10 rounded-2xl shadow-xl w-full max-w-3xl border border-slate-200">
+
+        <div class="text-center mb-8">
+            <h1 class="text-3xl font-extrabold text-slate-800">Busca CNPJ</h1>
+            <p class="text-slate-500 mt-2">Consulte dados da Receita Federal em tempo real</p>
+        </div>
+
+        <div class="flex flex-col md:flex-row gap-3 mb-8">
+            <input type="text" id="cnpjInput" placeholder="00.000.000/0000-00"
+                class="flex-1 p-4 border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all text-lg shadow-sm">
+            <button onclick="buscarCNPJ()" id="btnBuscar"
+                class="bg-blue-600 hover:bg-blue-700 text-white px-8 py-4 rounded-xl font-bold transition-all shadow-lg active:scale-95 flex items-center justify-center">
+                <span id="textBtn">Consultar</span>
+            </button>
+        </div>
+
+        <div id="loader" class="hidden flex flex-col items-center py-10">
+            <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mb-4"></div>
+            <p class="text-blue-600 font-medium">Acessando base de dados...</p>
+        </div>
+
+        <div id="resultado" class="hidden space-y-6 animate-fade-in">
+            <div class="flex items-center justify-between border-b pb-4">
+                <h2 class="text-xl font-bold text-slate-700">Dados da Empresa</h2>
+                <span id="statusBadge" class="px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider"></span>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="md:col-span-2">
+                    <p class="text-xs font-bold text-slate-400 uppercase mb-1">Razão Social / Nome Empresarial</p>
+                    <p id="razao" class="text-lg font-semibold text-slate-800 leading-tight">-</p>
+                </div>
+
+                <div>
+                    <p class="text-xs font-bold text-slate-400 uppercase mb-1">Nome Fantasia</p>
+                    <p id="fantasia" class="text-slate-700 font-medium">-</p>
+                </div>
+
+                <div>
+                    <p class="text-xs font-bold text-slate-400 uppercase mb-1">Capital Social</p>
+                    <p id="capital" class="text-green-600 font-bold">-</p>
+                </div>
+
+                <div class="md:col-span-2 bg-slate-50 p-4 rounded-xl border-l-4 border-blue-500">
+                    <p class="text-xs font-bold text-blue-600 uppercase mb-1">Atividade Econômica Principal</p>
+                    <p id="cnae" class="text-slate-700 text-sm font-medium">-</p>
+                </div>
+
+                <div class="md:col-span-2">
+                    <p class="text-xs font-bold text-slate-400 uppercase mb-1">Localização</p>
+                    <p id="endereco" class="text-slate-700 text-sm">-</p>
+                </div>
+            </div>
+
+            <div class="mt-6">
+                <h3 class="text-sm font-bold text-slate-800 uppercase mb-3 flex items-center">
+                    <span class="mr-2">👥</span> Quadro de Sócios e Administradores
+                </h3>
+                <div class="overflow-hidden border border-slate-200 rounded-xl">
+                    <table class="min-w-full divide-y divide-slate-200">
+                        <thead class="bg-slate-50">
+                            <tr>
+                                <th class="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase">Sócio
+                                </th>
+                                <th class="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase">Cargo
+                                </th>
+                            </tr>
+                        </thead>
+                        <tbody id="listaSocios" class="divide-y divide-slate-100 bg-white">
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        async function buscarCNPJ() {
+            // Limpa o input para pegar só os números
+            const input = document.getElementById('cnpjInput');
+            const cnpj = input.value.replace(/\D/g, '');
+
+            const resDiv = document.getElementById('resultado');
+            const loader = document.getElementById('loader');
+            const listaSocios = document.getElementById('listaSocios');
+            const statusBadge = document.getElementById('statusBadge');
+
+            if (cnpj.length !== 14) {
+                alert("Por favor, insira um CNPJ com 14 dígitos.");
+                return;
+            }
+
+            // Interface: Esconde resultados e mostra carregamento
+            resDiv.classList.add('hidden');
+            loader.classList.remove('hidden');
+            listaSocios.innerHTML = '';
+
+            try {
+                const response = await fetch(`https://brasilapi.com.br/api/cnpj/v1/${cnpj}`);
+
+                if (!response.ok) {
+                    throw new Error('Empresa não encontrada ou erro na API');
+                }
+
+                const data = await response.json();
+
+                // 1. Preenchendo textos simples
+                document.getElementById('razao').innerText = data.razao_social;
+                document.getElementById('fantasia').innerText = data.nome_fantasia || "Não informado";
+                document.getElementById('cnae').innerText = `${data.cnae_fiscal} - ${data.cnae_fiscal_descricao}`;
+
+                // 2. Endereço formatado
+                document.getElementById('endereco').innerText =
+                    `${data.descricao_tipo_de_logradouro} ${data.logradouro}, ${data.numero}. ${data.bairro} - ${data.municipio}/${data.uf}`;
+
+                // 3. Formatação de Moeda (Capital Social)
+                document.getElementById('capital').innerText = new Intl.NumberFormat('pt-BR', {
+                    style: 'currency',
+                    currency: 'BRL'
+                }).format(data.capital_social);
+
+                // 4. Status da Empresa (Cores dinâmicas)
+                statusBadge.innerText = data.descricao_situacao_cadastral;
+                if (data.situacao_cadastral === 2) { // Ativa
+                    statusBadge.className = "px-3 py-1 rounded-full text-xs font-bold uppercase bg-green-100 text-green-700";
+                } else {
+                    statusBadge.className = "px-3 py-1 rounded-full text-xs font-bold uppercase bg-red-100 text-red-700";
+                }
+
+                // 5. Mapeando a lista de Sócios (O QSA do seu print)
+                if (data.qsa && data.qsa.length > 0) {
+                    data.qsa.forEach(socio => {
+                        const row = `
+                            <tr class="hover:bg-slate-50 transition-colors">
+                                <td class="px-4 py-3 text-sm text-slate-800 font-medium">${socio.nome_socio}</td>
+                                <td class="px-4 py-3 text-sm text-slate-500">${socio.qualificacao_socio}</td>
+                            </tr>
+                        `;
+                        listaSocios.innerHTML += row;
+                    });
+                } else {
+                    listaSocios.innerHTML = '<tr><td colspan="2" class="p-4 text-center text-slate-400 italic">Sem sócios listados na base pública.</td></tr>';
+                }
+
+                // Mostra o resultado final
+                resDiv.classList.remove('hidden');
+
+            } catch (error) {
+                alert("Erro ao consultar: " + error.message);
+            } finally {
+                loader.classList.add('hidden');
+            }
+        }
+
+        // Adiciona suporte ao "Enter" no teclado
+        document.getElementById('cnpjInput').addEventListener('keypress', function (e) {
+            if (e.key === 'Enter') buscarCNPJ();
+        });
+    </script>
+</body>
+
+</html>
