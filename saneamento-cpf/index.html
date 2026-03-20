@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Filtro de CPF's</title>
+    <link rel="shortcut icon" href="../icone.ico" type="image/x-icon">
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+        }
+        
+        body {
+            background-color: #f4f7f6;
+            color: #333;
+            line-height: 1.6;
+        }
+
+        header {
+            background-color: #004085;
+            color: #fff;
+            padding: 20px 0;
+            text-align: center;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+
+        header h1 {
+            font-size: 24px;
+            font-weight: 600;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 30px auto;
+            background: #fff;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+        }
+
+        .instructions {
+            margin-bottom: 25px;
+            color: #555;
+            font-size: 15px;
+            border-left: 4px solid #0056b3;
+            padding-left: 15px;
+        }
+
+        .controls {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+            align-items: flex-end;
+            background-color: #f8f9fa;
+            padding: 20px;
+            border-radius: 6px;
+            border: 1px solid #e9ecef;
+            margin-bottom: 30px;
+        }
+
+        .control-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .control-group label {
+            font-size: 13px;
+            font-weight: bold;
+            color: #495057;
+            margin-bottom: 5px;
+        }
+
+        .control-group input[type="file"] {
+            padding: 8px 0;
+        }
+
+        .control-group input[type="number"] {
+            width: 100px;
+            padding: 10px;
+            border: 1px solid #ced4da;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+
+        button {
+            padding: 12px 20px;
+            font-size: 14px;
+            font-weight: bold;
+            color: #fff;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+
+        .btn-primary {
+            background-color: #0056b3;
+        }
+
+        .btn-primary:hover {
+            background-color: #004494;
+        }
+
+        .btn-success {
+            background-color: #28a745;
+            display: none; 
+        }
+
+        .btn-success:hover {
+            background-color: #218838;
+        }
+
+        .table-container {
+            max-height: 500px;
+            overflow-y: auto;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            text-align: left;
+            font-size: 13px;
+            white-space: nowrap;
+        }
+
+        th, td {
+            padding: 12px 15px;
+            border-bottom: 1px solid #dee2e6;
+        }
+
+        th {
+            background-color: #e9ecef;
+            position: sticky;
+            top: 0;
+            color: #495057;
+            font-weight: 600;
+            z-index: 1;
+        }
+
+        tbody tr:hover {
+            background-color: #f8f9fa;
+        }
+
+        .status {
+            margin-bottom: 15px;
+            font-weight: bold;
+            color: #0056b3;
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>Sistema de Filtragem de Leads</h1>
+    </header>
+
+    <div class="container">
+        <div class="instructions">
+            <p><strong>Como usar:</strong> Faça o upload da sua base no formato <strong>.CSV</strong>. Defina os 3 últimos dígitos do CPF que deseja buscar e clique em Filtrar.</p>
+        </div>
+
+        <div class="controls">
+            <div class="control-group">
+                <label for="csvFileInput">1. Escolha a base (.CSV)</label>
+                <input type="file" id="csvFileInput" accept=".csv" />
+            </div>
+
+            <div class="control-group">
+                <label for="minVal">Final CPF (De):</label>
+                <input type="number" id="minVal" value="100" min="0" max="999">
+            </div>
+
+            <div class="control-group">
+                <label for="maxVal">Final CPF (Até):</label>
+                <input type="number" id="maxVal" value="199" min="0" max="999">
+            </div>
+
+            <button class="btn-primary" onclick="processarCSV()">Processar Filtro</button>
+            <button class="btn-success" id="downloadBtn" onclick="baixarCSV()">📥 Baixar Lista Filtrada</button>
+        </div>
+
+        <div id="statusMensagem" class="status"></div>
+
+        <div class="table-container" id="resultadoTabela">
+            </div>
+    </div>
+
+    <script>
+        let cabecalhoGlobal = [];
+        let dadosFiltradosGlobais = [];
+
+        function processarCSV() {
+            const fileInput = document.getElementById('csvFileInput');
+            const file = fileInput.files[0];
+            const minVal = parseInt(document.getElementById('minVal').value);
+            const maxVal = parseInt(document.getElementById('maxVal').value);
+            const statusDiv = document.getElementById('statusMensagem');
+            const tableDiv = document.getElementById('resultadoTabela');
+            const downloadBtn = document.getElementById('downloadBtn');
+            
+            if (!file) { 
+                alert("Por favor, selecione um arquivo CSV primeiro!"); 
+                return; 
+            }
+
+            statusDiv.innerHTML = "Processando arquivo, aguarde...";
+            tableDiv.innerHTML = "";
+            downloadBtn.style.display = 'none';
+
+            const reader = new FileReader();
+            
+            reader.onload = function(e) {
+                let texto = e.target.result;
+                
+                // CORREÇÃO 1: Remove o caractere invisível (BOM) se o Excel tiver colocado no começo
+                if (texto.charCodeAt(0) === 0xFEFF) {
+                    texto = texto.slice(1);
+                }
+
+                const linhas = texto.split(/\r?\n/).filter(linha => linha.trim() !== '');
+                if (linhas.length === 0) {
+                    statusDiv.innerHTML = "O arquivo parece estar vazio.";
+                    return;
+                }
+
+                const delimitador = linhas[0].includes(';') ? ';' : ',';
+                
+                // CORREÇÃO 2: Limpa aspas e espaços do cabeçalho de forma mais agressiva
+                cabecalhoGlobal = linhas[0].split(delimitador).map(col => col.replace(/^"|"$/g, '').trim());
+                
+                // Procura a coluna ignorando maiúsculas/minúsculas
+                const cpfIndex = cabecalhoGlobal.findIndex(col => col.toUpperCase() === 'CPF');
+
+                if (cpfIndex === -1) {
+                    statusDiv.innerHTML = "<span style='color:red;'>Erro: A coluna 'CPF' não foi encontrada. O cabeçalho lido foi: " + cabecalhoGlobal.join(', ') + "</span>";
+                    return;
+                }
+
+                dadosFiltradosGlobais = [];
+                let htmlTabela = '<table><thead><tr>';
+                cabecalhoGlobal.forEach(col => htmlTabela += `<th>${col}</th>`);
+                htmlTabela += '</tr></thead><tbody>';
+
+                let contagem = 0;
+
+                for (let i = 1; i < linhas.length; i++) {
+                    const colunas = linhas[i].split(delimitador);
+                    if (colunas.length <= cpfIndex) continue;
+
+                    const cpfLimpo = colunas[cpfIndex].replace(/\D/g, ''); 
+                    
+                    if (cpfLimpo.length >= 3) {
+                        const finalCpf = parseInt(cpfLimpo.slice(-3));
+                        
+                        if (finalCpf >= minVal && finalCpf <= maxVal) {
+                            dadosFiltradosGlobais.push(linhas[i]);
+                            contagem++;
+                            
+                            if (contagem <= 100) {
+                                htmlTabela += '<tr>';
+                                // CORREÇÃO 3: Limpa aspas das linhas de dados para o visual ficar perfeito
+                                colunas.forEach(col => {
+                                    let valorLimpo = col.replace(/^"|"$/g, '').trim();
+                                    htmlTabela += `<td>${valorLimpo}</td>`;
+                                });
+                                htmlTabela += '</tr>';
+                            }
+                        }
+                    }
+                }
+                
+                htmlTabela += '</tbody></table>';
+                
+                if (contagem > 100) {
+                    htmlTabela += `<div style="padding: 15px; text-align: center; color: #666; font-size: 13px;">Mostrando os primeiros 100 resultados. Faça o download para ver todos os ${contagem}.</div>`;
+                }
+
+                tableDiv.innerHTML = htmlTabela;
+
+                if (dadosFiltradosGlobais.length > 0) {
+                    statusDiv.innerHTML = `✅ Sucesso! Foram encontrados ${contagem} leads no intervalo de ${minVal} a ${maxVal}.`;
+                    downloadBtn.style.display = 'inline-block';
+                } else {
+                    statusDiv.innerHTML = `Nenhum lead encontrado com final entre ${minVal} e ${maxVal}.`;
+                }
+            };
+
+            reader.readAsText(file, 'ISO-8859-1'); 
+        }
+
+        function baixarCSV() {
+            const delimitador = cabecalhoGlobal.join('').includes(';') ? ';' : ',';
+            
+            // Recria o cabeçalho original com o delimitador correto
+            const cabecalhoParaDownload = cabecalhoGlobal.join(delimitador);
+            const conteudo = [cabecalhoParaDownload, ...dadosFiltradosGlobais].join('\n');
+            
+            const blob = new Blob(["\uFEFF" + conteudo], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement("a");
+            const url = URL.createObjectURL(blob);
+            
+            link.setAttribute("href", url);
+            const min = document.getElementById('minVal').value;
+            const max = document.getElementById('maxVal').value;
+            link.setAttribute("download", `Leads_Filtrados_${min}_a_${max}.csv`);
+            
+            link.style.visibility = 'hidden';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+    </script>
+</body>
+</html>
