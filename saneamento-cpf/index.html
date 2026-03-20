@@ -193,6 +193,7 @@
     <script>
         let cabecalhoGlobal = [];
         let dadosFiltradosGlobais = [];
+        let delimitadorGlobal = ';'; // Vamos guardar o delimitador para o download também
 
         function processarCSV() {
             const fileInput = document.getElementById('csvFileInput');
@@ -217,27 +218,35 @@
             reader.onload = function(e) {
                 let texto = e.target.result;
                 
-                // CORREÇÃO 1: Remove o caractere invisível (BOM) se o Excel tiver colocado no começo
+                // 1. Remove o caractere invisível (BOM) do Excel
                 if (texto.charCodeAt(0) === 0xFEFF) {
                     texto = texto.slice(1);
                 }
 
-                const linhas = texto.split(/\r?\n/).filter(linha => linha.trim() !== '');
+                // 2. Divide as linhas
+                let linhas = texto.split(/\r?\n/).filter(linha => linha.trim() !== '');
                 if (linhas.length === 0) {
                     statusDiv.innerHTML = "O arquivo parece estar vazio.";
                     return;
                 }
 
-                const delimitador = linhas[0].includes(';') ? ';' : ',';
+                // 3. Verifica se o Excel colocou aquele "sep=;" na primeira linha e arranca ele
+                if (linhas[0].toLowerCase().replace(/"/g, '').startsWith('sep=')) {
+                    linhas.shift(); // Joga a primeira linha fora
+                }
+
+                // 4. Inteligência para descobrir o delimitador (conta quem aparece mais: ; ou ,)
+                const qtdPontoVirgula = (linhas[0].match(/;/g) || []).length;
+                const qtdVirgula = (linhas[0].match(/,/g) || []).length;
+                delimitadorGlobal = qtdPontoVirgula > qtdVirgula ? ';' : ',';
                 
-                // CORREÇÃO 2: Limpa aspas e espaços do cabeçalho de forma mais agressiva
-                cabecalhoGlobal = linhas[0].split(delimitador).map(col => col.replace(/^"|"$/g, '').trim());
+                // 5. Separa o cabeçalho usando o delimitador vencedor
+                cabecalhoGlobal = linhas[0].split(delimitadorGlobal).map(col => col.replace(/^"|"$/g, '').trim());
                 
-                // Procura a coluna ignorando maiúsculas/minúsculas
                 const cpfIndex = cabecalhoGlobal.findIndex(col => col.toUpperCase() === 'CPF');
 
                 if (cpfIndex === -1) {
-                    statusDiv.innerHTML = "<span style='color:red;'>Erro: A coluna 'CPF' não foi encontrada. O cabeçalho lido foi: " + cabecalhoGlobal.join(', ') + "</span>";
+                    statusDiv.innerHTML = "<span style='color:red;'>Erro: A coluna 'CPF' não foi encontrada. O cabeçalho lido foi: " + cabecalhoGlobal.join(' | ') + "</span>";
                     return;
                 }
 
@@ -248,8 +257,9 @@
 
                 let contagem = 0;
 
+                // 6. Processa o resto dos dados
                 for (let i = 1; i < linhas.length; i++) {
-                    const colunas = linhas[i].split(delimitador);
+                    const colunas = linhas[i].split(delimitadorGlobal);
                     if (colunas.length <= cpfIndex) continue;
 
                     const cpfLimpo = colunas[cpfIndex].replace(/\D/g, ''); 
@@ -263,7 +273,6 @@
                             
                             if (contagem <= 100) {
                                 htmlTabela += '<tr>';
-                                // CORREÇÃO 3: Limpa aspas das linhas de dados para o visual ficar perfeito
                                 colunas.forEach(col => {
                                     let valorLimpo = col.replace(/^"|"$/g, '').trim();
                                     htmlTabela += `<td>${valorLimpo}</td>`;
@@ -294,10 +303,8 @@
         }
 
         function baixarCSV() {
-            const delimitador = cabecalhoGlobal.join('').includes(';') ? ';' : ',';
-            
-            // Recria o cabeçalho original com o delimitador correto
-            const cabecalhoParaDownload = cabecalhoGlobal.join(delimitador);
+            // Usa o mesmo delimitador que o sistema descobriu na leitura
+            const cabecalhoParaDownload = cabecalhoGlobal.join(delimitadorGlobal);
             const conteudo = [cabecalhoParaDownload, ...dadosFiltradosGlobais].join('\n');
             
             const blob = new Blob(["\uFEFF" + conteudo], { type: 'text/csv;charset=utf-8;' });
