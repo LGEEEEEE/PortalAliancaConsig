@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gerador de Termo - Margem Nova SIAPE (v28)</title>
+    <title>Gerador de Termo - Margem Nova SIAPE (v29)</title>
 
     <script>
         if (localStorage.getItem('isAuthenticated') !== 'true') {
@@ -19,7 +19,7 @@
     <style>
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            zoom: 0.9;
+            /* ZOOM REMOVIDO DAQUI - Será controlado pelo JS para não quebrar o PDF */
             background-color: #f0f2f5;
             display: flex;
             flex-direction: row;
@@ -27,6 +27,7 @@
             gap: 40px;
             padding: 40px;
             margin: 0;
+            transition: zoom 0.1s ease;
         }
 
         #form-container {
@@ -140,6 +141,9 @@
             color: #000;
             font-size: 10pt;
             line-height: 1.4;
+            /* GARANTIA DE ESPAÇAMENTO */
+            word-spacing: normal;
+            letter-spacing: normal;
         }
 
         .generating-pdf #documento-completo {
@@ -218,14 +222,13 @@
             font-weight: bold;
         }
 
-        /* --- NOVO CSS DO TOAST (POP-UP NO CENTRO DA TELA) --- */
         #toast-container {
             position: fixed;
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
             z-index: 9999;
-            pointer-events: none; /* Permite clicar através dele se necessário */
+            pointer-events: none;
             display: flex;
             flex-direction: column;
             gap: 10px;
@@ -242,7 +245,7 @@
             opacity: 0;
             transform: scale(0.8);
             transition: all 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
-            border: 3px solid #28a745; /* Borda Verde Sucesso */
+            border: 3px solid #28a745;
             font-size: 1.1rem;
             line-height: 1.5;
         }
@@ -253,7 +256,7 @@
         }
 
         .toast.bg-danger {
-            border-color: #dc3545; /* Borda Vermelha Erro */
+            border-color: #dc3545;
         }
     </style>
 </head>
@@ -261,8 +264,6 @@
 <body>
 
     <div id="loading-overlay"><span>Lendo e extraindo dados do PDF...</span></div>
-
-    <div id="toast-container"></div>
 
     <div id="form-container">
         <h1>Termo Pollo <button id="btn-logout" style="cursor:pointer; background:none; border:1px solid #dadce0; border-radius:4px; padding:4px 8px;">Sair</button></h1>
@@ -359,10 +360,12 @@
     </div>
 
     <script>
+        // Restaura o zoom para o visual da tela ficar agradável ao abrir
+        document.body.style.zoom = "0.9";
+
         pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.10.377/pdf.worker.min.js';
 
         const showToast = (message, type = 'success') => {
-            // Garante que o container existe
             let toastContainer = document.getElementById('toast-container');
             if (!toastContainer) {
                 toastContainer = document.createElement('div');
@@ -381,16 +384,13 @@
 
             toastContainer.appendChild(toastEl);
             
-            // Animação de entrada
             setTimeout(() => { toastEl.classList.add('show'); }, 10);
             
-            // Animação de saída e remoção (6 segundos depois)
             setTimeout(() => {
                 toastEl.classList.remove('show');
-                setTimeout(() => toastEl.remove(), 250);
-            }, 2500); 
+                setTimeout(() => toastEl.remove(), 400);
+            }, 1000); 
         };
-
 
         document.getElementById('pdf-upload').addEventListener('change', async function (event) {
             const file = event.target.files[0];
@@ -409,8 +409,8 @@
                         text += content.items.map(item => item.str).join('\n') + '\n';
                     }
 
-                    // EXTRAÇÃO DO CABEÇALHO
-                    const cabecalhoRegex = /Órgão\s*\n\s*CPF\s*\n\s*Matrícula\s*\n\s*Nome\s*\n\s*([^\n]+)\s*\n\s*([\d.-]+)\s*\n\s*\d+\s*\n\s*([^\n]+)/i;
+                    // EXTRAÇÃO DO CABEÇALHO (Aceita barras na matrícula)
+                    const cabecalhoRegex = /Órgão\s*\n\s*CPF\s*\n\s*Matrícula\s*\n\s*Nome\s*\n\s*([^\n]+)\s*\n\s*([\d.-]+)\s*\n\s*([^\n]+)\s*\n\s*([^\n]+)/i;
                     const matchCabecalho = text.match(cabecalhoRegex);
 
                     let nome = "---", cpf = "---", orgao = "---", margem = "---";
@@ -418,7 +418,7 @@
                     if (matchCabecalho) {
                         orgao = matchCabecalho[1].trim();
                         cpf = matchCabecalho[2].trim();
-                        nome = matchCabecalho[3].trim();
+                        nome = matchCabecalho[4].trim();
 
                         document.getElementById('orgao').value = orgao;
                         document.getElementById('cpf-cliente').value = cpf;
@@ -437,7 +437,6 @@
 
                     atualizar();
 
-                    // MENSAGEM DO TOAST CENTRALIZADO
                     const mensagemToast = `
                         <h3 style="margin-top:0; margin-bottom:15px; color:#28a745;">✅ Dados Extraídos!</h3>
                         <div style="text-align:left; display:inline-block;">
@@ -458,7 +457,7 @@
                 }
                 finally { 
                     document.getElementById('loading-overlay').style.display = 'none'; 
-                    event.target.value = ''; // Limpa o input file para poder upar o mesmo arquivo de novo se precisar
+                    event.target.value = ''; 
                 }
             };
             fileReader.readAsArrayBuffer(file);
@@ -495,13 +494,21 @@
         document.getElementById('gerar-pdf').addEventListener('click', () => {
             const doc = document.getElementById('documento-completo');
             window.scrollTo(0, 0);
+            
+            // DESLIGA O ZOOM TEMPORARIAMENTE PARA A FOTO SAIR PERFEITA
+            document.body.style.zoom = "1";
             document.body.classList.add('generating-pdf');
+            
             html2pdf().from(doc).set({
                 margin: [15, 15, 15, 15],
                 filename: `Termo_Margem_${document.getElementById('nome-cliente').value || 'Cliente'}.pdf`,
                 html2canvas: { scale: 2, useCORS: true, scrollY: 0 },
                 jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
-            }).save().then(() => document.body.classList.remove('generating-pdf'));
+            }).save().then(() => {
+                document.body.classList.remove('generating-pdf');
+                // LIGA O ZOOM DE NOVO
+                document.body.style.zoom = "0.9";
+            });
         });
 
         const d = new Date();
