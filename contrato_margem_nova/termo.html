@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gerador de Termo - Margem Nova SIAPE (v25)</title>
+
+    <script>
+        // GUARDA DE AUTENTICAÇÃO
+        if (localStorage.getItem('isAuthenticated') !== 'true') {
+            alert("Acesso negado. Por favor, faça o login.");
+            window.location.replace('index.html');
+        }
+    </script>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+
+    <style>
+        /* --- ESTILOS DE INTERFACE --- */
+        body { 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+            background-color: #f0f2f5; 
+            display: flex; 
+            flex-direction: row;
+            justify-content: center; 
+            gap: 40px; 
+            padding: 40px; 
+            margin: 0;
+        }
+
+        #form-container { 
+            flex: 0 0 420px; 
+            background: #ffffff; 
+            padding: 30px; 
+            border-radius: 12px; 
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1); 
+            height: fit-content;
+            position: sticky;
+            top: 40px;
+        }
+
+        h1 { font-size: 1.4rem; margin-bottom: 25px; display: flex; justify-content: space-between; align-items: center; color: #1a73e8; }
+        
+        .form-section { margin-bottom: 25px; }
+        .form-section h2 { font-size: 1rem; color: #5f6368; border-bottom: 2px solid #e8eaed; padding-bottom: 8px; margin-bottom: 15px; }
+        
+        .form-group { margin-bottom: 15px; }
+        .form-group label { display: block; margin-bottom: 6px; font-weight: 600; font-size: 0.85rem; color: #3c4043; }
+        .form-group input { width: 100%; padding: 10px; border: 1px solid #dadce0; border-radius: 6px; box-sizing: border-box; transition: border 0.2s; }
+        .form-group input:focus { border-color: #1a73e8; outline: none; }
+
+        #gerar-pdf { width: 100%; padding: 14px; background: #1a73e8; color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 1rem; }
+        #gerar-pdf:hover { background: #1557b0; }
+
+        /* --- ESTILOS DO DOCUMENTO (O PREVIEW) --- */
+        #preview-container { 
+            flex: 1; 
+            display: flex; 
+            justify-content: center;
+        }
+
+        #documento-completo { 
+            width: 210mm; /* Largura padrão A4 */
+            min-height: 297mm; /* Altura padrão A4 */
+            padding: 15mm 20mm; /* Margens visuais na tela */
+            background: #ffffff; 
+            box-shadow: 0 0 15px rgba(0,0,0,0.2); 
+            box-sizing: border-box;
+            font-family: Arial, sans-serif; 
+            color: #000; 
+            font-size: 10pt; 
+            line-height: 1.4;
+        }
+
+        /* FIX: Ajustes rigorosos para o PDF centralizar perfeitamente */
+        .generating-pdf #documento-completo {
+            width: 100% !important; /* Usa 100% da área útil definida pela margem do jsPDF */
+            max-width: none !important;
+            padding: 0 3mm !important; /* Respiro milimétrico pra evitar o corte na margem direita */
+            margin: 0 !important;
+            box-shadow: none !important;
+            min-height: auto !important;
+        }
+
+        .titulo { text-align: center; font-size: 12pt; font-weight: bold; margin-top: 0; margin-bottom: 20px; text-decoration: underline; }
+        
+        .bloco-dados { margin-bottom: 15px; border: 1.5px solid #000; }
+        .bloco-titulo { text-align: center; font-weight: bold; background: #f2f2f2; padding: 4px; border-bottom: 1.5px solid #000; margin: 0; }
+        .dado-linha { margin: 0; padding: 4px 8px; border-bottom: 1px solid #eee; }
+        
+        .clausula { font-weight: bold; text-transform: uppercase; margin-top: 20px; display: block; }
+        
+        #documento-completo p { text-align: justify; margin-bottom: 10px; margin-top: 0; }
+        
+        .destaque-valor { background-color: #f8f9fa; padding: 10px 15px; border-left: 5px solid #1a73e8; margin: 15px 0; }
+        
+        .variavel { font-weight: bold; color: #0d47a1; }
+        .generating-pdf .variavel { color: #000; }
+
+        .assinatura-bloco { margin-top: 40px; display: flex; justify-content: space-between; }
+        .assinatura-linha { border-top: 1px solid #000; width: 45%; text-align: center; padding-top: 5px; font-weight: bold; font-size: 9pt; }
+
+        @media (max-width: 1100px) {
+            body { flex-direction: column; align-items: center; }
+            #form-container { width: 100%; position: static; }
+        }
+    </style>
+</head>
+
+<body>
+
+    <div id="form-container">
+        <h1>Termo Pollo <button id="btn-logout" style="cursor:pointer; background:none; border:1px solid #dadce0; border-radius:4px; padding:4px 8px;">Sair</button></h1>
+
+        <div class="form-section">
+            <h2>Dados do Cliente</h2>
+            <div class="form-group"><label>Nome:</label><input type="text" id="nome-cliente" placeholder="Nome Completo"></div>
+            <div class="form-group"><label>CPF:</label><input type="text" id="cpf-cliente" placeholder="000.000.000-00"></div>
+            <div class="form-group"><label>Órgão:</label><input type="text" id="orgao" placeholder="Ex: SIAPE / Ministério..."></div>
+        </div>
+
+        <div class="form-section">
+            <h2>Detalhes da Margem Nova</h2>
+            <div class="form-group"><label>Banco:</label><input type="text" id="banco" value="BRADESCO S.A"></div>
+            <div class="form-group"><label>Parcela Mensal:</label><input type="text" id="parcela" class="moeda-input"></div>
+            <div class="form-group"><label>Valor Líquido (Recebido):</label><input type="text" id="liquido" class="moeda-input"></div>
+            
+            <div class="form-group">
+                <label style="color: #d93025;">Valor de Repasse (Consultoria):</label>
+                <input type="text" id="repasse" class="moeda-input" placeholder="Valor facultativo">
+            </div>
+
+            <div class="form-group"><label>Prazo:</label><input type="text" id="prazo" value="96x"></div>
+        </div>
+
+        <button id="gerar-pdf">Gerar PDF</button>
+    </div>
+
+    <div id="preview-container">
+        <div id="documento-completo">
+            <div class="titulo">TERMO DE CIÊNCIA E RESPONSABILIDADE OPERACIONAL</div>
+
+            <div class="bloco-dados">
+                <h3 class="bloco-titulo">QUALIFICAÇÃO DO PROPONENTE</h3>
+                <p class="dado-linha">NOME: <span id="doc-nome-cliente" class="variavel">---</span></p>
+                <p class="dado-linha">CPF: <span id="doc-cpf-cliente" class="variavel">---</span></p>
+                <p class="dado-linha" style="border:none;">ÓRGÃO: <span id="doc-orgao" class="variavel">---</span></p>
+            </div>
+
+            <div class="bloco-dados">
+                <h3 class="bloco-titulo">INTERMEDIADOR (CREDORA)</h3>
+                <p class="dado-linha">RAZÃO SOCIAL: <strong>POLLO PROMOTORA LTDA</strong></p>
+                <p class="dado-linha" style="border:none;">CNPJ: <strong>44.906.703/0001-59</strong></p>
+            </div>
+
+            <span class="clausula">CLÁUSULA PRIMEIRA - DA OPERAÇÃO DE MARGEM</span>
+            <p>1.1 - O proponente acima qualificado declara estar ciente da contratação de empréstimo consignado na modalidade <strong>MARGEM NOVA</strong> junto ao banco <span id="doc-banco" class="variavel">---</span>.</p>
+            
+            <div class="destaque-valor">
+                <strong>Resumo Financeiro:</strong><br>
+                • Parcela Mensal: <span id="doc-parcela" class="variavel">---</span><br>
+                • Prazo Total: <span id="doc-prazo" class="variavel">---</span><br>
+                • <strong>VALOR LÍQUIDO A RECEBER: <span id="doc-liquido" class="variavel">---</span></strong>
+            </div>
+
+            <span class="clausula">CLÁUSULA SEGUNDA - DA CONSULTORIA E REPASSE</span>
+            
+            <p>2.1 - Tendo em vista o baixo comissionamento bancário pago à correspondente nesta operação específica (cerca de 0,5%), o proponente concorda em realizar o repasse do valor de <span id="doc-repasse" class="variavel" style="text-decoration: underline;">---</span> em favor da <strong>POLLO PROMOTORA</strong>, a título de assessoria, estruturação e suporte operacional, após a liberação do crédito em sua conta bancária.</p>
+            
+            <p style="font-size: 9.5pt; font-style: italic;"><strong>Nota de Transparência:</strong> O proponente reconhece que este repasse tem natureza de consultoria técnica facultativa, visando a viabilidade operacional do atendimento prestado, não caracterizando condição obrigatória imposta pela instituição financeira para a concessão do crédito.</p>
+
+            <span class="clausula">CLÁUSULA TERCEIRA - DADOS PARA TRANSFERÊNCIA</span>
+            <p>3.1 - O valor mencionado na cláusula anterior deverá ser encaminhado via PIX para os dados abaixo:</p>
+            <div style="margin-left: 20px; font-weight: bold;">
+                CHAVE PIX: vinicius@estilopromotora.com.br<br>
+                FAVORECIDO: POLLO PROMOTORA
+            </div>
+
+            <p style="text-align: center; margin-top: 40px; font-weight: bold;">
+                Brasília/DF, <span id="doc-data">---</span>
+            </p>
+
+            <div class="assinatura-bloco">
+                <div class="assinatura-linha"><span id="doc-nome-ass">---</span><br>CLIENTE</div>
+                <div class="assinatura-linha">POLLO PROMOTORA LTDA<br>ASSESSORIA</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Formatação de Moeda
+        function mascaraMoeda(event) {
+            let v = event.target.value.replace(/\D/g, "");
+            v = (v / 100).toLocaleString("pt-BR", { minimumFractionDigits: 2 });
+            event.target.value = "R$ " + v;
+            atualizar();
+        }
+
+        function atualizar() {
+            const ids = ['nome-cliente', 'cpf-cliente', 'orgao', 'banco', 'parcela', 'liquido', 'repasse', 'prazo'];
+            ids.forEach(id => {
+                const val = document.getElementById(id).value || "---";
+                document.getElementById('doc-' + id).textContent = val;
+                if(id === 'nome-cliente') document.getElementById('doc-nome-ass').textContent = val;
+            });
+        }
+
+        // Listeners
+        document.querySelectorAll('input').forEach(input => {
+            input.addEventListener('input', atualizar);
+            if(input.classList.contains('moeda-input')) {
+                input.addEventListener('blur', mascaraMoeda);
+            }
+        });
+
+        // Gerar PDF (Com Correção de Centralização Absoluta)
+        document.getElementById('gerar-pdf').addEventListener('click', () => {
+            const doc = document.getElementById('documento-completo');
+            
+            // Sobe a tela pro topo pra evitar bug de recorte de margem top
+            window.scrollTo(0, 0);
+            
+            document.body.classList.add('generating-pdf');
+
+            const opt = {
+                margin: [15, 15, 15, 15], // 15mm de margem simétrica no papel A4
+                filename: `Termo_Margem_${document.getElementById('nome-cliente').value || 'Cliente'}.pdf`,
+                image: { type: 'jpeg', quality: 0.98 },
+                html2canvas: { 
+                    scale: 2, 
+                    useCORS: true,
+                    scrollY: 0
+                }, 
+                jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+            };
+
+            html2pdf().from(doc).set(opt).save().then(() => {
+                document.body.classList.remove('generating-pdf');
+            });
+        });
+
+        // Data de hoje (Brasília)
+        const d = new Date();
+        document.getElementById('doc-data').textContent = `${d.getDate()} de ${["janeiro", "fevereiro", "março", "abril", "maio", "junho", "julho", "agosto", "setembro", "outubro", "novembro", "dezembro"][d.getMonth()]} de ${d.getFullYear()}`;
+        
+        document.getElementById('btn-logout').onclick = () => { localStorage.removeItem('isAuthenticated'); window.location.reload(); };
+    </script>
+</body>
+</html>

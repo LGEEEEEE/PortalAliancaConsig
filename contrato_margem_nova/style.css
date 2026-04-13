@@ -1,0 +1,129 @@
+/* --- Importando uma fonte mais moderna --- */
+@import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap');
+
+/* --- Estilos Gerais --- */
+body {
+    font-family: 'Roboto', sans-serif;
+    background-color: #f0f2f5;
+    color: #333;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    margin: 0;
+    padding: 20px;
+    box-sizing: border-box;
+}
+
+/* --- Container Principal --- */
+.container {
+    background-color: #ffffff;
+    padding: 40px;
+    border-radius: 12px;
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.1);
+    width: 100%;
+    max-width: 500px;
+    text-align: center;
+    border-top: 5px solid #007bff;
+}
+
+h1, h2, h3 { color: #0056b3; font-weight: 700; }
+h1 { margin-top: 0; margin-bottom: 30px; }
+h2 { margin-top: 0; }
+
+/* --- Estilos do Formulário --- */
+.form-group { margin-bottom: 20px; text-align: left; }
+label { display: block; margin-bottom: 8px; font-weight: 500; color: #555; }
+input, select, textarea {
+    width: 100%;
+    padding: 12px 15px;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    box-sizing: border-box;
+    font-size: 1rem;
+    font-family: 'Roboto', sans-serif;
+    transition: border-color 0.3s ease, box-shadow 0.3s ease;
+}
+input:focus, select:focus, textarea:focus {
+    outline: none;
+    border-color: #007bff;
+    box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.2);
+}
+input[type="file"] {
+    border-style: dashed;
+    padding: 20px;
+    background-color: #fafafa;
+    cursor: pointer;
+}
+input[type="file"]:hover { background-color: #f5f5f5; border-color: #007bff; }
+
+/* --- Botões --- */
+button { border: none; border-radius: 8px; padding: 12px 20px; font-size: 1rem; font-weight: 500; cursor: pointer; transition: all 0.2s ease; }
+.btn-principal { background-color: #28a745; color: white; width: 100%; }
+.btn-principal:hover { background-color: #218838; }
+.btn-secundario { background-color: #6c757d; color: white; width: 100%; margin-top: 20px; }
+.btn-secundario:hover { background-color: #5a6268; }
+.btn-terciario { background-color: #f8f9fa; color: #333; border: 1px solid #ccc; }
+.btn-terciario:hover { background-color: #e2e6ea; }
+
+/* --- ÁREA DE RESULTADO --- */
+pre#resultado {
+    background-color: #f8f9fa; border: 1px solid #e9ecef; border-left: 5px solid #28a745; border-radius: 8px;
+    padding: 20px; margin-top: 30px; text-align: left; font-family: 'Courier New', Courier, monospace;
+    font-size: 1rem; line-height: 1.6; white-space: pre-wrap; color: #343a40; display: none;
+}
+
+/* --- ESTILOS DO MODAL DE GERENCIAMENTO --- */
+.hidden { display: none !important; }
+
+.modal-backdrop {
+    position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.6);
+    display: flex; justify-content: center; align-items: center; z-index: 1000;
+}
+.modal-content {
+    background: white; padding: 30px; border-radius: 12px; width: 90%; max-width: 600px;
+    position: relative; max-height: 90vh; overflow-y: auto;
+}
+.modal-close-btn {
+    position: absolute; top: 10px; right: 15px; background: none; border: none;
+    font-size: 2rem; cursor: pointer; color: #888;
+}
+.modal-close-btn:hover { color: #333; }
+
+.lista-gerenciamento .item { display: flex; justify-content: space-between; align-items: center; padding: 15px; border-bottom: 1px solid #eee; }
+.lista-gerenciamento .item-info { flex-grow: 1; }
+.lista-gerenciamento .item-info strong { font-size: 1.1rem; }
+.lista-gerenciamento .item-info span { font-size: 0.9rem; color: #666; display: block; }
+.lista-gerenciamento .item-actions button { margin-left: 10px; }
+
+.form-gerenciamento { margin-top: 20px; }
+hr { border: 0; border-top: 1px solid #eee; margin: 20px 0; }
+
+/* --- NOVOS ESTILOS PARA METAS DINÂMICAS --- */
+#metas-container { display: flex; flex-direction: column; gap: 10px; margin-bottom: 15px; }
+.meta-row { display: flex; align-items: center; gap: 10px; }
+.meta-row input { flex-grow: 1; }
+.btn-remover-meta {
+    background-color: #dc3545; color: white; border: none; width: 30px; height: 30px;
+    border-radius: 50%; cursor: pointer; font-weight: bold; font-size: 1.2rem;
+    display: flex; align-items: center; justify-content: center; padding-bottom: 3px;
+}
+.btn-remover-meta:hover { background-color: #c82333; }
+.btn-adicionar {
+    background: none; border: 1px dashed #007bff; color: #007bff;
+    width: 100%; padding: 10px; font-weight: bold;
+}
+.btn-adicionar:hover { background-color: rgba(0, 123, 255, 0.05); }
+
+
+/* --- Media Query para Telas Pequenas --- */
+@media (max-width: 540px) {
+    .container, .modal-content { padding: 25px; }
+    h1 { font-size: 1.5rem; }
+    .lista-gerenciamento .item { flex-direction: column; align-items: flex-start; }
+    .lista-gerenciamento .item-actions { margin-top: 10px; }
+}
+img{
+    max-width: 150px;
+}
+
