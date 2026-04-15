@@ -1,14 +1,16 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Processador Lemit - ETL</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
     <style>
         :root {
-            --primary-color: #0f52ba; /* Azul corporativo */
+            --primary-color: #0f52ba;
             --primary-hover: #0b3d8c;
             --bg-color: #f0f4f8;
             --card-bg: #ffffff;
@@ -17,28 +19,28 @@
             --border-color: #e1e8ed;
         }
 
-        body { 
-            font-family: 'Inter', sans-serif; 
-            padding: 40px 20px; 
-            background-color: var(--bg-color); 
+        body {
+            font-family: 'Inter', sans-serif;
+            padding: 40px 20px;
+            background-color: var(--bg-color);
             display: flex;
             justify-content: center;
             margin: 0;
         }
 
-        .container { 
+        .container {
             width: 100%;
-            max-width: 500px; 
-            background: var(--card-bg); 
-            padding: 40px; 
-            border-radius: 12px; 
-            box-shadow: 0 10px 25px rgba(0,0,0,0.05); 
+            max-width: 500px;
+            background: var(--card-bg);
+            padding: 40px;
+            border-radius: 12px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.05);
             text-align: center;
         }
 
-        h2 { 
-            color: var(--primary-color); 
-            margin-top: 0; 
+        h2 {
+            color: var(--primary-color);
+            margin-top: 0;
             font-size: 24px;
             margin-bottom: 8px;
         }
@@ -49,7 +51,6 @@
             margin-bottom: 30px;
         }
 
-        /* Estilo da área de upload */
         .file-drop-area {
             border: 2px dashed var(--border-color);
             border-radius: 8px;
@@ -78,25 +79,25 @@
             font-size: 15px;
         }
 
-        input[type="file"] { 
-            display: none; /* Esconde o input original feio */
+        input[type="file"] {
+            display: none;
         }
 
-        .btn-process { 
-            background-color: var(--primary-color); 
-            color: white; 
-            border: none; 
-            padding: 14px 24px; 
+        .btn-process {
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 14px 24px;
             width: 100%;
-            cursor: pointer; 
-            border-radius: 8px; 
-            font-weight: 600; 
+            cursor: pointer;
+            border-radius: 8px;
+            font-weight: 600;
             font-size: 16px;
-            transition: background 0.3s; 
+            transition: background 0.3s;
         }
 
-        .btn-process:hover { 
-            background-color: var(--primary-hover); 
+        .btn-process:hover {
+            background-color: var(--primary-hover);
         }
 
         .btn-process:disabled {
@@ -104,170 +105,290 @@
             cursor: not-allowed;
         }
 
-        #status { 
-            margin-top: 25px; 
-            font-size: 14px; 
+        #status {
+            margin-top: 25px;
+            font-size: 14px;
             text-align: left;
             background: #f8f9fa;
             padding: 15px;
             border-radius: 6px;
             display: none;
             border: 1px solid var(--border-color);
+            word-wrap: break-word;
         }
 
-        .success { color: #10b981; font-weight: 600; margin-bottom: 5px; display: block;}
-        .error { color: #ef4444; font-weight: 600; margin-bottom: 5px; display: block;}
-        .loading { color: var(--text-muted); margin-bottom: 5px; display: block;}
+        .success {
+            color: #10b981;
+            font-weight: 600;
+            margin-bottom: 5px;
+            display: block;
+        }
+
+        .error {
+            color: #ef4444;
+            font-weight: 600;
+            margin-bottom: 5px;
+            display: block;
+        }
+
+        .warning {
+            color: #f59e0b;
+            font-weight: 600;
+            margin-bottom: 5px;
+            display: block;
+            font-size: 12px;
+        }
+
+        .loading {
+            color: var(--text-muted);
+            margin-bottom: 5px;
+            display: block;
+        }
     </style>
 </head>
+
 <body>
 
-<div class="container">
-    <h2>🛡️ Aliança Consig ETL</h2>
-    <p>Converta os relatórios do Lemit para o layout padrão.</p>
-    
-    <label for="csvFileInput" class="file-drop-area" id="dropArea">
-        <span class="icon">📄</span>
-        <span class="file-msg" id="fileMsg">Clique aqui para selecionar os CSVs</span>
-    </label>
-    <input type="file" id="csvFileInput" accept=".csv" multiple>
+    <div class="container">
+        <h2>🛡️ Aliança Consig ETL</h2>
+        <p>Converta os relatórios Lemit para o layout padrão.</p>
 
-    <button class="btn-process" id="btnProcess" onclick="processarArquivos()" disabled>Processar e Baixar</button>
+        <label for="fileInput" class="file-drop-area" id="dropArea">
+            <span class="icon">📄</span>
+            <span class="file-msg" id="fileMsg">Clique para selecionar CSV ou XLSX</span>
+        </label>
+        <input type="file" id="fileInput" accept=".csv, .xlsx, .xls" multiple>
 
-    <div id="status"></div>
-</div>
+        <button class="btn-process" id="btnProcess" onclick="processarArquivos()" disabled>Processar e Baixar
+            CSV</button>
 
-<script>
-    // --- LÓGICA DE INTERFACE ---
-    const fileInput = document.getElementById('csvFileInput');
-    const fileMsg = document.getElementById('fileMsg');
-    const btnProcess = document.getElementById('btnProcess');
-    const statusDiv = document.getElementById('status');
+        <div id="status"></div>
+    </div>
 
-    // Atualiza o texto quando escolhe arquivos e libera o botão
-    fileInput.addEventListener('change', () => {
-        if (fileInput.files.length > 0) {
-            fileMsg.textContent = `${fileInput.files.length} arquivo(s) selecionado(s)`;
-            fileMsg.style.color = 'var(--primary-color)';
-            btnProcess.disabled = false;
-        } else {
-            fileMsg.textContent = 'Clique aqui para selecionar os CSVs';
-            fileMsg.style.color = 'var(--text-main)';
-            btnProcess.disabled = true;
-        }
-    });
+    <script>
+        const fileInput = document.getElementById('fileInput');
+        const fileMsg = document.getElementById('fileMsg');
+        const btnProcess = document.getElementById('btnProcess');
+        const statusDiv = document.getElementById('status');
 
-    // --- LÓGICA DE PROCESSAMENTO (A MESMA QUE FUNCIONOU PERFEITAMENTE) ---
-    function formatarNumero(ddd, telefone) {
-        if (ddd !== undefined && telefone !== undefined && ddd !== null && telefone !== null) {
-            let dStr = String(ddd).trim();
-            let fStr = String(telefone).trim();
-            
-            if (dStr !== '' && fStr !== '') {
-                let dddLimpo = parseInt(parseFloat(dStr));
-                let foneLimpo = parseInt(parseFloat(fStr));
-                if (!isNaN(dddLimpo) && !isNaN(foneLimpo)) {
-                    return `${dddLimpo}${foneLimpo}`;
-                }
+        fileInput.addEventListener('change', () => {
+            if (fileInput.files.length > 0) {
+                fileMsg.textContent = `${fileInput.files.length} arquivo(s) selecionado(s)`;
+                fileMsg.style.color = 'var(--primary-color)';
+                btnProcess.disabled = false;
+            } else {
+                fileMsg.textContent = 'Clique para selecionar CSV ou XLSX';
+                fileMsg.style.color = 'var(--text-main)';
+                btnProcess.disabled = true;
             }
+        });
+
+        // --- Formatador de Telefones ---
+        function formatarNumero(ddd, telefone) {
+            let dStr = ddd ? String(ddd).trim() : '';
+            let fStr = telefone ? String(telefone).trim() : '';
+
+            let limpoDdd = dStr.replace(/\D/g, '');
+            let limpoFone = fStr.replace(/\D/g, '');
+
+            if (limpoDdd && limpoFone) {
+                return `${limpoDdd}${limpoFone}`;
+            }
+
+            // SALVA-VIDAS: Se não achou a coluna de DDD, retorna pelo menos o telefone puro
+            if (!limpoDdd && limpoFone) {
+                return limpoFone;
+            }
+
+            return '';
         }
-        return '';
-    }
 
-    function processarArquivos() {
-        const files = fileInput.files;
-        if (files.length === 0) return;
+        function processarArquivos() {
+            const files = fileInput.files;
+            if (files.length === 0) return;
 
-        statusDiv.style.display = 'block';
-        statusDiv.innerHTML = `<span class="loading">⏳ Processando ${files.length} arquivo(s)...</span>`;
+            statusDiv.style.display = 'block';
+            statusDiv.innerHTML = `<span class="loading">⏳ Processando ${files.length} arquivo(s)...</span>`;
 
-        Array.from(files).forEach(file => {
-            Papa.parse(file, {
-                delimiter: ";", 
-                header: false,  
-                skipEmptyLines: true,
-                complete: function(results) {
-                    let data = results.data;
-                    if (data.length < 2) {
-                        statusDiv.innerHTML += `<span class="error">✖ Erro: Arquivo ${file.name} está vazio.</span>`;
-                        return;
-                    }
+            Array.from(files).forEach(file => {
+                const reader = new FileReader();
 
-                    let originalHeaders = data[0];
-                    let headerCounts = {};
-                    let mappedHeaders = [];
+                reader.onload = function (e) {
+                    const buffer = e.target.result;
+                    const view = new Uint8Array(buffer);
 
-                    originalHeaders.forEach(h => {
-                        let cleanH = h.trim();
-                        if (cleanH === "") {
-                            mappedHeaders.push(cleanH);
-                        } else if (headerCounts[cleanH] === undefined) {
-                            headerCounts[cleanH] = 0;
-                            mappedHeaders.push(cleanH);
-                        } else {
-                            headerCounts[cleanH]++;
-                            mappedHeaders.push(`${cleanH}.${headerCounts[cleanH]}`);
+                    const isRealExcel = (view[0] === 0x50 && view[1] === 0x4B) ||
+                        (view[0] === 0xD0 && view[1] === 0xCF);
+
+                    if (isRealExcel) {
+                        try {
+                            const workbook = XLSX.read(buffer, { type: 'array' });
+                            const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
+                            const jsonData = XLSX.utils.sheet_to_json(firstSheet, { header: 1, blankrows: false, defval: "" });
+                            aplicarLogicaETL(jsonData, file.name);
+                        } catch (err) {
+                            statusDiv.innerHTML += `<span class="error">✖ Erro ao ler Excel ${file.name}: ${err.message}</span>`;
                         }
-                    });
-
-                    let idxNome = mappedHeaders.indexOf('NOME');
-                    let idxCpf = mappedHeaders.indexOf('CPF/CNPJ');
-                    let idxUf = mappedHeaders.indexOf('UF');
-                    let idxDdd3 = mappedHeaders.indexOf('DDD.3');
-                    let idxFone3 = mappedHeaders.indexOf('FONE.3');
-                    let idxDdd4 = mappedHeaders.indexOf('DDD.4');
-                    let idxFone4 = mappedHeaders.indexOf('FONE.4');
-                    let idxDdd5 = mappedHeaders.indexOf('DDD.5');
-                    let idxFone5 = mappedHeaders.indexOf('FONE.5');
-                    let idxDdd6 = mappedHeaders.indexOf('DDD.6');
-                    let idxFone6 = mappedHeaders.indexOf('FONE.6');
-
-                    let newData = [];
-
-                    for (let i = 1; i < data.length; i++) {
-                        let row = data[i];
-                        const getVal = (idx) => (idx !== -1 && row[idx] !== undefined) ? row[idx] : '';
-
-                        newData.push({
-                            'nome': getVal(idxNome),
-                            'cpf': getVal(idxCpf),
-                            'uf': getVal(idxUf),
-                            'fone 1': formatarNumero(getVal(idxDdd3), getVal(idxFone3)),
-                            'fone 2': formatarNumero(getVal(idxDdd4), getVal(idxFone4)),
-                            'fone 3': formatarNumero(getVal(idxDdd5), getVal(idxFone5)),
-                            'fone 4': formatarNumero(getVal(idxDdd6), getVal(idxFone6))
+                    } else {
+                        Papa.parse(file, {
+                            header: false,
+                            skipEmptyLines: true,
+                            complete: function (results) {
+                                aplicarLogicaETL(results.data, file.name);
+                            },
+                            error: function (err) {
+                                statusDiv.innerHTML += `<span class="error">✖ Erro ao ler CSV ${file.name}: ${err}</span>`;
+                            }
                         });
                     }
+                };
 
-                    const csvOutput = Papa.unparse(newData, { delimiter: ";" });
-                    const blob = new Blob(["\uFEFF" + csvOutput], { type: 'text/csv;charset=utf-8;' });
-                    
-                    const link = document.createElement("a");
-                    const url = URL.createObjectURL(blob);
-                    link.setAttribute("href", url);
-                    
-                    // Adiciona "-formatado" no nome do arquivo novo para não confundir com o original
-                    let nomeFinal = file.name.replace('.csv', ' - formatado.csv');
-                    link.setAttribute("download", nomeFinal); 
-                    
-                    link.style.visibility = 'hidden';
-                    document.body.appendChild(link);
-                    link.click();
-                    document.body.removeChild(link);
+                reader.onerror = function () {
+                    statusDiv.innerHTML += `<span class="error">✖ Falha ao ler o arquivo ${file.name}.</span>`;
+                };
 
-                    // Remove o aviso de "Processando" e mostra o sucesso
-                    let loadingMsg = statusDiv.querySelector('.loading');
-                    if(loadingMsg) loadingMsg.remove();
-                    
-                    statusDiv.innerHTML += `<span class="success">✔ ${file.name} formatado!</span>`;
-                },
-                error: function(err) {
-                    statusDiv.innerHTML += `<span class="error">✖ Erro no arquivo ${file.name}: ${err}</span>`;
+                reader.readAsArrayBuffer(file);
+            });
+        }
+
+        function aplicarLogicaETL(data, originalName) {
+            if (data.length < 2) {
+                statusDiv.innerHTML += `<span class="error">✖ Erro: Arquivo ${originalName} está vazio.</span>`;
+                return;
+            }
+
+            let originalHeaders = data[0];
+            let headerCounts = {};
+            let mappedHeaders = [];
+
+            originalHeaders.forEach(h => {
+                let cleanH = h ? String(h).trim().toUpperCase() : "";
+                if (cleanH === "") {
+                    mappedHeaders.push(cleanH);
+                } else if (headerCounts[cleanH] === undefined) {
+                    headerCounts[cleanH] = 0;
+                    mappedHeaders.push(cleanH);
+                } else {
+                    headerCounts[cleanH]++;
+                    mappedHeaders.push(`${cleanH}.${headerCounts[cleanH]}`);
                 }
             });
-        });
-    }
-</script>
+
+            const findCol = (possibilidades) => {
+                for (let p of possibilidades) {
+                    let idx = mappedHeaders.indexOf(p);
+                    if (idx !== -1) return idx;
+                }
+                return -1;
+            };
+
+            let idxNome = findCol(['NOME', 'NOME_CLIENTE', 'CLIENTE']);
+            let idxCpf = findCol(['CPF/CNPJ', 'CPF', 'CNPJ', 'CPF_CNPJ']);
+            let idxUf = findCol(['UF', 'ESTADO']);
+
+            if (idxNome === -1) {
+                statusDiv.innerHTML += `
+                <span class="error">✖ Colunas não reconhecidas no arquivo ${originalName}!</span>
+                <span class="warning">Colunas encontradas na primeira linha: <br>${mappedHeaders.join(', ')}</span>
+            `;
+                let loadingMsg = statusDiv.querySelector('.loading');
+                if (loadingMsg) loadingMsg.remove();
+                return;
+            }
+
+            // 🔥 LISTA VIP ATUALIZADA - HOTFONES NUMERADOS NO TOPO!
+            const prioridadeTelefones = [
+                // 1. Prioridade Máxima: Hotfones
+                'HOTFONE', 'HOT FONE', 'HOT_FONE',
+                'HOTFONE1', 'HOTFONE 1', 'HOTFONE_1', 'HOT_FONE_1',
+                'HOTFONE2', 'HOTFONE 2', 'HOTFONE_2', 'HOT_FONE_2',
+                'HOTFONE3', 'HOTFONE 3', 'HOTFONE_3', 'HOT_FONE_3',
+                'HOTFONE4', 'HOTFONE 4', 'HOTFONE_4', 'HOT_FONE_4',
+
+                // 2. Manuais
+                'TELEFONE_MANUAL_1', 'TELEFONE MANUAL 1', 'TEL_MANUAL_1',
+                'TELEFONE_MANUAL_2', 'TELEFONE MANUAL 2', 'TEL_MANUAL_2',
+                'TELEFONE_MANUAL_3', 'TELEFONE MANUAL 3', 'TEL_MANUAL_3',
+                'TELEFONE_MANUAL_4', 'TELEFONE MANUAL 4', 'TEL_MANUAL_4',
+
+                // 3. Móveis / Celulares
+                'TELEFONE_MOVEL_1', 'TELEFONE MOVEL 1', 'CELULAR_1', 'CELULAR 1',
+                'TELEFONE_MOVEL_2', 'TELEFONE MOVEL 2', 'CELULAR_2', 'CELULAR 2',
+                'TELEFONE_MOVEL_3', 'TELEFONE MOVEL 3', 'CELULAR_3', 'CELULAR 3',
+                'TELEFONE_MOVEL_4', 'TELEFONE MOVEL 4', 'CELULAR_4', 'CELULAR 4',
+
+                // 4. Fixos
+                'TELEFONE_FIXO_1', 'TELEFONE FIXO 1',
+                'TELEFONE_FIXO_2', 'TELEFONE FIXO 2',
+
+                // 5. Genéricos
+                'FONE.1', 'FONE.2', 'FONE.3', 'FONE.4', 'FONE.5', 'FONE.6',
+                'FONE 1', 'FONE 2', 'FONE 3', 'FONE 4', 'FONE 5', 'FONE 6'
+            ];
+
+            let newData = [];
+
+            for (let i = 1; i < data.length; i++) {
+                let row = data[i];
+                const getVal = (idx) => (idx !== -1 && row[idx] !== undefined) ? row[idx] : '';
+
+                let telefonesDaLinha = [];
+
+                for (let colName of prioridadeTelefones) {
+                    let idxFone = mappedHeaders.indexOf(colName);
+
+                    if (idxFone !== -1) {
+                        let fStr = getVal(idxFone);
+                        if (!fStr || String(fStr).trim() === '') continue;
+
+                        let dStr = '';
+                        let prevColName = mappedHeaders[idxFone - 1] || '';
+
+                        if (prevColName.includes('DDD')) {
+                            dStr = getVal(idxFone - 1);
+                        }
+
+                        let numeroFormatado = formatarNumero(dStr, fStr);
+
+                        if (numeroFormatado && !telefonesDaLinha.includes(numeroFormatado)) {
+                            telefonesDaLinha.push(numeroFormatado);
+                        }
+                    }
+                }
+
+                newData.push({
+                    'NOME': getVal(idxNome),
+                    'CPF': getVal(idxCpf),
+                    'UF': getVal(idxUf),
+                    'FONE 1': telefonesDaLinha[0] || '',
+                    'FONE 2': telefonesDaLinha[1] || '',
+                    'FONE 3': telefonesDaLinha[2] || '',
+                    'FONE 4': telefonesDaLinha[3] || ''
+                });
+            }
+
+            const csvOutput = Papa.unparse(newData, { delimiter: ";" });
+            const blob = new Blob(["\uFEFF" + csvOutput], { type: 'text/csv;charset=utf-8;' });
+
+            const link = document.createElement("a");
+            const url = URL.createObjectURL(blob);
+            link.setAttribute("href", url);
+
+            let baseName = originalName.replace(/\.(csv|xlsx|xls)$/i, '');
+            link.setAttribute("download", `${baseName} - formatado.csv`);
+
+            link.style.visibility = 'hidden';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+
+            let loadingMsg = statusDiv.querySelector('.loading');
+            if (loadingMsg) loadingMsg.remove();
+
+            statusDiv.innerHTML += `<span class="success">✔ ${originalName} processado com sucesso!</span>`;
+        }
+    </script>|
 
 </body>
+
 </html>
