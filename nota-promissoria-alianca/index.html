@@ -1,0 +1,1141 @@
+
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gerador de Nota Promissória (v2.2 Corrigido)</title>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.10.377/pdf.min.js"></script>
+    <script src='https://cdn.jsdelivr.net/npm/tesseract.js@latest/dist/tesseract.min.js'></script>
+
+
+    <style>
+        /* --- Estilos base (adaptados do termo.html) --- */
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f0f2f5;
+            display: flex;
+            align-items: flex-start;
+            justify-content: center;
+            gap: 30px;
+            padding: 20px;
+            font-size: 14px;
+            flex-wrap: wrap;
+        }
+
+        #form-container {
+            flex: 0 0 450px;
+            background: #ffffff;
+            padding: 25px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+            position: sticky;
+            top: 20px;
+            max-height: 95vh;
+            overflow-y: auto;
+        }
+
+        #form-container h1 {
+            text-align: center;
+            margin-top: 0;
+            margin-bottom: 25px;
+            font-size: 1.5rem;
+            color: #333;
+        }
+
+        .form-section {
+            margin-bottom: 20px;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 20px;
+        }
+
+        .form-section:last-of-type {
+            border-bottom: none;
+            padding-bottom: 0;
+        }
+
+        .form-section h2 {
+            font-size: 1.1rem;
+            color: #333;
+            margin-top: 0;
+            margin-bottom: 15px;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 5px;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            font-size: 0.9rem;
+            color: #555;
+        }
+
+        .form-group input[type="text"],
+        .form-group input[type="date"],
+        .form-group textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+
+        /* --- NOVO: Estilo para inputs "buscando" --- */
+        .form-group input[type="text"]:disabled {
+            background-color: #e9ecef;
+        }
+
+        .grid-2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+        
+        /* --- NOVO: Grid-3 para o CEP --- */
+        .grid-3 {
+            display: grid;
+            grid-template-columns: 1fr 1fr 80px;
+            gap: 10px;
+        }
+
+        #gerar-pdf {
+            display: block;
+            width: 100%;
+            padding: 12px;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            font-size: 1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+            background-color: #007bff;
+        }
+
+        #gerar-pdf:hover:not(:disabled) {
+            background-color: #0056b3;
+        }
+
+        #gerar-pdf:disabled {
+            background-color: #aaa;
+            cursor: not-allowed;
+        }
+
+        /* --- Estilos do Preview da Nota Promissória --- */
+        #preview-container {
+            flex: 1;
+            display: flex;
+            justify-content: center;
+            min-width: 210mm;
+            /* Largura A4 */
+        }
+
+        #nota-promissoria {
+            width: 210mm;
+            /* Largura A4 */
+            min-height: 110mm;
+            /* <<< CORREÇÃO: Altura mínima */
+            padding: 20mm;
+            background: #ffffff;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            box-sizing: border-box;
+            font-family: 'Times New Roman', Times, serif;
+            color: #000;
+            font-size: 12pt;
+            border: 2px solid #000;
+            text-transform: uppercase;
+            /* A maioria do texto é maiúscula */
+        }
+
+        .variavel {
+            font-weight: bold;
+            color: #0d47a1;
+            transition: color 0.3s ease;
+        }
+
+        .generating-pdf .variavel {
+            color: #000;
+            font-weight: normal;
+        }
+
+        /* Estilo para impressão */
+
+        .np-header {
+            display: flex;
+            justify-content: space-between;
+            border-bottom: 2px solid #000;
+            padding-bottom: 10px;
+        }
+
+        .np-header-left {
+            font-size: 1.5rem;
+            font-weight: bold;
+        }
+
+        .np-header-right {
+            border: 1px solid #000;
+            padding: 5px;
+            text-align: center;
+        }
+
+        .np-header-right div:first-child {
+            border-bottom: 1px solid #000;
+            padding: 0 10px 5px 10px;
+        }
+
+        .np-header-right div:last-child {
+            padding: 5px 10px 0 10px;
+            min-width: 150px;
+        }
+
+        .np-body {
+            margin-top: 20px;
+            line-height: 1.6;
+        }
+
+        .np-local-pagamento {
+            margin-top: 20px;
+        }
+
+        .np-emitente {
+            margin-top: 30px;
+            border-top: 1px solid #000;
+            padding-top: 10px;
+        }
+
+        .np-emitente strong {
+            display: inline-block;
+            width: 120px;
+        }
+
+        .np-data-emissao {
+            margin-top: 25px;
+            font-weight: bold;
+        }
+
+        /* Classe para feedback no formulário */
+        .feedback-extenso {
+            font-size: 0.9rem;
+            color: #555;
+            background: #f8f9fa;
+            padding: 8px;
+            border-radius: 4px;
+            border: 1px solid #eee;
+            margin-top: 5px;
+            min-height: 1.2em;
+        }
+
+        /* Toast (Notificações) */
+        .toast-container {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 1090;
+        }
+
+        .toast {
+            width: 350px;
+            max-width: 90%;
+            background-color: #333;
+            color: white;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 10px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+            opacity: 0;
+            transition: opacity 0.3s, transform 0.3s;
+            transform: translateX(100%);
+        }
+
+        .toast.show {
+            opacity: 1;
+            transform: translateX(0);
+        }
+
+        .toast.bg-success {
+            background-color: #198754;
+        }
+
+        .toast.bg-danger {
+            background-color: #dc3545;
+        }
+
+        /* --- NOVOS ESTILOS DO TERMO.HTML (ESSENCIAIS) --- */
+        .upload-area {
+            border: 2px dashed #007bff;
+            padding: 15px;
+            text-align: center;
+            cursor: pointer;
+            background-color: #f8f9fa;
+            transition: background-color 0.2s, border-color 0.2s;
+            border-radius: 8px;
+            margin-bottom: 00px;
+        }
+
+        .upload-area.hover {
+            background-color: #e9ecef;
+            border-color: #0056b3;
+        }
+
+        /* Este input é o que guarda o arquivo, ele fica escondido */
+        #pdf-upload {
+            display: none;
+        }
+
+        .upload-area span {
+            font-weight: bold;
+            color: #007bff;
+        }
+
+        #loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.6);
+            z-index: 2000;
+            display: none;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            color: white;
+        }
+
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #007bff;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+        /* --- FIM DOS NOVOS ESTILOS --- */
+
+
+        /* Estilos de Geração de PDF (do termo.html) */
+        @media print,
+        (min-width: 0px) {
+            .jsPDF-native-generating {
+                display: block;
+                background-color: #fff;
+                padding: 0;
+                margin: 0;
+            }
+
+            .jsPDF-native-generating #form-container,
+            .jsPDF-native-generating #toast-container,
+            /* --- NOVO: Esconde o overlay --- */
+            .jsPDF-native-generating #loading-overlay {
+                display: none;
+            }
+
+            .jsPDF-native-generating #preview-container {
+                flex: none;
+                justify-content: flex-start;
+                margin: 0;
+                padding: 0;
+            }
+
+            .jsPDF-native-generating #nota-promissoria {
+                box-shadow: none;
+                margin: 0;
+                border: none;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="toast-container" id="toast-container"></div>
+
+    <div id="loading-overlay">
+        <div class="spinner"></div>
+        <span id="loading-text">Analisando PDF...</span>
+    </div>
+
+    <div id="form-container">
+        <h1>Gerar Nota Promissória</h1>
+
+        <div class="form-section">
+            <h2>Preenchimento Rápido (Opcional)</h2>
+            <input type="file" id="pdf-upload" accept=".pdf">
+            
+            <label for="pdf-upload" class="upload-area" id="upload-label">
+                <span>Clique ou arraste o PDF aqui</span>
+                <br><small>Para preencher Nome e CPF automaticamente</small>
+            </label>
+        </div>
+        <div class="form-section">
+            <h2>Dados do Emitente (Devedor)</h2>
+            
+            <div class="form-group">
+                <label for="emitente-nome">Nome do Emitente:</label>
+                <input type="text" id="emitente-nome" placeholder="VILMA DE SOUZA SANTOS">
+            </div>
+            <div class="form-group">
+                <label for="emitente-cpf">CPF nº:</label>
+                <input type="text" id="emitente-cpf" placeholder="121.290.381-15">
+            </div>
+
+            <div class="grid-3">
+                <div class="form-group" style="grid-column: span 3;"><label for="cep">CEP (Digite e saia do campo para
+                        buscar):</label><input type="text" id="cep" placeholder="39480-000">
+                </div>
+            </div>
+            <div class="form-group"><label for="logradouro">Logradouro:</label><input type="text" id="logradouro"
+                    placeholder="Rua E número 340"></div>
+            <div class="form-group"><label for="bairro">Bairro:</label><input type="text" id="bairro"
+                    placeholder="Residencial Lagoa do Velho Chico"></div>
+            <div class="grid-2">
+                <div class="form-group"><label for="cidade">Cidade:</label><input type="text" id="cidade"
+                        placeholder="JANUARIA"></div>
+                <div class="form-group"><label for="estado">Estado:</label><input type="text" id="estado"
+                        placeholder="MG"></div>
+            </div>
+            </div>
+
+        <div class="form-section">
+            <h2>Dados do Credor (Empresa)</h2>
+            <div class="form-group">
+                <label for="credor-nome">Nome do Credor (ou à sua ordem):</label>
+                <input type="text" id="credor-nome" value="POLLO PROMOTORA LTDA">
+            </div>
+            <div class="form-group">
+                <label for="credor-cnpj">CNPJ do Credor:</label>
+                <input type="text" id="credor-cnpj" value="44.906.703/0001-59">
+            </div>
+        </div>
+
+        <div class="form-section">
+            <h2>Valores e Datas</h2>
+            <div class="grid-2">
+                <div class="form-group">
+                    <label for="valor-numerico">Valor (R$):</label>
+                    <input type="text" id="valor-numerico" class="campo-moeda" placeholder="114.500,00">
+                </div>
+                <div class="form-group">
+                    <label for="data-vencimento">Data de Vencimento:</label>
+                    <input type="date" id="data-vencimento">
+                </div>
+            </div>
+            <div class="form-group">
+                <label>Valor por Extenso (Automático):</label>
+                <div id="valor-extenso-feedback" class="feedback-extenso"></div>
+            </div>
+            <div class="form-group">
+                <label>Vencimento por Extenso (Automático):</label>
+                <div id="vencimento-extenso-feedback" class="feedback-extenso"></div>
+            </div>
+            <hr style="border: 0; border-top: 1px solid #eee; margin: 15px 0;">
+            <div class="grid-2">
+                <div class="form-group">
+                    <label for="local-pagamento">Local de Pagamento:</label>
+                    <input type="text" id="local-pagamento" value="BRASILIA-DF">
+                </div>
+                <div class="form-group">
+                    <label for="data-emissao">Data de Emissão:</label>
+                    <input type="date" id="data-emissao">
+                </div>
+            </div>
+        </div>
+
+        <button id="gerar-pdf">Gerar PDF</button>
+    </div>
+
+    <div id="preview-container">
+        <div id="nota-promissoria">
+
+            <div class="np-header">
+                <div class="np-header-left">
+                    NOTA PROMISSÓRIA
+                </div>
+                <div class="np-header-right">
+                    <div>VALOR: <span id="doc-valor-formatado" class="variavel">R$ 0,00</span></div>
+                    <div>VENCIMENTO: <span id="doc-data-vencimento" class="variavel">[Data Venc.]</span></div>
+                </div>
+            </div>
+
+            <div class="np-body">
+                Até o dia <span id="doc-vencimento-extenso" class="variavel">[Vencimento por Extenso]</span>
+                pagarei por esta única via de NOTA PROMISSÓRIA à
+                <span id="doc-credor-nome" class="variavel">POLLO CONSULTORA DE SEGUROS LTDA</span>
+                CNPJ <span id="doc-credor-cnpj" class="variavel">44.906.703/0001-59</span>
+                ou à sua ordem a quantia de
+                <span id="doc-valor-extenso" class="variavel">[Valor por Extenso]</span>
+                &nbsp;em moeda corrente desse país.
+            </div>
+
+            <div class="np-local-pagamento">
+                Local de pagamento: <span id="doc-local-pagamento" class="variavel">BRASILIA-DF</span>
+            </div>
+
+            <div class="np-emitente">
+                <div><strong>Nome do Emitente:</strong> <span id="doc-emitente-nome" class="variavel">[Nome
+                        Emitente]</span></div>
+                <div><strong>CPF nº:</strong> <span id="doc-emitente-cpf" class="variavel">[CPF Emitente]</span></div>
+                <div><strong>Endereço:</strong> <span id="doc-emitente-endereco" class="variavel">[Endereço
+                        Emitente]</span></div>
+            </div>
+
+            <div style="margin-top: 40px; border-top: 1px solid #000; width: 60%;">
+                <strong>Assinatura do Emitente</strong>
+            </div>
+
+            <div style="margin-top: 40px; border-top: 1px solid #000; width: 60%;">
+                <strong>Testemunha</strong>
+                <strong>CPF:</strong>
+
+            </div>
+
+            <div class="np-data-emissao">
+                Data da Emissão: <span id="doc-data-emissao" class="variavel">[Data Emissão]</span>
+            </div>
+
+        </div>
+    </div>
+
+
+    <script>
+        // Importa o jsPDF para o escopo local
+        const { jsPDF } = window.jspdf;
+
+        // === NOVO: Configuração do PDF.js (do Termo.html) ===
+        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.10.377/pdf.worker.min.js';
+
+        // --- FUNÇÕES UTILITÁRIAS (Comuns aos dois arquivos) ---
+        const formatarMoeda = (v) => { if (typeof v === 'string') { if (v.startsWith('R$')) return v; v = moedaParaFloat(v); } return (v || 0).toLocaleString("pt-BR", { style: "currency", currency: "BRL" }); };
+        const moedaParaFloat = (v) => { return parseFloat(String(v || '').replace('R$', '').trim().replace(/\./g, "").replace(",", ".")) || 0; };
+
+        // Toast (Notificações)
+        const showToast = (message, type = 'success') => {
+            const toastContainer = document.getElementById('toast-container');
+            const toastId = 'toast-' + Date.now();
+            let bgClass = 'bg-success';
+            if (type === 'danger') bgClass = 'bg-danger';
+
+            const toastEl = document.createElement('div');
+            toastEl.id = toastId;
+            toastEl.className = `toast ${bgClass}`;
+            toastEl.textContent = message;
+            toastContainer.appendChild(toastEl);
+            setTimeout(() => { toastEl.classList.add('show'); }, 10);
+            setTimeout(() => {
+                toastEl.classList.remove('show');
+                setTimeout(() => toastEl.remove(), 300);
+            }, 4000);
+        };
+
+        // --- FUNÇÕES DE AUTOMAÇÃO (do index.html) ---
+        function dataParaExtenso(dataString) {
+            if (!dataString) return "";
+            const meses = ["JANEIRO", "FEVEREIRO", "MARÇO", "ABRIL", "MAIO", "JUNHO", "JULHO", "AGOSTO", "SETEMBRO", "OUTUBRO", "NOVEMBRO", "DEZEMBRO"];
+            let dataObj;
+            if (dataString.includes('-')) {
+                const parts = dataString.split('-');
+                dataObj = new Date(parts[0], parts[1] - 1, parts[2]);
+            } else if (dataString.includes('/')) {
+                const parts = dataString.split('/');
+                dataObj = new Date(parts[2], parts[1] - 1, parts[0]);
+            } else {
+                return "";
+            }
+            if (isNaN(dataObj.getDate())) return "";
+            dataObj.setMinutes(dataObj.getMinutes() + dataObj.getTimezoneOffset());
+            const dia = dataObj.getDate();
+            const mesNome = meses[dataObj.getMonth()];
+            const ano = dataObj.getFullYear();
+            const opts = { currency: false };
+            const diaExtenso = (dia === 1) ? "UM" : numeroPorExtenso(dia, opts);
+            const anoExtenso = numeroPorExtenso(ano, opts);
+            return `${diaExtenso} de ${mesNome} de ${anoExtenso}`.toUpperCase();
+        }
+        function numeroPorExtenso(numero, options = {}) {
+            const settings = { currency: true, ...options };
+            numero = typeof numero === 'number' ? numero.toString() : numero.toString().replace(/[^\d,.-]/g, '');
+            numero = numero.replace(',', '.');
+            if (isNaN(parseFloat(numero))) return "";
+            let [inteiro, centavos] = parseFloat(numero).toFixed(2).split('.');
+            inteiro = parseInt(inteiro, 10);
+            centavos = parseInt(centavos, 10);
+            const unidades = ["", "UM", "DOIS", "TRÊS", "QUATRO", "CINCO", "SEIS", "SETE", "OITO", "NOVE"];
+            const especiais = ["DEZ", "ONZE", "DOZE", "TREZE", "QUATORZE", "QUINZE", "DEZESSEIS", "DEZESSETE", "DEZOITO", "DEZENOVE"];
+            const dezenas = ["", "DEZ", "VINTE", "TRINTA", "QUARENTA", "CINQUENTA", "SESSENTA", "SETENTA", "OITENTA", "NOVENTA"];
+            const centenas = ["", "CENTO", "DUZENTOS", "TREZENTOS", "QUATROCENTOS", "QUINHENTOS", "SEISCENTOS", "SETECENTOS", "OITOCENTOS", "NOVECENTOS"];
+            const milhares = ["", "MIL", "MILHÕES", "BILHÕES", "TRILHÕES"];
+            function converterGrupo(n) {
+                if (n === 0) return "";
+                if (n === 100) return "CEM";
+                let str = "";
+                let c = Math.floor(n / 100);
+                let d = Math.floor((n % 100) / 10);
+                let u = n % 10;
+                if (c > 0) str += centenas[c] + (d > 0 || u > 0 ? " E " : "");
+                if (d === 1 && u > 0) {
+                    str += especiais[u];
+                } else {
+                    if (d > 0) str += dezenas[d] + (u > 0 ? " E " : "");
+                    if (u > 0) str += unidades[u];
+                }
+                return str;
+            }
+            if (inteiro === 0) {
+                if (settings.currency) {
+                    if (centavos > 0) return converterGrupo(centavos) + " CENTAVOS";
+                    return "ZERO REAIS";
+                }
+                return "ZERO";
+            }
+            let grupos = [];
+            let temp = inteiro;
+            while (temp > 0) {
+                grupos.push(temp % 1000);
+                temp = Math.floor(temp / 1000);
+            }
+            let extenso = [];
+            for (let i = grupos.length - 1; i >= 0; i--) {
+                let grupo = grupos[i];
+                if (grupo === 0) continue;
+                let grupoStr = converterGrupo(grupo);
+                if (i === 1 && grupo === 1) {
+                    extenso.push("MIL");
+                } else if (grupoStr) {
+                    extenso.push(grupoStr + " " + milhares[i]);
+                }
+            }
+            let resultado = extenso.join(" E ").replace(/\s+E\s+$/, '').trim();
+            if (settings.currency) {
+                resultado += (inteiro === 1 ? " REAL" : " REAIS");
+                if (centavos > 0) {
+                    resultado += " E " + converterGrupo(centavos) + " CENTAVOS";
+                }
+            }
+            return resultado.toUpperCase().replace(/\s+/g, ' ');
+        }
+
+
+        // --- FUNÇÃO ATUALIZAR PREVIEW (MODIFICADA) ---
+        function atualizarPreview() {
+            // 1. Mapeia campos do formulário para o preview
+            const camposTexto = {
+                'emitente-nome': ['doc-emitente-nome'],
+                'emitente-cpf': ['doc-emitente-cpf'],
+                // 'emitente-endereco': ['doc-emitente-endereco'], // REMOVIDO DAQUI
+                'credor-nome': ['doc-credor-nome'],
+                'credor-cnpj': ['doc-credor-cnpj'],
+                'local-pagamento': ['doc-local-pagamento']
+            };
+
+            for (const formId in camposTexto) {
+                const valor = document.getElementById(formId).value.toUpperCase(); // Força maiúsculas
+                camposTexto[formId].forEach(docId => {
+                    const el = document.getElementById(docId);
+                    if (el) el.textContent = valor || `[${el.id.replace('doc-', '')}]`; // Placeholder melhorado
+                });
+            }
+
+            // 2. Lógica de Valores (Moeda e Extenso)
+            const valorInput = document.getElementById('valor-numerico');
+            const valorFloat = moedaParaFloat(valorInput.value);
+            const valorFormatado = formatarMoeda(valorFloat);
+            const valorExtenso = numeroPorExtenso(valorFloat);
+
+            document.getElementById('doc-valor-formatado').textContent = valorFormatado;
+            document.getElementById('doc-valor-extenso').textContent = valorExtenso || '[Valor por Extenso]';
+            document.getElementById('valor-extenso-feedback').textContent = valorExtenso;
+
+            // 3. Lógica de Datas (Formato e Extenso)
+            const vencimentoInput = document.getElementById('data-vencimento').value; // AAAA-MM-DD
+            const emissaoInput = document.getElementById('data-emissao').value; // AAAA-MM-DD
+
+            const formatarDataBR = (dataAAAA) => {
+                if (!dataAAAA) return "";
+                const [a, m, d] = dataAAAA.split('-');
+                return `${d}/${m}/${a}`;
+            };
+
+            const dataVencFormatada = formatarDataBR(vencimentoInput);
+            const dataVencExtenso = dataParaExtenso(vencimentoInput);
+            const dataEmissaoFormatada = formatarDataBR(emissaoInput);
+
+            document.getElementById('doc-data-vencimento').textContent = dataVencFormatada || '[Data Venc.]';
+            document.getElementById('doc-vencimento-extenso').textContent = dataVencExtenso || '[Vencimento por Extenso]';
+            document.getElementById('vencimento-extenso-feedback').textContent = dataVencExtenso;
+            document.getElementById('doc-data-emissao').textContent = dataEmissaoFormatada || '[Data Emissão]';
+
+            // 4. Lógica de Endereço (NOVO)
+            // Combina os campos do formulário em um único campo de preview
+            const cep = document.getElementById('cep').value.toUpperCase();
+            const logradouro = document.getElementById('logradouro').value.toUpperCase();
+            const bairro = document.getElementById('bairro').value.toUpperCase();
+            const cidade = document.getElementById('cidade').value.toUpperCase();
+            const estado = document.getElementById('estado').value.toUpperCase();
+
+            // Tenta montar um endereço legível
+            let partesEndereco = [];
+            if (logradouro) partesEndereco.push(logradouro);
+            if (bairro) partesEndereco.push(`BAIRRO: ${bairro}`);
+            if (cidade) partesEndereco.push(cidade);
+            if (estado) partesEndereco.push(estado);
+            if (cep) partesEndereco.push(`CEP: ${cep}`);
+
+            let enderecoCompleto = partesEndereco.join(', ').replace("BAIRRO:", "Bairro:");
+            
+            if (enderecoCompleto.trim() === "") {
+                enderecoCompleto = '[Endereço Emitente]';
+            }
+            
+            document.getElementById('doc-emitente-endereco').textContent = enderecoCompleto;
+        }
+
+        // --- FUNÇÃO GERAR PDF (Original do index.html) ---
+        async function gerarPdf() {
+            const botao = document.getElementById('gerar-pdf');
+            botao.textContent = 'Gerando PDF...';
+            botao.disabled = true;
+
+            const nomePessoa = document.getElementById('emitente-nome').value || 'nota_promissoria';
+            const filename = `${nomePessoa.trim().replace(/\s+/g, '_')}_NP.pdf`;
+
+            const documento = document.getElementById('nota-promissoria');
+
+            document.body.classList.add('jsPDF-native-generating');
+            documento.classList.add('generating-pdf'); // Prepara para impressão
+
+            try {
+                const pdf = new jsPDF('p', 'mm', 'a4'); 
+                const docWidth = pdf.internal.pageSize.getWidth(); 
+
+                await pdf.html(documento, {
+                    callback: function (doc) {
+                        doc.save(filename);
+                        showToast("PDF gerado com sucesso!");
+                    },
+                    x: 0, 
+                    y: 0, 
+                    autoPaging: 'text',
+                    width: docWidth, 
+                    windowWidth: documento.scrollWidth
+                });
+
+            } catch (error) {
+                console.error("Erro ao gerar PDF:", error);
+                showToast("Ocorreu um erro ao gerar o PDF.", "danger");
+            } finally {
+                document.body.classList.remove('jsPDF-native-generating');
+                documento.classList.remove('generating-pdf');
+                botao.textContent = 'Gerar PDF';
+                botao.disabled = false;
+            }
+        }
+
+
+        // ##################################################################
+        // ### INÍCIO - NOVAS FUNÇÕES (Importadas do Termo.html) ###
+        // ##################################################################
+
+        function showLoading(message) {
+            document.getElementById('loading-text').textContent = message || 'Analisando PDF...';
+            document.getElementById('loading-overlay').style.display = 'flex';
+        }
+
+        function hideLoading() {
+            document.getElementById('loading-overlay').style.display = 'none';
+        }
+
+        // --- NOVO: Função para buscar CEP via API (ViaCEP) ---
+        async function buscarCep() {
+            const cepInput = document.getElementById('cep');
+            const cidadeInput = document.getElementById('cidade');
+            const estadoInput = document.getElementById('estado');
+            const logradouroInput = document.getElementById('logradouro');
+            const bairroInput = document.getElementById('bairro');
+
+            let cep = cepInput.value.replace(/\D/g, ''); // Limpa o CEP (deixa só números)
+
+            if (cep.length !== 8) {
+                if (cidadeInput.value === "Buscando...") {
+                    cidadeInput.value = "";
+                    estadoInput.value = "";
+                }
+                return;
+            }
+
+            cidadeInput.value = "Buscando...";
+            estadoInput.value = "...";
+            logradouroInput.value = "...";
+            bairroInput.value = "...";
+
+            try {
+                const response = await fetch(`https://viacep.com.br/ws/${cep}/json/`);
+                if (!response.ok) throw new Error('CEP não encontrado (erro de rede)');
+                const data = await response.json();
+                if (data.erro) {
+                    showToast("CEP não encontrado.", "warning");
+                    cidadeInput.value = "";
+                    estadoInput.value = "";
+                    logradouroInput.value = "";
+                    bairroInput.value = "";
+                    return;
+                }
+                logradouroInput.value = data.logradouro || '';
+                bairroInput.value = data.bairro || '';
+                cidadeInput.value = data.localidade || '';
+                estadoInput.value = data.uf || '';
+                showToast("Endereço preenchido!", "success");
+                logradouroInput.focus();
+            } catch (error) {
+                console.error("Erro ao buscar CEP:", error);
+                showToast("Erro ao buscar CEP. Verifique a conexão.", "danger");
+                cidadeInput.value = "";
+                estadoInput.value = "";
+                logradouroInput.value = "";
+                bairroInput.value = "";
+            } finally {
+                atualizarPreview(); // Atualiza o preview com os dados novos (mesmo se der erro)
+            }
+        }
+
+        // --- Lógica de Processamento de PDF (Importada) ---
+        async function processarPdfExercicio(text) {
+            let loansArray = [];
+            let clienteObject = { nome: 'Não lido', cpf: 'Não lido', estado: '' };
+            let clienteCpfPDF = '';
+            let clienteNomePDF = '';
+            let cleanText = text.replace(/--- FIM DA PÁGINA \d+ ---/g, '').replace(/Consignatária\n\s*▴\s*▾[\s\S]+?Situação\n\s*▴\s*▾/g, '').replace(/Consignatária Nº Serviço Inclusão Vir.prest. Virfolha Nº Pagas Situação/g, '');
+            const isOcrText = cleanText.includes('O74-SABEMI-') || cleanText.includes('R$834/12') || cleanText.includes('R$74046');
+            if (isOcrText) {
+                console.log("Detectado texto de OCR (Exército). Usando parser tolerante.");
+                const cpfMatch = text.match(/(\d{3}\.\d{3}\.\d{3}-\d{2})/);
+                const nomeMatch = text.match(/(\d{9,12})\s*-\s*([\d.-]+)\s*-\s*([A-ZÀ-Ú ]+)(?:\n([A-ZÀ-Ú ]+))?/);
+                if (cpfMatch) {
+                    clienteCpfPDF = cpfMatch[0];
+                } else if (nomeMatch) {
+                    clienteCpfPDF = nomeMatch[2].trim();
+                }
+                if (nomeMatch) {
+                    clienteNomePDF = nomeMatch[3].trim() + (nomeMatch[4] ? ' ' + nomeMatch[4].trim() : '');
+                }
+            } else {
+                console.log("Detectado texto limpo (Exército). Usando parser padrão.");
+                const infoRegex = /(\d{9,12})\s*-\s*([\d.-]+)\s*-\s*([A-ZÀ-Ú ]+)(?:\n([A-ZÀ-Ú ]+))?/;
+                const infoMatch = text.match(infoRegex);
+                if (infoMatch) {
+                    clienteCpfPDF = infoMatch[2].trim();
+                    clienteNomePDF = infoMatch[3].trim();
+                    if (infoMatch[4]) {
+                        clienteNomePDF += ` ${infoMatch[4].trim()}`;
+                    }
+                } else {
+                    console.warn("Regex de Nome/CPF falhou no parser limpo (Exército).");
+                }
+            }
+            clienteObject.nome = clienteNomePDF || 'Não lido';
+            clienteObject.cpf = clienteCpfPDF || 'Não lido';
+            return { loans: [], cliente: clienteObject }; // Só nos interessa o cliente
+        }
+        async function processarPdfSiape(text) {
+            let cliente = { nome: 'Não lido', cpf: 'Não lido', estado: '' };
+            console.log("Tentando Regex do SIAPE (Layout Novo)...");
+            const infoRegexNovo = /CPF\nMatrícula\nNome\n(?:[^\n]+\n)([^\n]+)\n(?:[^\n]+\n)([^\n]+)/;
+            let infoMatchNovo = text.match(infoRegexNovo);
+            if (!infoMatchNovo) {
+                const infoRegexAntonio = /CPF\n(?:[^\n]+\n)([^\n]+)\nMatrícula\s+(\d+)\nNome\n([A-ZÀ-Ú ]+)/;
+                const infoMatchAntonio = text.match(infoRegexAntonio);
+                if (infoMatchAntonio) {
+                    console.log("Regex SIAPE (Layout Antonio) detectado.");
+                    infoMatchNovo = [null, infoMatchAntonio[1], infoMatchAntonio[3]];
+                }
+            }
+            if (infoMatchNovo && infoMatchNovo[1] && infoMatchNovo[2]) {
+                const cpfPotencial = infoMatchNovo[1].trim();
+                if (/\d{3}\.\d{3}\.\d{3}-\d{2}/.test(cpfPotencial) || /\d{11}/.test(cpfPotencial.replace(/[.-]/g, ''))) {
+                    cliente.cpf = cpfPotencial;
+                    cliente.nome = infoMatchNovo[2].trim();
+                    console.log("Cliente SIAPE (Novo) encontrado:", cliente.nome);
+                } else {
+                    console.warn("Regex SIAPE (Novo) encontrou dados, mas CPF parece inválido.");
+                }
+            } else {
+                console.warn("Regex SIAPE (Novo) falhou.");
+            }
+            if (cliente.cpf === 'Não lido') {
+                console.warn("Regex SIAPE (Novo Contratos) falhou. Tentando Regex antigo (da Calculadora)...");
+                if (cliente.cpf === 'Não lido') {
+                    const headerRegexAntigo = /Órgão\nCPF\nMatrícula\nNome\n[^\n]+\n([^\n]+)\n[^\n]+\n([^\n]+)/;
+                    let headerMatchAntigo = text.match(headerRegexAntigo);
+                    if (headerMatchAntigo) {
+                        cliente.cpf = headerMatchAntigo[1].trim();
+                        cliente.nome = headerMatchAntigo[2].trim();
+                        console.log("Cliente SIAPE (Antigo) encontrado:", cliente.nome);
+                    }
+                }
+            }
+            if (cliente.cpf === 'Não lido') {
+                const headerRegexAntigo = /Órgão\nCPF\nMatrícula\nNome\n[^\n]+\n([^\n]+)\n[^\n]+\n([^\n]+)/;
+                let headerMatchAntigo = text.match(headerRegexAntigo);
+                if (headerMatchAntigo) {
+                    cliente.cpf = headerMatchAntigo[1].trim();
+                    cliente.nome = headerMatchAntigo[2].trim();
+                    console.log("Cliente SIAPE (Antigo-Fallback) encontrado:", cliente.nome);
+                }
+            }
+            return { loans: [], cliente: cliente }; // Só nos interessa o cliente
+        }
+        async function processarPdfContrachequeServidor(text) {
+            let cliente = { nome: 'Não lido', cpf: 'Não lido', estado: '', profissao: '', orgao: '' };
+            console.log("Processando como Contracheque SERVIDOR (SGP/SIGEPE)...");
+            const nomeCargoMatch = text.match(/\n([A-ZÀ-Ú ]+)\s*\n\s*(\d{7,9})\s*\n\s*(\d{7,9})\s*\n\s*([A-ZÀ-Ú -]+)\s*\n\s*[A-Z]\s*\n\s*[A-Z]/);
+            if (nomeCargoMatch) {
+                cliente.nome = nomeCargoMatch[1].trim();
+                cliente.profissao = nomeCargoMatch[4].trim().replace(/\s+/g, ' ');
+            } else {
+                const nomeMatchFallback = text.match(/NOME DO SERVIDOR(?:.|\n)+?([A-ZÀ-Ú ]{3,}\s[A-ZÀ-Ú ]{3,})/);
+                if (nomeMatchFallback) cliente.nome = nomeMatchFallback[1].trim();
+            }
+            const cpfMatch = text.match(/CPF\s*\n\s*(\d{11})/);
+            if (cpfMatch && cpfMatch[1]) {
+                cliente.cpf = cpfMatch[1].trim();
+            } else {
+                const cpfMatchFallbackB = text.match(/\n(\d{11})\s*\n\s*(\d{3})\s*\n\s*(\d{6})\s+/);
+                if (cpfMatchFallbackB) {
+                    cliente.cpf = cpfMatchFallbackB[1].trim();
+                } else {
+                    const cpfMatchFallbackC = text.match(/\n00\s*\n\s*00\s*\n\s*(\d{11})/);
+                    if (cpfMatchFallbackC) cliente.cpf = cpfMatchFallbackC[1].trim();
+                }
+            }
+            const ufMatch = text.match(/\n([A-Z]{2})\s*\n\s*EST\s*\n\s*([A-ZÀ-Ú ]+)/);
+            if (ufMatch && ufMatch[1]) {
+                cliente.estado = ufMatch[1].trim();
+            }
+            return { loans: [], cliente: cliente }; // Só nos interessa o cliente
+        }
+        async function processarPdfGovMG(text) {
+            let cliente = { nome: 'Não lido', cpf: 'Não lido', estado: 'MG', profissao: '', orgao: '' };
+            console.log("Processando como Contracheque GOVERNO DE MINAS GERAIS...");
+            try {
+                const nomeMatch = text.match(/Nome:\s*\n\s*([^\n]+)\s*\n\s*MASP:/);
+                if (nomeMatch) cliente.nome = nomeMatch[1].trim();
+                const cpfMatch = text.match(/CPF:\s*\n\s*([^\n]+)\s*\n\s*Pis\/Pasep:/);
+                if (cpfMatch) cliente.cpf = cpfMatch[1].trim();
+            } catch (e) {
+                console.error("Erro ao parsear dados do cliente (GOV-MG):", e);
+            }
+            return { loans: [], cliente: cliente }; // Só nos interessa o cliente
+        }
+        async function processarPdfExtratoMG(text) {
+            let cliente = { nome: 'Não lido', cpf: 'Não lido', estado: 'MG', profissao: '', orgao: '' };
+            console.log("Processando como Extrato de Consignação (GOV-MG)...");
+            try {
+                const nomeMatch = text.match(/Nome:\s*\n\s*([^\n]+)\s*\n\s*MASP:/);
+                if (nomeMatch) cliente.nome = nomeMatch[1].trim();
+                const cpfMatch = text.match(/CPF:\s*\n\s*([\d.-]+)/);
+                if (cpfMatch) cliente.cpf = cpfMatch[1].trim();
+            } catch (e) {
+                console.error("Erro ao parsear dados do cliente (Extrato MG):", e);
+            }
+            return { loans: [], cliente: cliente }; // Só nos interessa o cliente
+        }
+
+        // --- FUNÇÃO PRINCIPAL DE PARSE (MODIFICADA) ---
+        async function parsearPdf(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            event.target.value = null;
+            showLoading('Analisando...');
+            const loadingText = document.getElementById("loading-text");
+
+            const fileReader = new FileReader();
+            fileReader.onload = async function () {
+                let extractedText = '';
+                let result = { loans: [], cliente: { nome: '', cpf: '', estado: '', profissao: '', orgao: '' } };
+
+                try {
+                    const typedarray = new Uint8Array(this.result);
+                    const pdf = await pdfjsLib.getDocument(typedarray).promise;
+                    let textFound = false;
+
+                    for (let i = 1; i <= pdf.numPages; i++) {
+                        const page = await pdf.getPage(i);
+                        const textContent = await page.getTextContent();
+                        if (textContent.items.length > 0) textFound = true;
+                        extractedText += textContent.items.map(item => item.str).join('\n') + '\n\n--- FIM DA PÁGINA ' + i + ' ---\n\n';
+                    }
+
+                    const hasRealData = extractedText.toUpperCase().includes('CONSIGNATÁRIA') || extractedText.toUpperCase().includes('EMPRÉSTIMO') || extractedText.toUpperCase().includes('CPF') || extractedText.toUpperCase().includes('RUBRICA') || extractedText.toUpperCase().includes('COMPROVANTE DE RENDIMENTOS') || extractedText.toUpperCase().includes('MARGEM DE CONSIGNAÇÃO');
+                    if (extractedText.trim().length < 50 || !hasRealData) {
+                        textFound = false;
+                        console.log("Texto 'limpo' não parece válido. Forçando OCR (Plano B).");
+                    }
+
+                    if (!textFound) {
+                        console.warn("PDF parece ser uma imagem. Iniciando OCR...");
+                        extractedText = '';
+                        if (typeof Tesseract === 'undefined') throw new Error("Tesseract.js não foi carregado.");
+                        const worker = await Tesseract.createWorker('por');
+                        for (let i = 1; i <= pdf.numPages; i++) {
+                            loadingText.textContent = `Lendo imagem: Página ${i} de ${pdf.numPages}...`;
+                            const page = await pdf.getPage(i);
+                            const viewport = page.getViewport({ scale: 2.0 });
+                            const canvas = document.createElement('canvas');
+                            const context = canvas.getContext('2d');
+                            canvas.height = viewport.height;
+                            canvas.width = viewport.width;
+                            await page.render({ canvasContext: context, viewport: viewport }).promise;
+                            const { data: { text: ocrText } } = await worker.recognize(canvas);
+                            extractedText += ocrText + '\n\n';
+                        }
+                        await worker.terminate();
+                        console.log("OCR Concluído.");
+                    }
+
+                    const upperText = extractedText.toUpperCase();
+
+                    // LÓGICA DE DETECÇÃO (Sem a função 'SGP' que estava faltando)
+                    if (upperText.includes("COMPROVANTE DE RENDIMENTOS - FOLHA")) {
+                        console.log("Detectado: Contracheque SERVIDOR (SGP/SIGEPE)");
+                        result = await processarPdfContrachequeServidor(extractedText);
+                    } else if (upperText.includes("GOVERNO DO ESTADO DE MINAS GERAIS") && upperText.includes("DEMONSTRATIVO DE PAGAMENTO")) {
+                        console.log("Detectado: Contracheque GOVERNO DE MINAS GERAIS");
+                        result = await processarPdfGovMG(extractedText);
+                    } else if (upperText.includes("GOVERNO DO ESTADO DE MINAS GERAIS") && upperText.includes("MARGEM DE CONSIGNAÇÃO")) {
+                        console.log("Detectado: Extrato de Consignação GOVERNO DE MINAS GERAIS");
+                        result = await processarPdfExtratoMG(extractedText);
+                    } else if (upperText.includes("EXTRATO DE CONSIGNAÇÕES VIGENTES") || upperText.includes("RUBRICA\nSEQUÊNCIA") || upperText.includes("RUBRICA\n")) {
+                        console.log("Detectado: Extrato SIAPE");
+                        result = await processarPdfSiape(extractedText);
+                    } else {
+                        console.log("Detectado: Extrato Exército (Padrão)");
+                        result = await processarPdfExercicio(extractedText);
+                    }
+                    
+                    showToast("Documento lido e convênio detectado!", "success");
+
+                    // **** MODIFICAÇÃO PRINCIPAL: Preenche o formulário ****
+                    if (result.cliente) {
+                        if (result.cliente.nome && result.cliente.nome !== 'Não lido') {
+                            document.getElementById('emitente-nome').value = result.cliente.nome.toUpperCase();
+                            showToast("Nome do emitente preenchido!", "success");
+                        }
+                        if (result.cliente.cpf && result.cliente.cpf !== 'Não lido') {
+                            document.getElementById('emitente-cpf').value = result.cliente.cpf;
+                            showToast("CPF do emitente preenchido!", "success");
+                        }
+                        if (result.cliente.estado && result.cliente.estado !== '') {
+                            document.getElementById('estado').value = result.cliente.estado;
+                        }
+                        // Atualiza o preview com os novos dados
+                        atualizarPreview(); 
+                    }
+                    // **** FIM DA MODIFICAÇÃO ****
+
+                } catch (error) {
+                    console.error("Erro ao processar o PDF:", error);
+                    showToast(`Erro ao ler o PDF: ${error.message}`, "danger");
+                } finally {
+                    hideLoading();
+                }
+            };
+            fileReader.readAsArrayBuffer(file);
+        }
+
+        // ##################################################################
+        // ### FIM - NOVAS FUNÇÕES ###
+        // ##################################################################
+
+
+        // --- INICIALIZAÇÃO E EVENT LISTENERS (MODIFICADO) ---
+        document.addEventListener('DOMContentLoaded', () => {
+
+            // Define a data de emissão como hoje
+            const hoje = new Date();
+            const ano = hoje.getFullYear();
+            const mes = String(hoje.getMonth() + 1).padStart(2, '0');
+            const dia = String(hoje.getDate()).padStart(2, '0');
+            const dataAtualFormatada = `${ano}-${mes}-${dia}`;
+            document.getElementById('data-emissao').value = dataAtualFormatada;
+
+            // Listeners do formulário (Original)
+            document.querySelectorAll('#form-container input').forEach(input => {
+                input.addEventListener('input', atualizarPreview);
+                if (input.type === 'text') {
+                    input.addEventListener('blur', () => { 
+                        // Impede que o campo CEP seja forçado para maiúsculas
+                        if (input.id !== 'cep') {
+                            input.value = input.value.toUpperCase(); 
+                        }
+                        atualizarPreview(); 
+                    });
+                }
+            });
+
+            // Listener específico para moeda (Original)
+            document.querySelectorAll('.campo-moeda').forEach(input => {
+                input.addEventListener('blur', function () {
+                    if (this.value.trim() !== "") {
+                        const valorNumerico = moedaParaFloat(this.value);
+                        this.value = valorNumerico.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).replace(/[^0-9,]/g, (match) => match === ',' ? ',' : '');
+                        atualizarPreview();
+                    }
+                });
+            });
+
+            // Botão Gerar PDF (Original)
+            document.getElementById('gerar-pdf').addEventListener('click', gerarPdf);
+
+            // Preenche os placeholders iniciais (Original)
+            document.getElementById('emitente-nome').placeholder = "VILMA DE SOUZA SANTOS";
+            document.getElementById('emitente-cpf').placeholder = "121.290.381-15";
+            document.getElementById('valor-numerico').placeholder = "114.500,00";
+
+            // Simula o preenchimento inicial
+            atualizarPreview();
+
+            // === NOVOS Event Listeners (para Leitor de PDF) ===
+            const uploadArea = document.getElementById('upload-label');
+            uploadArea.addEventListener('dragover', (e) => { e.preventDefault(); uploadArea.classList.add('hover'); });
+            uploadArea.addEventListener('dragleave', () => uploadArea.classList.remove('hover'));
+            uploadArea.addEventListener('drop', (e) => {
+                e.preventDefault();
+                uploadArea.classList.remove('hover');
+                if (e.dataTransfer.files.length > 0 && e.dataTransfer.files[0].type === "application/pdf") {
+                    document.getElementById('pdf-upload').files = e.dataTransfer.files;
+                    document.getElementById('pdf-upload').dispatchEvent(new Event('change'));
+                } else if (e.dataTransfer.files.length > 0) {
+                    showToast("Por favor, arraste apenas arquivos PDF.", "warning");
+                }
+            });
+            // Adiciona o listener ao input de arquivo
+            document.getElementById("pdf-upload").addEventListener("change", parsearPdf);
+
+            // --- NOVO: Listener para API de CEP ---
+            document.getElementById('cep').addEventListener('blur', buscarCep);
+        });
+    </script>
+
+</body>
+
+</html>
