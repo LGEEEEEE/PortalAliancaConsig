@@ -300,6 +300,8 @@
                     class="moeda-input"></div>
             <div class="form-group"><label>Valor Líquido Cliente:</label><input type="text" id="liquido"
                     class="moeda-input"></div>
+            <div class="form-group"><label>Valor Total do Contrato:</label><input type="text" id="total-contrato" class="moeda-input"></div>
+
             <div class="form-group"><label>Valor de Repasse:</label><input type="text" id="repasse" class="moeda-input">
             </div>
             <div class="form-group"><label>Prazo:</label><input type="text" id="prazo" value="96x"></div>
@@ -337,6 +339,7 @@
                 <strong>Resumo Financeiro:</strong><br>
                 • Parcela Mensal: <span id="doc-parcela" class="variavel">---</span><br>
                 • Prazo Total: <span id="doc-prazo" class="variavel">---</span><br>
+                • Valor Total do Contrato: <span id="doc-total-contrato" class="variavel">---</span> <br>
                 • <strong>VALOR LÍQUIDO A RECEBER: <span id="doc-liquido" class="variavel">---</span></strong>
             </div>
 
@@ -517,7 +520,7 @@
         }
 
         function atualizar() {
-            const ids = ['nome-cliente', 'cpf-cliente', 'orgao', 'endereco', 'banco', 'parcela', 'liquido', 'repasse', 'prazo', 'chave-pix', 'favorecido-pix'];
+            const ids = ['nome-cliente', 'cpf-cliente', 'orgao', 'endereco', 'banco', 'total-contrato',  'parcela', 'liquido', 'repasse', 'prazo', 'chave-pix', 'favorecido-pix'];
             ids.forEach(id => {
                 const val = document.getElementById(id).value || "---";
                 const doc = document.getElementById('doc-' + id);

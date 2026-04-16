@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+    <label for="cnpj">Digite aqui seu cnpj</label> <br>
+    <input type="text" id="cnpj" placeholder="00.000.000/0000-00" maxlength="17">
+    <div class="resultado-apibrasil"></div>
+    <button id="btn-buscar">BUSCAR CNPJ</button>
+
+    <script>
+        const buscarCnpj = async (cnpj) => {
+
+            const cnpjLimpo = cnpj.replace(/\D/g, '');
+
+            if (cnpjLimpo.length !== 14) return;
+
+            try{
+                const resposta = await fetch(`brasilapi.com.br/api/cnpj/v1/${cnpjLimpo}`)
+                const data = await resposta.json();
+
+                if(data.erro){
+                    console.log("Erro ao buscar no Viacep");
+                    return;
+                }
+                const dadosCnpj = `${data.uf}, ${data.nome_socio}, ${data.qualificacao_socio}, `
+            }
+        }
+
+        
+    </script>
+</body>
+</html>
