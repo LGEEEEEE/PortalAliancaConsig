@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Gerador de Contrato com ViaCEP</title>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+
+<style>
+    :root {
+        --bg-color: #f0f2f5;
+        --panel-bg: #ffffff;
+        --border-color: #dcdde1;
+        --primary-blue: #0984e3;
+    }
+    body {
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        margin: 0;
+        padding: 0;
+        background-color: var(--bg-color);
+        display: flex;
+        height: 100vh;
+        overflow: hidden;
+    }
+    
+    .container {
+        display: flex;
+        width: 100%;
+        height: 100%;
+    }
+    
+    .left-panel {
+        width: 35%;
+        min-width: 300px;
+        background-color: var(--panel-bg);
+        padding: 30px 20px;
+        box-shadow: 2px 0 10px rgba(0,0,0,0.05);
+        overflow-y: auto;
+        border-right: 1px solid var(--border-color);
+        z-index: 2;
+    }
+    
+    .right-panel {
+        width: 65%;
+        padding: 30px;
+        overflow-y: auto;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+    }
+
+    h2 {
+        color: #2d3436;
+        margin-top: 0;
+        font-size: 1.4rem;
+        margin-bottom: 25px;
+    }
+    .form-group {
+        margin-bottom: 18px;
+    }
+    .form-group label {
+        display: block;
+        margin-bottom: 6px;
+        font-weight: 600;
+        font-size: 0.85rem;
+        color: #636e72;
+    }
+    .form-group input, .form-group select {
+        width: 100%;
+        padding: 10px;
+        border: 1px solid #b2bec3;
+        border-radius: 6px;
+        box-sizing: border-box;
+        font-size: 0.95rem;
+        transition: border-color 0.3s;
+    }
+    .form-group input:focus, .form-group select:focus {
+        outline: none;
+        border-color: var(--primary-blue);
+    }
+    
+    /* Indicador de carregamento do CEP */
+    .loading-cep {
+        font-size: 0.75rem;
+        color: var(--primary-blue);
+        display: none;
+        margin-top: 4px;
+    }
+
+    .btn-gerar {
+        background-color: var(--primary-blue);
+        color: white;
+        border: none;
+        padding: 12px 25px;
+        font-size: 1rem;
+        font-weight: bold;
+        border-radius: 6px;
+        cursor: pointer;
+        margin-bottom: 25px;
+        width: 100%;
+        max-width: 700px;
+        box-shadow: 0 4px 6px rgba(9, 132, 227, 0.2);
+        transition: background-color 0.3s;
+    }
+    .btn-gerar:hover {
+        background-color: #074a80;
+    }
+
+    /* Estilos da Folha de Preview */
+    #document-preview {
+        background-color: white;
+        padding: 50px;
+        width: 100%;
+        max-width: 700px;
+        box-shadow: 0 10px 20px rgba(0,0,0,0.08);
+        line-height: 1.7;
+        color: #2d3436;
+        box-sizing: border-box;
+        font-family: Arial, sans-serif;
+    }
+    #document-preview h3 {
+        text-align: center;
+        margin-bottom: 30px;
+        font-size: 1.2rem;
+    }
+    #document-preview p {
+        margin-bottom: 15px;
+        text-align: justify;
+    }
+    
+    /* Destaques visuais */
+    .highlight {
+        background-color: #ffeaa7;
+        padding: 2px 5px;
+        border-radius: 3px;
+        font-weight: bold;
+        color: #d63031;
+        transition: all 0.3s;
+    }
+    .filled {
+        background-color: transparent;
+        color: inherit;
+        font-weight: normal;
+    }
+
+    /* Regra para limpar os destaques amarelos apenas na hora de gerar o PDF */
+    #document-preview.is-printing .highlight {
+        background-color: transparent !important;
+        color: inherit !important;
+        font-weight: normal !important;
+    }
+</style>
+</head>
+<body>
+
+<div class="container">
+    <div class="left-panel">
+        <h2>Dados do Contrato</h2>
+        
+        <div class="form-group">
+            <label>Nome do Locador</label>
+            <input type="text" id="in-locador" placeholder="Ex: João da Silva" oninput="updatePreview()">
+        </div>
+        <div class="form-group">
+            <label>CPF do Locador</label>
+            <input type="text" id="in-cpf-locador" placeholder="000.000.000-00" oninput="updatePreview()">
+        </div>
+        
+        <div class="form-group">
+            <label>Nome do Locatário</label>
+            <input type="text" id="in-locatario" placeholder="Ex: Maria Souza" oninput="updatePreview()">
+        </div>
+        <div class="form-group">
+            <label>CPF do Locatário</label>
+            <input type="text" id="in-cpf-locatario" placeholder="111.111.111-11" oninput="updatePreview()">
+        </div>
+
+        <div class="form-group">
+            <label>CEP do Imóvel</label>
+            <input type="text" id="in-cep" placeholder="00000-000" maxlength="9" oninput="buscarCEP(this.value)">
+            <span id="cep-loading" class="loading-cep">Buscando endereço...</span>
+        </div>
+
+        <div class="form-group">
+            <label>Endereço do Imóvel</label>
+            <input type="text" id="in-endereco" placeholder="Rua X, nº 123 - Bairro Y" oninput="updatePreview()">
+        </div>
+
+        <div class="form-group">
+            <label>Valor do Aluguel Mensal (R$)</label>
+            <input type="text" id="in-valor" placeholder="1.500,00" oninput="updatePreview()">
+        </div>
+
+        <div class="form-group">
+            <label>Prazo de Locação (Meses)</label>
+            <input type="number" id="in-prazo" placeholder="12" oninput="updatePreview()">
+        </div>
+        
+        <div class="form-group">
+            <label>Modalidade de Garantia</label>
+            <select id="in-garantia" onchange="updatePreview()">
+                <option value="Caução de 3 meses de aluguel">Caução (3 meses)</option>
+                <option value="Apresentação de Fiador idôneo">Fiador</option>
+                <option value="Seguro Fiança Locatícia">Seguro Fiança</option>
+            </select>
+        </div>
+    </div>
+
+    <div class="right-panel">
+        <button class="btn-gerar" onclick="gerarPDF()">Gerar PDF do Contrato</button>
+        
+        <div id="document-preview">
+            <h3>CONTRATO DE LOCAÇÃO DE IMÓVEL RESIDENCIAL</h3>
+            
+            <p><strong>1. DAS PARTES</strong></p>
+            <p><strong>LOCADOR:</strong> <span class="highlight" id="out-locador">[Nome do Locador]</span>, portador do CPF nº <span class="highlight" id="out-cpf-locador">[CPF do Locador]</span>.</p>
+            <p><strong>LOCATÁRIO:</strong> <span class="highlight" id="out-locatario">[Nome do Locatário]</span>, portador do CPF nº <span class="highlight" id="out-cpf-locatario">[CPF do Locatário]</span>.</p>
+            
+            <p><strong>2. DO OBJETO</strong></p>
+            <p>O objeto deste contrato é a locação do imóvel situado à <span class="highlight" id="out-endereco">[Endereço do Imóvel]</span>, em perfeitas condições de habitabilidade e conservação.</p>
+            
+            <p><strong>3. DO PRAZO E DO VALOR</strong></p>
+            <p>O prazo total de locação é de <span class="highlight" id="out-prazo">[Prazo]</span> meses. O aluguel mensal fica acordado no valor de R$ <span class="highlight" id="out-valor">[Valor]</span>, devendo ser pago todo dia 10 de cada mês.</p>
+            
+            <p><strong>4. DA GARANTIA LOCATÍCIA</strong></p>
+            <p>Fica estabelecida como garantia deste contrato a seguinte modalidade: <span class="highlight" id="out-garantia">[Caução de 3 meses de aluguel]</span>.</p>
+
+            <br><br><br>
+            <p style="text-align: right;">Brasília - DF, <span id="data-atual"></span>.</p>
+            <br><br><br>
+            
+            <div style="display: flex; justify-content: space-between; text-align: center;">
+                <div style="width: 45%; border-top: 1px solid #000; padding-top: 5px;">
+                    Assinatura do Locador
+                </div>
+                <div style="width: 45%; border-top: 1px solid #000; padding-top: 5px;">
+                    Assinatura do Locatário
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Configura a data do dia automaticamente
+    const dataOptions = { year: 'numeric', month: 'long', day: 'numeric' };
+    document.getElementById('data-atual').textContent = new Date().toLocaleDateString('pt-BR', dataOptions);
+
+    // Função de Integração com ViaCEP
+    function buscarCEP(cep) {
+        // Remove tudo que não for número
+        const cepLimpo = cep.replace(/\D/g, '');
+        
+        // Verifica se tem 8 dígitos exatos
+        if (cepLimpo.length === 8) {
+            const loadingText = document.getElementById('cep-loading');
+            loadingText.style.display = 'block'; // Mostra "Buscando..."
+
+            fetch(`https://viacep.com.br/ws/${cepLimpo}/json/`)
+                .then(response => response.json())
+                .then(data => {
+                    loadingText.style.display = 'none'; // Esconde "Buscando..."
+                    
+                    if (!data.erro) {
+                        // Monta o endereço com os dados recebidos e um espaço para o número
+                        const enderecoFormatado = `${data.logradouro}, nº ___ - ${data.bairro}, ${data.localidade} - ${data.uf}, CEP: ${data.cep}`;
+                        
+                        // Joga pro input e dispara a atualização visual
+                        const inputEndereco = document.getElementById('in-endereco');
+                        inputEndereco.value = enderecoFormatado;
+                        updatePreview();
+                        
+                        // Foca no input de endereço pra facilitar a digitação do número
+                        inputEndereco.focus();
+                    } else {
+                        alert('CEP não encontrado. Verifique e tente novamente.');
+                    }
+                })
+                .catch(error => {
+                    loadingText.style.display = 'none';
+                    console.error('Erro ao buscar o CEP:', error);
+                });
+        }
+    }
+
+    // Função que atualiza o preview em tempo real
+    function updatePreview() {
+        const fields = ['locador', 'cpf-locador', 'locatario', 'cpf-locatario', 'endereco', 'valor', 'prazo', 'garantia'];
+        
+        fields.forEach(field => {
+            const inputEl = document.getElementById('in-' + field);
+            const outputEl = document.getElementById('out-' + field);
+            
+            if (!inputEl || !outputEl) return;
+            
+            const inputVal = inputEl.value;
+            
+            if (inputVal.trim() !== '') {
+                // Se o campo tiver texto, atualiza o span e tira o destaque amarelo
+                outputEl.textContent = inputVal;
+                outputEl.classList.add('filled');
+                outputEl.classList.remove('highlight');
+            } else {
+                // Se o usuário apagar, volta o texto padrão e a cor de alerta
+                let fallback = field === 'garantia' ? 'Caução de 3 meses de aluguel' : '[' + inputEl.getAttribute('placeholder') + ']';
+                outputEl.textContent = fallback;
+                outputEl.classList.add('highlight');
+                outputEl.classList.remove('filled');
+            }
+        });
+    }
+
+    // Função de geração do PDF corrigida
+    function gerarPDF() {
+        // 1. Força uma última atualização dos dados
+        updatePreview();
+
+        const element = document.getElementById('document-preview');
+
+        // 2. Adiciona classe de impressão para limpar o layout (remover amarelos) no PDF
+        element.classList.add('is-printing');
+
+        // 3. Configurações otimizadas para capturar o conteúdo dinâmico
+        const opt = {
+            margin: [15, 15, 15, 15],
+            filename: 'contrato_locacao.pdf',
+            image: { type: 'jpeg', quality: 0.98 },
+            html2canvas: { 
+                scale: 2, 
+                useCORS: true, 
+                letterRendering: true,
+                logging: false // desativa logs para performance
+            },
+            jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+        };
+
+        // 4. Executa a conversão
+        html2pdf().set(opt).from(element).save().then(() => {
+            // 5. Remove a classe para os destaques voltarem no preview da tela
+            element.classList.remove('is-printing');
+        }).catch(err => {
+            console.error("Erro ao gerar PDF:", err);
+            element.classList.remove('is-printing');
+        });
+    }
+
+    // Roda a função uma vez no início para popular selects e placeholders
+    updatePreview();
+</script>
+
+</body>
+</html>
