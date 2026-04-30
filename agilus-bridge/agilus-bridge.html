@@ -1,0 +1,634 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cortex Tech | Agilus Bridge Pro Max</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+    <script>pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';</script>
+
+    <style>
+        body { font-family: 'Inter', sans-serif; background-color: #f8fafc; }
+        .glass { background: rgba(255, 255, 255, 0.95); border: 1px solid rgba(226, 232, 240, 1); }
+        .hidden-field { display: none; }
+    </style>
+</head>
+
+<body class="p-4 md:p-8">
+
+    <div class="max-w-6xl mx-auto">
+        <!-- Header -->
+        <header class="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
+            <div>
+                <h1 class="text-3xl font-bold text-slate-900 tracking-tight">Agilus Bridge <span class="text-indigo-600">Pro Max</span></h1>
+                <p class="text-slate-500">Leitor Híbrido (Extrato PDF & Scripts do WhatsApp) + Ocorrências</p>
+            </div>
+            <div class="flex items-center gap-4">
+                <a id="bookmarkletLink" href="#"
+                    class="px-4 py-2 bg-white border-2 border-indigo-600 text-indigo-600 rounded-full text-xs font-bold hover:bg-indigo-600 hover:text-white transition-colors cursor-move shadow-sm">
+                    🚀 INJETAR NO AGILUS (Arraste pros Favoritos)
+                </a>
+            </div>
+        </header>
+
+        <div class="grid grid-cols-1 xl:grid-cols-3 gap-8">
+
+            <!-- Coluna 1: Leitor de PDF / Texto -->
+            <div class="xl:col-span-1 space-y-6">
+                <div class="glass p-6 rounded-2xl shadow-sm">
+                    <h2 class="text-lg font-semibold text-slate-800 mb-4 flex items-center gap-2">
+                        <svg class="w-5 h-5 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path></svg>
+                        1. Importar Extrato ou Script
+                    </h2>
+
+                    <div class="mb-4">
+                        <label class="block text-xs font-semibold text-slate-500 mb-2 uppercase">Arquivo PDF</label>
+                        <input type="file" id="pdfUpload" accept=".pdf" class="block w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100">
+                    </div>
+
+                    <div class="flex items-center mb-4">
+                        <div class="flex-grow border-t border-slate-200"></div>
+                        <span class="flex-shrink-0 mx-4 text-slate-400 text-xs">OU</span>
+                        <div class="flex-grow border-t border-slate-200"></div>
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="block text-xs font-semibold text-slate-500 mb-2 uppercase">Colar Texto (Extrato ou WhatsApp)</label>
+                        <textarea id="rawText" rows="6" class="w-full px-3 py-2 text-sm rounded-lg border border-slate-200 focus:ring-2 focus:ring-indigo-500 outline-none transition" placeholder="Cole o extrato ou o script do Thiago aqui..."></textarea>
+                    </div>
+
+                    <button onclick="processarTexto()" class="w-full bg-slate-800 hover:bg-slate-900 text-white font-medium py-2 px-4 rounded-lg transition-colors">
+                        Ler e Preencher
+                    </button>
+                </div>
+
+                <div id="contractsPanel" class="glass p-6 rounded-2xl shadow-sm hidden-field">
+                    <h2 class="text-lg font-semibold text-slate-800 mb-4">2. Selecionar Contrato</h2>
+                    <p class="text-xs text-slate-500 mb-4">Clique no contrato que deseja lançar.</p>
+                    <div id="contractsList" class="space-y-3 max-h-96 overflow-y-auto pr-2"></div>
+                </div>
+            </div>
+
+            <!-- Coluna 2 e 3: Formulário Final -->
+            <div class="xl:col-span-2 space-y-6">
+                <div class="glass p-6 rounded-2xl shadow-sm relative">
+                    <h2 class="text-xl font-semibold text-slate-800 mb-6">3. Revisar e Preencher Dados</h2>
+                    <form id="agilusForm" class="space-y-6">
+                        
+                        <!-- Dados do Cliente -->
+                        <div>
+                            <h3 class="text-sm font-bold text-slate-700 border-b pb-2 mb-4">Dados do Cliente</h3>
+                            <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                                <div class="space-y-1 md:col-span-2">
+                                    <label class="text-xs font-semibold text-slate-500 uppercase">Nome</label>
+                                    <input type="text" name="nome" id="f_nome" class="w-full px-3 py-2 rounded-lg border border-slate-200 focus:ring-2 focus:ring-indigo-500 outline-none">
+                                </div>
+                                <div class="space-y-1 md:col-span-2">
+                                    <label class="text-xs font-semibold text-slate-500 uppercase">CPF</label>
+                                    <input type="text" name="cpf" id="f_cpf" class="w-full px-3 py-2 rounded-lg border border-slate-200 focus:ring-2 focus:ring-indigo-500 outline-none">
+                                </div>
+                                <div class="space-y-1 md:col-span-2">
+                                    <label class="text-xs font-semibold text-slate-500 uppercase">Matrícula</label>
+                                    <input type="text" name="matricula" id="f_matricula" class="w-full px-3 py-2 rounded-lg border border-slate-200 focus:ring-2 focus:ring-indigo-500 outline-none">
+                                </div>
+                                <div class="space-y-1 md:col-span-2">
+                                    <label class="text-xs font-semibold text-slate-500 uppercase">Data de Nascimento</label>
+                                    <input type="text" name="dataNascimento" id="f_dataNascimento" placeholder="DD/MM/AAAA" class="w-full px-3 py-2 rounded-lg border border-slate-200 focus:ring-2 focus:ring-indigo-500 outline-none">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Classificação da Venda -->
+                        <div>
+                            <h3 class="text-sm font-bold text-slate-700 border-b pb-2 mb-4">Classificação da Venda</h3>
+                            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                <div class="space-y-1">
+                                    <label class="text-xs font-semibold text-slate-500 uppercase">Tipo de Contrato</label>
+                                    <select name="tipoContrato" id="tipoContrato" onchange="toggleConditionalFields()" class="w-full px-3 py-2 rounded-lg border border-slate-200 focus:ring-2 focus:ring-indigo-500 outline-none bg-white">
+                                        <option value="Novo">Novo</option>
+                                        <option value="Refinanciamento">Refinanciamento</option>
+                                        <option value="Portabilidade">Portabilidade</option>
+                                        <option value="Cartão Benefício">Cartão Benefício</option>
+                                        <option value="Cartão">Cartão</option>
+                                    </select>
+                                </div>
+                                <div class="space-y-1">
+                                    <label class="text-xs font-semibold text-slate-500 uppercase">Convênio</label>
+                                    <select name="convenio" id="f_convenio" class="w-full px-3 py-2 rounded-lg border border-slate-200 focus:ring-2 focus:ring-indigo-500 outline-none bg-white">
+                                        <option value="SIAPE">SIAPE</option>
+                                        <option value="INSS">INSS</option>
+                                        <option value="MARINHA">MARINHA</option>
+                                        <option value="Exercito">Exercito</option>
+                                        <option value="Governo">Governo</option>
+                                    </select>
+                                </div>
+                                <div class="space-y-1">
+                                    <label class="text-xs font-semibold text-slate-500 uppercase">Banco (Alvo)</label>
+                                    <input type="text" name="banco" id="f_banco" placeholder="Ex: 237" class="w-full px-3 py-2 rounded-lg border border-slate-200 focus:ring-2 focus:ring-indigo-500 outline-none">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Valores do Contrato -->
+                        <div>
+                            <h3 class="text-sm font-bold text-slate-700 border-b pb-2 mb-4">Valores do Contrato</h3>
+                            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                <div class="space-y-1">
+                                    <label class="text-xs font-semibold text-slate-500 uppercase">Valor Bruto / Liberado</label>
+                                    <input type="text" name="valorBruto" id="f_valorBruto" class="w-full px-3 py-2 rounded-lg border border-slate-200 focus:ring-2 focus:ring-indigo-500 outline-none">
+                                </div>
+                                <div class="space-y-1">
+                                    <label class="text-xs font-semibold text-slate-500 uppercase">Valor da Parcela</label>
+                                    <input type="text" name="valorParcela" id="f_valorParcela" class="w-full px-3 py-2 rounded-lg border border-slate-200 focus:ring-2 focus:ring-indigo-500 outline-none">
+                                </div>
+                                <div class="space-y-1">
+                                    <label class="text-xs font-semibold text-slate-500 uppercase">Prazo</label>
+                                    <input type="text" name="prazo" id="f_prazo" class="w-full px-3 py-2 rounded-lg border border-slate-200 focus:ring-2 focus:ring-indigo-500 outline-none">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Portabilidade -->
+                        <div id="boxPortabilidade" class="hidden-field bg-indigo-50 p-4 rounded-xl border border-indigo-100">
+                            <h3 class="text-sm font-bold text-indigo-800 border-b border-indigo-200 pb-2 mb-4">Dados da Portabilidade / Refinanciamento</h3>
+                            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                <div class="space-y-1">
+                                    <label class="text-xs font-semibold text-indigo-700 uppercase">Banco Portado</label>
+                                    <input type="text" name="bancoPortado" id="f_bancoPortado" class="w-full px-3 py-2 rounded-lg border border-indigo-200 focus:ring-2 focus:ring-indigo-500 outline-none">
+                                </div>
+                                <div class="space-y-1">
+                                    <label class="text-xs font-semibold text-indigo-700 uppercase">Nº Contrato Portado</label>
+                                    <input type="text" name="contratoPortado" id="f_contratoPortado" class="w-full px-3 py-2 rounded-lg border border-indigo-200 focus:ring-2 focus:ring-indigo-500 outline-none">
+                                </div>
+                                <div class="space-y-1">
+                                    <label class="text-xs font-semibold text-indigo-700 uppercase">Saldo Portado</label>
+                                    <input type="text" name="saldoPortado" id="f_saldoPortado" class="w-full px-3 py-2 rounded-lg border border-indigo-200 focus:ring-2 focus:ring-indigo-500 outline-none">
+                                </div>
+                                <div class="space-y-1">
+                                    <label class="text-xs font-semibold text-indigo-700 uppercase">Valor Parcela Portado</label>
+                                    <input type="text" name="valorParcelaPortado" id="f_valorParcelaPortado" class="w-full px-3 py-2 rounded-lg border border-indigo-200 focus:ring-2 focus:ring-indigo-500 outline-none">
+                                </div>
+                                <div class="space-y-1">
+                                    <label class="text-xs font-semibold text-indigo-700 uppercase">Prazo Original</label>
+                                    <input type="text" name="prazoOriginal" id="f_prazoOriginal" class="w-full px-3 py-2 rounded-lg border border-indigo-200 focus:ring-2 focus:ring-indigo-500 outline-none">
+                                </div>
+                                <div class="space-y-1">
+                                    <label class="text-xs font-semibold text-indigo-700 uppercase">Prazo Restante Portado</label>
+                                    <input type="text" name="prazoRestante" id="f_prazoRestante" class="w-full px-3 py-2 rounded-lg border border-indigo-200 focus:ring-2 focus:ring-indigo-500 outline-none">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Vendedor, Contato & Ocorrências -->
+                        <div>
+                            <h3 class="text-sm font-bold text-slate-700 border-b pb-2 mb-4">Dados Adicionais (Modais)</h3>
+                            <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                                <div class="space-y-1 md:col-span-2">
+                                    <label class="text-xs font-semibold text-slate-500 uppercase">Vendedor</label>
+                                    <input type="text" name="vendedor" placeholder="Nome do Vendedor" class="w-full px-3 py-2 rounded-lg border border-slate-200 focus:ring-2 focus:ring-indigo-500 outline-none">
+                                </div>
+                                <div class="space-y-1 md:col-span-2">
+                                    <label class="text-xs font-semibold text-slate-500 uppercase">Email</label>
+                                    <input type="email" name="email" id="f_email" placeholder="cliente@email.com" class="w-full px-3 py-2 rounded-lg border border-slate-200 focus:ring-2 focus:ring-indigo-500 outline-none">
+                                </div>
+                                <div class="space-y-1">
+                                    <label class="text-xs font-semibold text-slate-500 uppercase">DDD</label>
+                                    <input type="text" name="ddd" id="f_ddd" placeholder="61" maxlength="2" class="w-full px-3 py-2 rounded-lg border border-slate-200 focus:ring-2 focus:ring-indigo-500 outline-none">
+                                </div>
+                                <div class="space-y-1 md:col-span-3">
+                                    <label class="text-xs font-semibold text-slate-500 uppercase">Telefone</label>
+                                    <input type="text" name="telefone" id="f_telefone" placeholder="90000-0000" class="w-full px-3 py-2 rounded-lg border border-slate-200 focus:ring-2 focus:ring-indigo-500 outline-none">
+                                </div>
+                                <div class="space-y-1 md:col-span-4">
+                                    <label class="text-xs font-semibold text-slate-500 uppercase">Script / Ocorrência</label>
+                                    <textarea name="ocorrencia" id="f_ocorrencia" rows="3" placeholder="O script extraído ou anotações irão aqui..." class="w-full px-3 py-2 rounded-lg border border-slate-200 focus:ring-2 focus:ring-indigo-500 outline-none"></textarea>
+                                </div>
+                            </div>
+                        </div>
+
+                    </form>
+
+                    <div class="mt-8">
+                        <button onclick="copiarDados()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-4 px-6 rounded-xl shadow-lg shadow-indigo-200 transition-all active:scale-[0.98] flex items-center justify-center gap-2 text-lg">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3"></path></svg>
+                            4. Copiar Dados & Injetar no Agilus
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // LÓGICA DO BOOKMARKLET ATUALIZADA (Banco com Delay + Vendedor)
+        const botLogic = async function() {
+            const overlay = document.createElement('div');
+            overlay.style.cssText = 'position:fixed;top:0;left:0;width:100vw;height:100vh;background:rgba(0,0,0,0.8);z-index:99999;display:flex;justify-content:center;align-items:center;color:white;font-size:24px;font-family:sans-serif;flex-direction:column;';
+            overlay.innerHTML = '<div>⏳ Hackeando a Matrix do Agilus...</div><div style="font-size:16px;margin-top:10px;color:#cbd5e1;">Aguarde, injetando dados e ocorrências.</div>';
+            document.body.appendChild(overlay);
+
+            try {
+                let text = '';
+                try { 
+                    text = await navigator.clipboard.readText(); 
+                } catch(e) { 
+                    text = prompt('Chrome bloqueou a leitura automática. Dê um CTRL+V (Cole) os dados aqui:'); 
+                    if(!text) { document.body.removeChild(overlay); return; }
+                }
+                
+                const d = JSON.parse(text);
+                const delay = ms => new Promise(r => setTimeout(r, ms));
+
+                async function clickBtn(btnText) {
+                    const spans = Array.from(document.querySelectorAll('.block, .q-btn__content, .q-btn__label'));
+                    const targetSpan = spans.find(s => s.textContent.trim().toUpperCase() === btnText.toUpperCase());
+                    if (targetSpan) {
+                        const btn = targetSpan.closest('button') || targetSpan.closest('.q-btn');
+                        if (btn) {
+                            btn.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                            await delay(300);
+                            btn.click();
+                            console.log("Clicou no botão:", btnText);
+                            await delay(1200); 
+                            return true;
+                        }
+                    }
+                    console.warn("Botão não encontrado:", btnText);
+                    return false;
+                }
+
+                function p(labelTxt, value) {
+                    if (!value) return;
+                    try {
+                        const inputs = Array.from(document.querySelectorAll('input, textarea'));
+                        let targetInput = null;
+
+                        for (let i = inputs.length - 1; i >= 0; i--) {
+                            const input = inputs[i];
+                            if (input.getAttribute('aria-label') === labelTxt || input.placeholder === labelTxt) {
+                                targetInput = input;
+                                break;
+                            }
+                            const wrapper = input.closest('.q-field');
+                            if (wrapper) {
+                                const labelNode = wrapper.querySelector('.q-field__label');
+                                if (labelNode && labelNode.textContent.trim() === labelTxt) {
+                                    targetInput = input;
+                                    break;
+                                }
+                            }
+                        }
+
+                        if (targetInput) {
+                            targetInput.focus();
+                            const nativeSetter = Object.getOwnPropertyDescriptor(
+                                window.HTMLInputElement.prototype.isPrototypeOf(targetInput) 
+                                ? window.HTMLInputElement.prototype 
+                                : window.HTMLTextAreaElement.prototype, 
+                                "value"
+                            ).set;
+                            
+                            nativeSetter.call(targetInput, value);
+                            targetInput.dispatchEvent(new Event('input', { bubbles: true, composed: true }));
+                            targetInput.dispatchEvent(new InputEvent('input', { inputType: 'insertText', data: value, bubbles: true, composed: true, isComposing: false }));
+                            targetInput.dispatchEvent(new Event('change', { bubbles: true, composed: true }));
+                            targetInput.blur();
+                            console.log("Preencheu:", labelTxt);
+                        } else {
+                            console.warn("Campo não encontrado:", labelTxt);
+                        }
+                    } catch(e) { console.error('Erro em:', labelTxt, e); }
+                }
+
+                // Função de Select Turbinada (Digita pra filtrar listas longas tipo Banco)
+                async function s(labelTxt, valueText) {
+                    if (!valueText) return;
+                    try {
+                        const labels = Array.from(document.querySelectorAll('.q-field__label'));
+                        const targetLabel = labels.find(l => l.textContent.trim() === labelTxt);
+                        if (!targetLabel) return;
+                        
+                        const wrapper = targetLabel.closest('.q-field');
+                        const fieldControl = wrapper.querySelector('.q-field__control');
+                        const inputField = wrapper.querySelector('input'); 
+
+                        if (fieldControl) {
+                            fieldControl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                            fieldControl.click();
+                            await delay(800);
+
+                            // Se tiver um input de busca dentro do select (ex: Banco), ele digita e espera a API
+                            if(inputField) {
+                                const nativeSetter = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, "value").set;
+                                nativeSetter.call(inputField, valueText);
+                                inputField.dispatchEvent(new Event('input', { bubbles: true, composed: true }));
+                                await delay(1500); // Tempo extra pro Banese aparecer
+                            } else {
+                                await delay(800);
+                            }
+
+                            const menusAbertos = document.querySelectorAll('.q-menu');
+                            if (menusAbertos.length > 0) {
+                                const menuAtual = menusAbertos[menusAbertos.length - 1];
+                                const opcoes = Array.from(menuAtual.querySelectorAll('.q-item'));
+                                const targetOption = opcoes.find(opt => {
+                                    const textoOpcao = opt.textContent || opt.innerText;
+                                    return textoOpcao.toUpperCase().includes(valueText.toUpperCase());
+                                });
+                                if (targetOption) {
+                                    targetOption.click();
+                                } else {
+                                    console.warn("Opção de Select não achada:", valueText);
+                                    document.body.click(); 
+                                }
+                            }
+                            await delay(500);
+                        }
+                    } catch(e) { console.error(e) }
+                }
+
+                // 1. Dados Básicos
+                const matriculaLimpa = d.matricula ? d.matricula.replace(/[^0-9]/g, '') : '';
+                p('Matrícula', matriculaLimpa);
+                p('Nome', d.nome);
+                p('CPF/CNPJ', d.cpf);
+                p('Data de Nascimento', d.dataNascimento);
+                p('Valor Bruto', d.valorBruto);
+                p('Prazo', d.prazo);
+                p('Valor da Parcela', d.valorParcela);
+
+                await s('Tipo do Contrato', d.tipoContrato);
+                await s('Convênio', d.convenio);
+                await s('Banco', d.banco); // Agora com delay e filtro de digitação
+
+                // 2. Portabilidade
+                if(d.tipoContrato === 'Portabilidade' || d.tipoContrato === 'Refinanciamento'){
+                    await clickBtn('ADICIONAR CONTRATO');
+                    await s('Banco portado', d.bancoPortado);
+                    p('Nº Contrato Portado', d.contratoPortado);
+                    p('Saldo Portado', d.saldoPortado);
+                    p('Valor Parcela Portado', d.valorParcelaPortado);
+                    p('Prazo Original', d.prazoOriginal);
+                    p('Prazo Restante Portado', d.prazoRestante);
+                }
+
+                // 3. Modais (Telefone, Email, Vendedor)
+                if (d.ddd || d.telefone) {
+                    await clickBtn('ADICIONAR TELEFONE');
+                    p('DDD', d.ddd);
+                    p('Número', d.telefone); 
+                }
+
+                if (d.email) {
+                    await clickBtn('ADICIONAR EMAIL');
+                    p('Endereço', d.email); 
+                }
+
+                if (d.vendedor) {
+                    await clickBtn('ADICIONAR VENDEDOR');
+                    await delay(500);
+                    await s('Vendedor', d.vendedor); // Tenta selecionar se for um dropdown
+                    p('Vendedor', d.vendedor);       // Fallback se for texto simples
+                }
+
+                // 4. OCORRÊNCIAS
+                if (d.ocorrencia) {
+                    try {
+                        const tabs = Array.from(document.querySelectorAll('.q-tab'));
+                        const tabOcorrencia = tabs.find(t => t.textContent.toUpperCase().includes('OCORRÊNCIAS'));
+                        if (tabOcorrencia) {
+                            const btnAdd = tabOcorrencia.querySelector('button');
+                            if (btnAdd) {
+                                btnAdd.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                                btnAdd.click();
+                                await delay(1000); 
+                                
+                                p('Texto', d.ocorrencia); 
+                                await delay(500);
+
+                                const dialogs = document.querySelectorAll('.q-dialog');
+                                const activeDialog = dialogs.length > 0 ? dialogs[dialogs.length - 1] : document;
+                                const dialogBtns = Array.from(activeDialog.querySelectorAll('.block, .q-btn__content'));
+                                const saveBtn = dialogBtns.find(b => b.textContent.trim().toUpperCase() === 'SALVAR');
+                                
+                                if (saveBtn) {
+                                    saveBtn.closest('button').click();
+                                    await delay(800);
+                                }
+                            }
+                        }
+                    } catch(e) { console.error('Erro ao preencher Ocorrência', e); }
+                }
+
+                document.body.removeChild(overlay);
+                alert('✅ Hack concluído! Dados, Vendedor e Ocorrências injetados.');
+
+            } catch (e) {
+                if(document.body.contains(overlay)) document.body.removeChild(overlay);
+                alert('Erro na matriz! Verifique o console.');
+            }
+        };
+
+        const bookmarkletURL = 'javascript:(' + encodeURIComponent(botLogic.toString()) + ')();';
+        document.getElementById('bookmarkletLink').href = bookmarkletURL;
+
+        function toggleConditionalFields() {
+            const tipo = document.getElementById('tipoContrato').value;
+            const box = document.getElementById('boxPortabilidade');
+            if (tipo === 'Portabilidade' || tipo === 'Refinanciamento') {
+                box.style.display = 'block';
+            } else {
+                box.style.display = 'none';
+            }
+        }
+
+        function copiarDados() {
+            const form = document.getElementById('agilusForm');
+            const formData = new FormData(form);
+            const data = Object.fromEntries(formData.entries());
+
+            navigator.clipboard.writeText(JSON.stringify(data)).then(() => {
+                alert('🚀 Tudo copiado! Vá para a aba do Agilus e clique no Bookmarklet.');
+            }).catch(err => {
+                alert('Erro ao copiar dados para a área de transferência.');
+            });
+        }
+
+        document.getElementById('pdfUpload').addEventListener('change', async (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            const fileReader = new FileReader();
+            fileReader.onload = async function () {
+                const typedarray = new Uint8Array(this.result);
+                const pdf = await pdfjsLib.getDocument(typedarray).promise;
+                let text = "";
+                for (let i = 1; i <= pdf.numPages; i++) {
+                    const page = await pdf.getPage(i);
+                    const textContent = await page.getTextContent();
+                    text += textContent.items.map(s => s.str).join('\n') + "\n";
+                }
+                document.getElementById('rawText').value = text;
+                processarTexto();
+            };
+            fileReader.readAsArrayBuffer(file);
+        });
+
+        function processarTexto() {
+            const text = document.getElementById('rawText').value;
+            if (!text) return;
+
+            const extracted = { nome: "", cpf: "", matricula: "", dataNascimento: "", ocorrencia: "", contratos: [] };
+            
+            // MODO 1: SCRIPT DO WHATSAPP (Margem Livre, etc)
+            if (text.includes("Liberação") || text.includes("Data nascimento:")) {
+                const matchNome = text.match(/Nome:\s*(.+)/i);
+                const matchCPF = text.match(/CPF:\s*([\d\.-]+)/i);
+                const matchNasc = text.match(/Data nascimento:\s*([\d\/]+)/i);
+                const matchMatricula = text.match(/Matrícula:\s*(\d+)/i);
+                const matchOrgao = text.match(/Órgão:\s*(.+)/i);
+                const matchTel = text.match(/Tel:\s*(\d{2})\s*([\d-]+)/i);
+                const matchEmail = text.match(/E-mail:\s*([^\s]+)/i);
+                const matchParcela = text.match(/Parcela:\s*([\d\.,]+)/i);
+                const matchPrazo = text.match(/Prazo:\s*(\d+)/i);
+                const matchLiberado = text.match(/Liberado:\s*([\d\.,]+)/i);
+
+                // NOVO: Lê o banco que estiver na primeira frase do WhatsApp
+                const matchBanco = text.match(/Banese|Bradesco|Pan|BMG|Ita[úu]|Santander|Caixa/i);
+                if (matchBanco) document.getElementById('f_banco').value = matchBanco[0].toUpperCase();
+
+                if (matchNome) extracted.nome = matchNome[1].trim();
+                if (matchCPF) extracted.cpf = matchCPF[1].trim();
+                if (matchNasc) extracted.dataNascimento = matchNasc[1].trim();
+                if (matchMatricula) extracted.matricula = matchMatricula[1].trim();
+                if (matchTel) {
+                    document.getElementById('f_ddd').value = matchTel[1].trim();
+                    document.getElementById('f_telefone').value = matchTel[2].trim();
+                }
+                if (matchEmail) document.getElementById('f_email').value = matchEmail[1].trim();
+                if (matchParcela) document.getElementById('f_valorParcela').value = matchParcela[1].trim();
+                if (matchPrazo) document.getElementById('f_prazo').value = matchPrazo[1].trim();
+                if (matchLiberado) document.getElementById('f_valorBruto').value = matchLiberado[1].trim();
+                
+                if (matchOrgao) {
+                    const org = matchOrgao[1].trim().toUpperCase();
+                    if (org.includes("INSS")) document.getElementById('f_convenio').value = "INSS";
+                    if (org.includes("SIAPE")) document.getElementById('f_convenio').value = "SIAPE";
+                }
+
+                document.getElementById('tipoContrato').value = "Novo"; 
+                document.getElementById('f_ocorrencia').value = text; 
+                
+                preencherInterfaceBase(extracted);
+                toggleConditionalFields();
+                document.getElementById('contractsPanel').style.display = 'none';
+                return;
+            }
+
+            // MODO 2: PDF EXTRATO
+            const lines = text.split('\n').map(l => l.replace(/\|/g, '').trim()).filter(l => l !== '');
+
+            for (let i = 0; i < lines.length; i++) {
+                if (!extracted.cpf) {
+                    const cpfMatch = lines[i].match(/(\d{3}\.\d{3}\.\d{3}-\d{2})/);
+                    if (cpfMatch) {
+                        extracted.cpf = cpfMatch[1];
+                        if (i + 1 < lines.length) extracted.matricula = lines[i + 1];
+                        if (i + 2 < lines.length) extracted.nome = lines[i + 2];
+                    }
+                }
+            }
+
+            for (let i = 0; i < lines.length; i++) {
+                if (/^\d{8,20}$/.test(lines[i])) {
+                    let contrato = lines[i];
+                    let bancoDesc = "N/A";
+                    let prazoAtual = 0, prazoTotal = 0;
+                    let valorParcela = "0,00";
+                    let validContract = false;
+
+                    for (let j = i + 1; j <= Math.min(i + 10, lines.length - 1); j++) {
+                        if (/^\d{8,20}$/.test(lines[j])) break;
+                        if (lines[j].includes("EMPREST") || lines[j].includes("BCO") || lines[j].includes("AMORT") || lines[j].includes("BMG") || lines[j].includes("PAN") || lines[j].includes("BRADESC")) {
+                            bancoDesc = lines[j];
+                        }
+                        const parcelaMatch = lines[j].match(/^(\d{1,3})\/(\d{1,3})$/);
+                        if (parcelaMatch) {
+                            prazoAtual = parseInt(parcelaMatch[1]);
+                            prazoTotal = parseInt(parcelaMatch[2]);
+                            validContract = true;
+                        }
+                        const valorMatch = lines[j].match(/R\$\s*([\d\.,]+)/);
+                        if (valorMatch) valorParcela = valorMatch[1];
+                    }
+
+                    if (validContract) {
+                        extracted.contratos.push({
+                            contrato: contrato, bancoDesc: bancoDesc,
+                            prazoAtual: prazoAtual, prazoTotal: prazoTotal,
+                            prazoRestante: String(Math.max(0, prazoTotal - prazoAtual)),
+                            valorParcela: valorParcela
+                        });
+                    }
+                }
+            }
+
+            preencherInterfaceBase(extracted);
+            renderizarContratos(extracted.contratos);
+        }
+
+        function preencherInterfaceBase(data) {
+            if (data.nome) document.getElementById('f_nome').value = data.nome;
+            if (data.cpf) document.getElementById('f_cpf').value = data.cpf;
+            if (data.matricula) document.getElementById('f_matricula').value = data.matricula;
+            if (data.dataNascimento) document.getElementById('f_dataNascimento').value = data.dataNascimento;
+        }
+
+        function renderizarContratos(contratos) {
+            const list = document.getElementById('contractsList');
+            const panel = document.getElementById('contractsPanel');
+            list.innerHTML = "";
+
+            if (contratos.length === 0) {
+                list.innerHTML = "<p class='text-xs text-red-500'>Nenhum contrato detectado. Verifique o texto.</p>";
+            } else {
+                contratos.forEach((c, index) => {
+                    const card = document.createElement('div');
+                    card.className = "p-3 border border-slate-200 rounded-lg hover:border-indigo-400 hover:bg-indigo-50 cursor-pointer transition-colors";
+                    card.innerHTML = `
+                        <div class="flex justify-between items-start mb-1">
+                            <span class="font-bold text-sm text-slate-800">Contrato: ${c.contrato}</span>
+                            <span class="bg-slate-100 text-slate-600 px-2 py-0.5 rounded text-xs">R$ ${c.valorParcela}</span>
+                        </div>
+                        <div class="text-xs text-slate-500 truncate mb-1">${c.bancoDesc}</div>
+                        <div class="text-xs font-semibold text-indigo-600">Parcela: ${c.prazoAtual}/${c.prazoTotal} (Faltam ${c.prazoRestante})</div>
+                    `;
+                    card.onclick = () => carregarContratoNoForm(c);
+                    list.appendChild(card);
+                });
+            }
+            panel.style.display = 'block';
+        }
+
+        function carregarContratoNoForm(c) {
+            document.getElementById('f_valorParcela').value = c.valorParcela;
+            document.getElementById('f_prazo').value = c.prazoTotal;
+            document.getElementById('f_contratoPortado').value = c.contrato;
+            document.getElementById('f_valorParcelaPortado').value = c.valorParcela;
+            document.getElementById('f_prazoOriginal').value = c.prazoTotal;
+            document.getElementById('f_prazoRestante').value = c.prazoRestante;
+
+            const matchBanco = c.bancoDesc.match(/PAN|BRADESC|BMG|ITAÚ|SANTANDER|CAIXA/i);
+            document.getElementById('f_bancoPortado').value = matchBanco ? matchBanco[0] : "";
+
+            document.getElementById('tipoContrato').value = "Portabilidade";
+            toggleConditionalFields();
+
+            alert(`✅ Contrato ${c.contrato} selecionado! Coloque o 'Valor Bruto' que faltou e injete no Agilus.`);
+        }
+    </script>
+</body>
+</html>
