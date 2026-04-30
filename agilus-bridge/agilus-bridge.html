@@ -11,9 +11,19 @@
     <script>pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';</script>
 
     <style>
-        body { font-family: 'Inter', sans-serif; background-color: #f8fafc; }
-        .glass { background: rgba(255, 255, 255, 0.95); border: 1px solid rgba(226, 232, 240, 1); }
-        .hidden-field { display: none; }
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f8fafc;
+        }
+
+        .glass {
+            background: rgba(255, 255, 255, 0.95);
+            border: 1px solid rgba(226, 232, 240, 1);
+        }
+
+        .hidden-field {
+            display: none;
+        }
     </style>
 </head>
 
@@ -23,7 +33,8 @@
         <!-- Header -->
         <header class="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
             <div>
-                <h1 class="text-3xl font-bold text-slate-900 tracking-tight">Agilus Bridge <span class="text-indigo-600">Pro Max</span></h1>
+                <h1 class="text-3xl font-bold text-slate-900 tracking-tight">Agilus Bridge <span
+                        class="text-indigo-600">Pro Max</span></h1>
                 <p class="text-slate-500">Leitor Híbrido (Extrato PDF & Scripts do WhatsApp) + Ocorrências</p>
             </div>
             <div class="flex items-center gap-4">
@@ -40,13 +51,18 @@
             <div class="xl:col-span-1 space-y-6">
                 <div class="glass p-6 rounded-2xl shadow-sm">
                     <h2 class="text-lg font-semibold text-slate-800 mb-4 flex items-center gap-2">
-                        <svg class="w-5 h-5 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path></svg>
+                        <svg class="w-5 h-5 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12">
+                            </path>
+                        </svg>
                         1. Importar Extrato ou Script
                     </h2>
 
                     <div class="mb-4">
                         <label class="block text-xs font-semibold text-slate-500 mb-2 uppercase">Arquivo PDF</label>
-                        <input type="file" id="pdfUpload" accept=".pdf" class="block w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100">
+                        <input type="file" id="pdfUpload" accept=".pdf"
+                            class="block w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100">
                     </div>
 
                     <div class="flex items-center mb-4">
@@ -56,11 +72,15 @@
                     </div>
 
                     <div class="mb-4">
-                        <label class="block text-xs font-semibold text-slate-500 mb-2 uppercase">Colar Texto (Extrato ou WhatsApp)</label>
-                        <textarea id="rawText" rows="6" class="w-full px-3 py-2 text-sm rounded-lg border border-slate-200 focus:ring-2 focus:ring-indigo-500 outline-none transition" placeholder="Cole o extrato ou o script do Thiago aqui..."></textarea>
+                        <label class="block text-xs font-semibold text-slate-500 mb-2 uppercase">Colar Texto (Extrato ou
+                            WhatsApp)</label>
+                        <textarea id="rawText" rows="6"
+                            class="w-full px-3 py-2 text-sm rounded-lg border border-slate-200 focus:ring-2 focus:ring-indigo-500 outline-none transition"
+                            placeholder="Cole o extrato ou o script do Thiago aqui..."></textarea>
                     </div>
 
-                    <button onclick="processarTexto()" class="w-full bg-slate-800 hover:bg-slate-900 text-white font-medium py-2 px-4 rounded-lg transition-colors">
+                    <button onclick="processarTexto()"
+                        class="w-full bg-slate-800 hover:bg-slate-900 text-white font-medium py-2 px-4 rounded-lg transition-colors">
                         Ler e Preencher
                     </button>
                 </div>
@@ -72,31 +92,78 @@
                 </div>
             </div>
 
+            <div class="glass p-6 rounded-2xl shadow-sm border-l-4 border-indigo-500">
+                <h2 class="text-lg font-semibold text-slate-800 mb-4 flex items-center gap-2">
+                    <svg class="w-5 h-5 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z">
+                        </path>
+                    </svg>
+                    Modelo de Script (WhatsApp)
+                </h2>
+
+                <div class="bg-slate-50 p-3 rounded-lg border border-slate-200 relative group">
+                    <pre id="scriptTemplate"
+                        class="text-[10px] text-slate-600 leading-relaxed font-mono whitespace-pre-wrap">
+*Liberação margem livre Banese / Siape*
+
+Nome: Exemplo de Cliente Fictício 
+CPF: 000.000.000-00
+Data nascimento: 01/01/1980
+Idade: 46 anos 
+Matrícula: 123456
+Órgão: SIAPE
+Tel: 61 99999-9999
+E-mail: cliente.exemplo@provedor.com
+Parcela: 500,00
+Prazo: 96x 
+Liberado: 15.000,00</pre>
+
+                    <button onclick="copiarModelo()"
+                        class="absolute top-2 right-2 p-1.5 bg-white border border-slate-200 rounded-md shadow-sm opacity-0 group-hover:opacity-100 transition-opacity hover:text-indigo-600"
+                        title="Copiar Modelo">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3">
+                            </path>
+                        </svg>
+                    </button>
+                </div>
+                <p class="text-[10px] text-slate-400 mt-3 italic">* Altere os dados acima preservando os rótulos (Nome,
+                    CPF, etc.) para a leitura automática.</p>
+            </div>
+
             <!-- Coluna 2 e 3: Formulário Final -->
             <div class="xl:col-span-2 space-y-6">
                 <div class="glass p-6 rounded-2xl shadow-sm relative">
                     <h2 class="text-xl font-semibold text-slate-800 mb-6">3. Revisar e Preencher Dados</h2>
                     <form id="agilusForm" class="space-y-6">
-                        
+
                         <!-- Dados do Cliente -->
                         <div>
                             <h3 class="text-sm font-bold text-slate-700 border-b pb-2 mb-4">Dados do Cliente</h3>
                             <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
                                 <div class="space-y-1 md:col-span-2">
                                     <label class="text-xs font-semibold text-slate-500 uppercase">Nome</label>
-                                    <input type="text" name="nome" id="f_nome" class="w-full px-3 py-2 rounded-lg border border-slate-200 focus:ring-2 focus:ring-indigo-500 outline-none">
+                                    <input type="text" name="nome" id="f_nome"
+                                        class="w-full px-3 py-2 rounded-lg border border-slate-200 focus:ring-2 focus:ring-indigo-500 outline-none">
                                 </div>
                                 <div class="space-y-1 md:col-span-2">
                                     <label class="text-xs font-semibold text-slate-500 uppercase">CPF</label>
-                                    <input type="text" name="cpf" id="f_cpf" class="w-full px-3 py-2 rounded-lg border border-slate-200 focus:ring-2 focus:ring-indigo-500 outline-none">
+                                    <input type="text" name="cpf" id="f_cpf"
+                                        class="w-full px-3 py-2 rounded-lg border border-slate-200 focus:ring-2 focus:ring-indigo-500 outline-none">
                                 </div>
                                 <div class="space-y-1 md:col-span-2">
                                     <label class="text-xs font-semibold text-slate-500 uppercase">Matrícula</label>
-                                    <input type="text" name="matricula" id="f_matricula" class="w-full px-3 py-2 rounded-lg border border-slate-200 focus:ring-2 focus:ring-indigo-500 outline-none">
+                                    <input type="text" name="matricula" id="f_matricula"
+                                        class="w-full px-3 py-2 rounded-lg border border-slate-200 focus:ring-2 focus:ring-indigo-500 outline-none">
                                 </div>
                                 <div class="space-y-1 md:col-span-2">
-                                    <label class="text-xs font-semibold text-slate-500 uppercase">Data de Nascimento</label>
-                                    <input type="text" name="dataNascimento" id="f_dataNascimento" placeholder="DD/MM/AAAA" class="w-full px-3 py-2 rounded-lg border border-slate-200 focus:ring-2 focus:ring-indigo-500 outline-none">
+                                    <label class="text-xs font-semibold text-slate-500 uppercase">Data de
+                                        Nascimento</label>
+                                    <input type="text" name="dataNascimento" id="f_dataNascimento"
+                                        placeholder="DD/MM/AAAA"
+                                        class="w-full px-3 py-2 rounded-lg border border-slate-200 focus:ring-2 focus:ring-indigo-500 outline-none">
                                 </div>
                             </div>
                         </div>
@@ -106,8 +173,10 @@
                             <h3 class="text-sm font-bold text-slate-700 border-b pb-2 mb-4">Classificação da Venda</h3>
                             <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                                 <div class="space-y-1">
-                                    <label class="text-xs font-semibold text-slate-500 uppercase">Tipo de Contrato</label>
-                                    <select name="tipoContrato" id="tipoContrato" onchange="toggleConditionalFields()" class="w-full px-3 py-2 rounded-lg border border-slate-200 focus:ring-2 focus:ring-indigo-500 outline-none bg-white">
+                                    <label class="text-xs font-semibold text-slate-500 uppercase">Tipo de
+                                        Contrato</label>
+                                    <select name="tipoContrato" id="tipoContrato" onchange="toggleConditionalFields()"
+                                        class="w-full px-3 py-2 rounded-lg border border-slate-200 focus:ring-2 focus:ring-indigo-500 outline-none bg-white">
                                         <option value="Novo">Novo</option>
                                         <option value="Refinanciamento">Refinanciamento</option>
                                         <option value="Portabilidade">Portabilidade</option>
@@ -117,7 +186,8 @@
                                 </div>
                                 <div class="space-y-1">
                                     <label class="text-xs font-semibold text-slate-500 uppercase">Convênio</label>
-                                    <select name="convenio" id="f_convenio" class="w-full px-3 py-2 rounded-lg border border-slate-200 focus:ring-2 focus:ring-indigo-500 outline-none bg-white">
+                                    <select name="convenio" id="f_convenio"
+                                        class="w-full px-3 py-2 rounded-lg border border-slate-200 focus:ring-2 focus:ring-indigo-500 outline-none bg-white">
                                         <option value="SIAPE">SIAPE</option>
                                         <option value="INSS">INSS</option>
                                         <option value="MARINHA">MARINHA</option>
@@ -127,7 +197,8 @@
                                 </div>
                                 <div class="space-y-1">
                                     <label class="text-xs font-semibold text-slate-500 uppercase">Banco (Alvo)</label>
-                                    <input type="text" name="banco" id="f_banco" placeholder="Ex: 237" class="w-full px-3 py-2 rounded-lg border border-slate-200 focus:ring-2 focus:ring-indigo-500 outline-none">
+                                    <input type="text" name="banco" id="f_banco" placeholder="Ex: 237"
+                                        class="w-full px-3 py-2 rounded-lg border border-slate-200 focus:ring-2 focus:ring-indigo-500 outline-none">
                                 </div>
                             </div>
                         </div>
@@ -137,74 +208,99 @@
                             <h3 class="text-sm font-bold text-slate-700 border-b pb-2 mb-4">Valores do Contrato</h3>
                             <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                                 <div class="space-y-1">
-                                    <label class="text-xs font-semibold text-slate-500 uppercase">Valor Bruto / Liberado</label>
-                                    <input type="text" name="valorBruto" id="f_valorBruto" class="w-full px-3 py-2 rounded-lg border border-slate-200 focus:ring-2 focus:ring-indigo-500 outline-none">
+                                    <label class="text-xs font-semibold text-slate-500 uppercase">Valor Bruto /
+                                        Liberado</label>
+                                    <input type="text" name="valorBruto" id="f_valorBruto"
+                                        class="w-full px-3 py-2 rounded-lg border border-slate-200 focus:ring-2 focus:ring-indigo-500 outline-none">
                                 </div>
                                 <div class="space-y-1">
-                                    <label class="text-xs font-semibold text-slate-500 uppercase">Valor da Parcela</label>
-                                    <input type="text" name="valorParcela" id="f_valorParcela" class="w-full px-3 py-2 rounded-lg border border-slate-200 focus:ring-2 focus:ring-indigo-500 outline-none">
+                                    <label class="text-xs font-semibold text-slate-500 uppercase">Valor da
+                                        Parcela</label>
+                                    <input type="text" name="valorParcela" id="f_valorParcela"
+                                        class="w-full px-3 py-2 rounded-lg border border-slate-200 focus:ring-2 focus:ring-indigo-500 outline-none">
                                 </div>
                                 <div class="space-y-1">
                                     <label class="text-xs font-semibold text-slate-500 uppercase">Prazo</label>
-                                    <input type="text" name="prazo" id="f_prazo" class="w-full px-3 py-2 rounded-lg border border-slate-200 focus:ring-2 focus:ring-indigo-500 outline-none">
+                                    <input type="text" name="prazo" id="f_prazo"
+                                        class="w-full px-3 py-2 rounded-lg border border-slate-200 focus:ring-2 focus:ring-indigo-500 outline-none">
                                 </div>
                             </div>
                         </div>
 
                         <!-- Portabilidade -->
-                        <div id="boxPortabilidade" class="hidden-field bg-indigo-50 p-4 rounded-xl border border-indigo-100">
-                            <h3 class="text-sm font-bold text-indigo-800 border-b border-indigo-200 pb-2 mb-4">Dados da Portabilidade / Refinanciamento</h3>
+                        <div id="boxPortabilidade"
+                            class="hidden-field bg-indigo-50 p-4 rounded-xl border border-indigo-100">
+                            <h3 class="text-sm font-bold text-indigo-800 border-b border-indigo-200 pb-2 mb-4">Dados da
+                                Portabilidade / Refinanciamento</h3>
                             <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                                 <div class="space-y-1">
                                     <label class="text-xs font-semibold text-indigo-700 uppercase">Banco Portado</label>
-                                    <input type="text" name="bancoPortado" id="f_bancoPortado" class="w-full px-3 py-2 rounded-lg border border-indigo-200 focus:ring-2 focus:ring-indigo-500 outline-none">
+                                    <input type="text" name="bancoPortado" id="f_bancoPortado"
+                                        class="w-full px-3 py-2 rounded-lg border border-indigo-200 focus:ring-2 focus:ring-indigo-500 outline-none">
                                 </div>
                                 <div class="space-y-1">
-                                    <label class="text-xs font-semibold text-indigo-700 uppercase">Nº Contrato Portado</label>
-                                    <input type="text" name="contratoPortado" id="f_contratoPortado" class="w-full px-3 py-2 rounded-lg border border-indigo-200 focus:ring-2 focus:ring-indigo-500 outline-none">
+                                    <label class="text-xs font-semibold text-indigo-700 uppercase">Nº Contrato
+                                        Portado</label>
+                                    <input type="text" name="contratoPortado" id="f_contratoPortado"
+                                        class="w-full px-3 py-2 rounded-lg border border-indigo-200 focus:ring-2 focus:ring-indigo-500 outline-none">
                                 </div>
                                 <div class="space-y-1">
                                     <label class="text-xs font-semibold text-indigo-700 uppercase">Saldo Portado</label>
-                                    <input type="text" name="saldoPortado" id="f_saldoPortado" class="w-full px-3 py-2 rounded-lg border border-indigo-200 focus:ring-2 focus:ring-indigo-500 outline-none">
+                                    <input type="text" name="saldoPortado" id="f_saldoPortado"
+                                        class="w-full px-3 py-2 rounded-lg border border-indigo-200 focus:ring-2 focus:ring-indigo-500 outline-none">
                                 </div>
                                 <div class="space-y-1">
-                                    <label class="text-xs font-semibold text-indigo-700 uppercase">Valor Parcela Portado</label>
-                                    <input type="text" name="valorParcelaPortado" id="f_valorParcelaPortado" class="w-full px-3 py-2 rounded-lg border border-indigo-200 focus:ring-2 focus:ring-indigo-500 outline-none">
+                                    <label class="text-xs font-semibold text-indigo-700 uppercase">Valor Parcela
+                                        Portado</label>
+                                    <input type="text" name="valorParcelaPortado" id="f_valorParcelaPortado"
+                                        class="w-full px-3 py-2 rounded-lg border border-indigo-200 focus:ring-2 focus:ring-indigo-500 outline-none">
                                 </div>
                                 <div class="space-y-1">
-                                    <label class="text-xs font-semibold text-indigo-700 uppercase">Prazo Original</label>
-                                    <input type="text" name="prazoOriginal" id="f_prazoOriginal" class="w-full px-3 py-2 rounded-lg border border-indigo-200 focus:ring-2 focus:ring-indigo-500 outline-none">
+                                    <label class="text-xs font-semibold text-indigo-700 uppercase">Prazo
+                                        Original</label>
+                                    <input type="text" name="prazoOriginal" id="f_prazoOriginal"
+                                        class="w-full px-3 py-2 rounded-lg border border-indigo-200 focus:ring-2 focus:ring-indigo-500 outline-none">
                                 </div>
                                 <div class="space-y-1">
-                                    <label class="text-xs font-semibold text-indigo-700 uppercase">Prazo Restante Portado</label>
-                                    <input type="text" name="prazoRestante" id="f_prazoRestante" class="w-full px-3 py-2 rounded-lg border border-indigo-200 focus:ring-2 focus:ring-indigo-500 outline-none">
+                                    <label class="text-xs font-semibold text-indigo-700 uppercase">Prazo Restante
+                                        Portado</label>
+                                    <input type="text" name="prazoRestante" id="f_prazoRestante"
+                                        class="w-full px-3 py-2 rounded-lg border border-indigo-200 focus:ring-2 focus:ring-indigo-500 outline-none">
                                 </div>
                             </div>
                         </div>
 
                         <!-- Vendedor, Contato & Ocorrências -->
                         <div>
-                            <h3 class="text-sm font-bold text-slate-700 border-b pb-2 mb-4">Dados Adicionais (Modais)</h3>
+                            <h3 class="text-sm font-bold text-slate-700 border-b pb-2 mb-4">Dados Adicionais (Modais)
+                            </h3>
                             <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
                                 <div class="space-y-1 md:col-span-2">
                                     <label class="text-xs font-semibold text-slate-500 uppercase">Vendedor</label>
-                                    <input type="text" name="vendedor" placeholder="Nome do Vendedor" class="w-full px-3 py-2 rounded-lg border border-slate-200 focus:ring-2 focus:ring-indigo-500 outline-none">
+                                    <input type="text" name="vendedor" placeholder="Nome do Vendedor"
+                                        class="w-full px-3 py-2 rounded-lg border border-slate-200 focus:ring-2 focus:ring-indigo-500 outline-none">
                                 </div>
                                 <div class="space-y-1 md:col-span-2">
                                     <label class="text-xs font-semibold text-slate-500 uppercase">Email</label>
-                                    <input type="email" name="email" id="f_email" placeholder="cliente@email.com" class="w-full px-3 py-2 rounded-lg border border-slate-200 focus:ring-2 focus:ring-indigo-500 outline-none">
+                                    <input type="email" name="email" id="f_email" placeholder="cliente@email.com"
+                                        class="w-full px-3 py-2 rounded-lg border border-slate-200 focus:ring-2 focus:ring-indigo-500 outline-none">
                                 </div>
                                 <div class="space-y-1">
                                     <label class="text-xs font-semibold text-slate-500 uppercase">DDD</label>
-                                    <input type="text" name="ddd" id="f_ddd" placeholder="61" maxlength="2" class="w-full px-3 py-2 rounded-lg border border-slate-200 focus:ring-2 focus:ring-indigo-500 outline-none">
+                                    <input type="text" name="ddd" id="f_ddd" placeholder="61" maxlength="2"
+                                        class="w-full px-3 py-2 rounded-lg border border-slate-200 focus:ring-2 focus:ring-indigo-500 outline-none">
                                 </div>
                                 <div class="space-y-1 md:col-span-3">
                                     <label class="text-xs font-semibold text-slate-500 uppercase">Telefone</label>
-                                    <input type="text" name="telefone" id="f_telefone" placeholder="90000-0000" class="w-full px-3 py-2 rounded-lg border border-slate-200 focus:ring-2 focus:ring-indigo-500 outline-none">
+                                    <input type="text" name="telefone" id="f_telefone" placeholder="90000-0000"
+                                        class="w-full px-3 py-2 rounded-lg border border-slate-200 focus:ring-2 focus:ring-indigo-500 outline-none">
                                 </div>
                                 <div class="space-y-1 md:col-span-4">
-                                    <label class="text-xs font-semibold text-slate-500 uppercase">Script / Ocorrência</label>
-                                    <textarea name="ocorrencia" id="f_ocorrencia" rows="3" placeholder="O script extraído ou anotações irão aqui..." class="w-full px-3 py-2 rounded-lg border border-slate-200 focus:ring-2 focus:ring-indigo-500 outline-none"></textarea>
+                                    <label class="text-xs font-semibold text-slate-500 uppercase">Script /
+                                        Ocorrência</label>
+                                    <textarea name="ocorrencia" id="f_ocorrencia" rows="3"
+                                        placeholder="O script extraído ou anotações irão aqui..."
+                                        class="w-full px-3 py-2 rounded-lg border border-slate-200 focus:ring-2 focus:ring-indigo-500 outline-none"></textarea>
                                 </div>
                             </div>
                         </div>
@@ -212,8 +308,13 @@
                     </form>
 
                     <div class="mt-8">
-                        <button onclick="copiarDados()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-4 px-6 rounded-xl shadow-lg shadow-indigo-200 transition-all active:scale-[0.98] flex items-center justify-center gap-2 text-lg">
-                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3"></path></svg>
+                        <button onclick="copiarDados()"
+                            class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-4 px-6 rounded-xl shadow-lg shadow-indigo-200 transition-all active:scale-[0.98] flex items-center justify-center gap-2 text-lg">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3">
+                                </path>
+                            </svg>
                             4. Copiar Dados & Injetar no Agilus
                         </button>
                     </div>
@@ -224,7 +325,7 @@
 
     <script>
         // LÓGICA DO BOOKMARKLET ATUALIZADA (Banco com Delay + Vendedor)
-        const botLogic = async function() {
+        const botLogic = async function () {
             const overlay = document.createElement('div');
             overlay.style.cssText = 'position:fixed;top:0;left:0;width:100vw;height:100vh;background:rgba(0,0,0,0.8);z-index:99999;display:flex;justify-content:center;align-items:center;color:white;font-size:24px;font-family:sans-serif;flex-direction:column;';
             overlay.innerHTML = '<div>⏳ Hackeando a Matrix do Agilus...</div><div style="font-size:16px;margin-top:10px;color:#cbd5e1;">Aguarde, injetando dados e ocorrências.</div>';
@@ -232,13 +333,13 @@
 
             try {
                 let text = '';
-                try { 
-                    text = await navigator.clipboard.readText(); 
-                } catch(e) { 
-                    text = prompt('Chrome bloqueou a leitura automática. Dê um CTRL+V (Cole) os dados aqui:'); 
-                    if(!text) { document.body.removeChild(overlay); return; }
+                try {
+                    text = await navigator.clipboard.readText();
+                } catch (e) {
+                    text = prompt('Chrome bloqueou a leitura automática. Dê um CTRL+V (Cole) os dados aqui:');
+                    if (!text) { document.body.removeChild(overlay); return; }
                 }
-                
+
                 const d = JSON.parse(text);
                 const delay = ms => new Promise(r => setTimeout(r, ms));
 
@@ -252,7 +353,7 @@
                             await delay(300);
                             btn.click();
                             console.log("Clicou no botão:", btnText);
-                            await delay(1200); 
+                            await delay(1200);
                             return true;
                         }
                     }
@@ -285,12 +386,12 @@
                         if (targetInput) {
                             targetInput.focus();
                             const nativeSetter = Object.getOwnPropertyDescriptor(
-                                window.HTMLInputElement.prototype.isPrototypeOf(targetInput) 
-                                ? window.HTMLInputElement.prototype 
-                                : window.HTMLTextAreaElement.prototype, 
+                                window.HTMLInputElement.prototype.isPrototypeOf(targetInput)
+                                    ? window.HTMLInputElement.prototype
+                                    : window.HTMLTextAreaElement.prototype,
                                 "value"
                             ).set;
-                            
+
                             nativeSetter.call(targetInput, value);
                             targetInput.dispatchEvent(new Event('input', { bubbles: true, composed: true }));
                             targetInput.dispatchEvent(new InputEvent('input', { inputType: 'insertText', data: value, bubbles: true, composed: true, isComposing: false }));
@@ -300,7 +401,7 @@
                         } else {
                             console.warn("Campo não encontrado:", labelTxt);
                         }
-                    } catch(e) { console.error('Erro em:', labelTxt, e); }
+                    } catch (e) { console.error('Erro em:', labelTxt, e); }
                 }
 
                 // Função de Select Turbinada (Digita pra filtrar listas longas tipo Banco)
@@ -310,10 +411,10 @@
                         const labels = Array.from(document.querySelectorAll('.q-field__label'));
                         const targetLabel = labels.find(l => l.textContent.trim() === labelTxt);
                         if (!targetLabel) return;
-                        
+
                         const wrapper = targetLabel.closest('.q-field');
                         const fieldControl = wrapper.querySelector('.q-field__control');
-                        const inputField = wrapper.querySelector('input'); 
+                        const inputField = wrapper.querySelector('input');
 
                         if (fieldControl) {
                             fieldControl.scrollIntoView({ behavior: 'smooth', block: 'center' });
@@ -321,7 +422,7 @@
                             await delay(800);
 
                             // Se tiver um input de busca dentro do select (ex: Banco), ele digita e espera a API
-                            if(inputField) {
+                            if (inputField) {
                                 const nativeSetter = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, "value").set;
                                 nativeSetter.call(inputField, valueText);
                                 inputField.dispatchEvent(new Event('input', { bubbles: true, composed: true }));
@@ -342,12 +443,12 @@
                                     targetOption.click();
                                 } else {
                                     console.warn("Opção de Select não achada:", valueText);
-                                    document.body.click(); 
+                                    document.body.click();
                                 }
                             }
                             await delay(500);
                         }
-                    } catch(e) { console.error(e) }
+                    } catch (e) { console.error(e) }
                 }
 
                 // 1. Dados Básicos
@@ -365,7 +466,7 @@
                 await s('Banco', d.banco); // Agora com delay e filtro de digitação
 
                 // 2. Portabilidade
-                if(d.tipoContrato === 'Portabilidade' || d.tipoContrato === 'Refinanciamento'){
+                if (d.tipoContrato === 'Portabilidade' || d.tipoContrato === 'Refinanciamento') {
                     await clickBtn('ADICIONAR CONTRATO');
                     await s('Banco portado', d.bancoPortado);
                     p('Nº Contrato Portado', d.contratoPortado);
@@ -379,12 +480,12 @@
                 if (d.ddd || d.telefone) {
                     await clickBtn('ADICIONAR TELEFONE');
                     p('DDD', d.ddd);
-                    p('Número', d.telefone); 
+                    p('Número', d.telefone);
                 }
 
                 if (d.email) {
                     await clickBtn('ADICIONAR EMAIL');
-                    p('Endereço', d.email); 
+                    p('Endereço', d.email);
                 }
 
                 if (d.vendedor) {
@@ -404,30 +505,30 @@
                             if (btnAdd) {
                                 btnAdd.scrollIntoView({ behavior: 'smooth', block: 'center' });
                                 btnAdd.click();
-                                await delay(1000); 
-                                
-                                p('Texto', d.ocorrencia); 
+                                await delay(1000);
+
+                                p('Texto', d.ocorrencia);
                                 await delay(500);
 
                                 const dialogs = document.querySelectorAll('.q-dialog');
                                 const activeDialog = dialogs.length > 0 ? dialogs[dialogs.length - 1] : document;
                                 const dialogBtns = Array.from(activeDialog.querySelectorAll('.block, .q-btn__content'));
                                 const saveBtn = dialogBtns.find(b => b.textContent.trim().toUpperCase() === 'SALVAR');
-                                
+
                                 if (saveBtn) {
                                     saveBtn.closest('button').click();
                                     await delay(800);
                                 }
                             }
                         }
-                    } catch(e) { console.error('Erro ao preencher Ocorrência', e); }
+                    } catch (e) { console.error('Erro ao preencher Ocorrência', e); }
                 }
 
                 document.body.removeChild(overlay);
                 alert('✅ Hack concluído! Dados, Vendedor e Ocorrências injetados.');
 
             } catch (e) {
-                if(document.body.contains(overlay)) document.body.removeChild(overlay);
+                if (document.body.contains(overlay)) document.body.removeChild(overlay);
                 alert('Erro na matriz! Verifique o console.');
             }
         };
@@ -482,7 +583,7 @@
             if (!text) return;
 
             const extracted = { nome: "", cpf: "", matricula: "", dataNascimento: "", ocorrencia: "", contratos: [] };
-            
+
             // MODO 1: SCRIPT DO WHATSAPP (Margem Livre, etc)
             if (text.includes("Liberação") || text.includes("Data nascimento:")) {
                 const matchNome = text.match(/Nome:\s*(.+)/i);
@@ -512,16 +613,16 @@
                 if (matchParcela) document.getElementById('f_valorParcela').value = matchParcela[1].trim();
                 if (matchPrazo) document.getElementById('f_prazo').value = matchPrazo[1].trim();
                 if (matchLiberado) document.getElementById('f_valorBruto').value = matchLiberado[1].trim();
-                
+
                 if (matchOrgao) {
                     const org = matchOrgao[1].trim().toUpperCase();
                     if (org.includes("INSS")) document.getElementById('f_convenio').value = "INSS";
                     if (org.includes("SIAPE")) document.getElementById('f_convenio').value = "SIAPE";
                 }
 
-                document.getElementById('tipoContrato').value = "Novo"; 
-                document.getElementById('f_ocorrencia').value = text; 
-                
+                document.getElementById('tipoContrato').value = "Novo";
+                document.getElementById('f_ocorrencia').value = text;
+
                 preencherInterfaceBase(extracted);
                 toggleConditionalFields();
                 document.getElementById('contractsPanel').style.display = 'none';
@@ -629,6 +730,19 @@
 
             alert(`✅ Contrato ${c.contrato} selecionado! Coloque o 'Valor Bruto' que faltou e injete no Agilus.`);
         }
+
+        function copiarModelo() {
+            const template = document.getElementById('scriptTemplate').innerText;
+            navigator.clipboard.writeText(template).then(() => {
+                // Alerta visual simples
+                const btn = event.currentTarget;
+                const originalSVG = btn.innerHTML;
+                btn.innerHTML = '<svg class="w-4 h-4 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>';
+                setTimeout(() => btn.innerHTML = originalSVG, 2000);
+                alert('Modelo copiado!');
+            });
+        }
     </script>
 </body>
+
 </html>
