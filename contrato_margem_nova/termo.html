@@ -19,7 +19,6 @@
     <style>
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            /* ZOOM REMOVIDO DAQUI - Será controlado pelo JS para não quebrar o PDF */
             background-color: #f0f2f5;
             display: flex;
             flex-direction: row;
@@ -141,7 +140,6 @@
             color: #000;
             font-size: 10pt;
             line-height: 1.4;
-            /* GARANTIA DE ESPAÇAMENTO */
             word-spacing: normal;
             letter-spacing: normal;
         }
@@ -285,11 +283,18 @@
                     placeholder="00000-000"></div>
         </div>
 
+        <!-- NOVA SEÇÃO: Assessoria / Empresa Credora -->
+        <div class="form-section">
+            <h2>Dados da Assessoria (Credora)</h2>
+            <div class="form-group"><label>Razão Social / Nome:</label><input type="text" id="razao-social" value="POLLO PROMOTORA LTDA"></div>
+            <div class="form-group"><label>CNPJ / CPF:</label><input type="text" id="cnpj-credora" value="44.906.703/0001-59"></div>
+        </div>
+
         <div class="form-section">
             <h2>Dados Bancários (Para Repasse)</h2>
             <div class="form-group"><label>Chave PIX:</label><input type="text" id="chave-pix"
                     value="vinicius@estilopromotora.com.br"></div>
-            <div class="form-group"><label>Favorecido:</label><input type="text" id="favorecido-pix"
+            <div class="form-group"><label>Favorecido do PIX:</label><input type="text" id="favorecido-pix"
                     value="POLLO PROMOTORA"></div>
         </div>
 
@@ -325,9 +330,8 @@
 
             <div class="bloco-dados">
                 <h3 class="bloco-titulo">INTERMEDIADOR (CREDORA)</h3>
-                <p class="dado-linha">RAZÃO SOCIAL: <strong id="doc-favorecido-pix-cabecalho">POLLO PROMOTORA
-                        LTDA</strong></p>
-                <p class="dado-linha" style="border:none;">CNPJ: <strong>44.906.703/0001-59</strong></p>
+                <p class="dado-linha">RAZÃO SOCIAL / NOME: <strong id="doc-razao-social">POLLO PROMOTORA LTDA</strong></p>
+                <p class="dado-linha" style="border:none;">CNPJ / CPF: <strong id="doc-cnpj-credora">44.906.703/0001-59</strong></p>
             </div>
 
             <span class="clausula">CLÁUSULA PRIMEIRA - DA OPERAÇÃO DE MARGEM</span>
@@ -346,7 +350,7 @@
             <span class="clausula">CLÁUSULA SEGUNDA - DA CONSULTORIA E REPASSE</span>
             <p>2.1 - Tendo em vista o baixo comissionamento bancário (cerca de 0,5%), o proponente concorda em realizar
                 o repasse de <span id="doc-repasse" class="variavel" style="text-decoration: underline;">---</span> em
-                favor da <span id="doc-favorecido-pix-corpo" class="variavel">POLLO PROMOTORA</span>, após a liberação
+                favor da <span id="doc-razao-social-corpo" class="variavel">POLLO PROMOTORA LTDA</span>, após a liberação
                 do crédito.</p>
 
             <p style="font-size: 9pt; font-style: italic;">Nota: Repasse facultativo destinado à viabilidade da
@@ -364,7 +368,7 @@
 
             <div class="assinatura-bloco">
                 <div class="assinatura-linha"><span id="doc-nome-ass">---</span><br>CLIENTE</div>
-                <div class="assinatura-linha"><span id="doc-favorecido-ass">POLLO PROMOTORA</span><br>ASSESSORIA</div>
+                <div class="assinatura-linha"><span id="doc-razao-social-ass">POLLO PROMOTORA LTDA</span><br>ASSESSORIA</div>
             </div>
         </div>
     </div>
@@ -520,17 +524,20 @@
         }
 
         function atualizar() {
-            const ids = ['nome-cliente', 'cpf-cliente', 'orgao', 'endereco', 'banco', 'total-contrato',  'parcela', 'liquido', 'repasse', 'prazo', 'chave-pix', 'favorecido-pix'];
+            // Adicionados 'razao-social' e 'cnpj-credora' no array
+            const ids = ['nome-cliente', 'cpf-cliente', 'orgao', 'endereco', 'banco', 'total-contrato',  'parcela', 'liquido', 'repasse', 'prazo', 'chave-pix', 'favorecido-pix', 'razao-social', 'cnpj-credora'];
+            
             ids.forEach(id => {
                 const val = document.getElementById(id).value || "---";
                 const doc = document.getElementById('doc-' + id);
                 if (doc) doc.textContent = val;
 
                 if (id === 'nome-cliente') document.getElementById('doc-nome-ass').textContent = val;
-                if (id === 'favorecido-pix') {
-                    document.getElementById('doc-favorecido-pix-cabecalho').textContent = val + " LTDA";
-                    document.getElementById('doc-favorecido-pix-corpo').textContent = val;
-                    document.getElementById('doc-favorecido-ass').textContent = val;
+                
+                // Liga o nome da assessoria/empresa com a cláusula e com a assinatura
+                if (id === 'razao-social') {
+                    if(document.getElementById('doc-razao-social-corpo')) document.getElementById('doc-razao-social-corpo').textContent = val;
+                    if(document.getElementById('doc-razao-social-ass')) document.getElementById('doc-razao-social-ass').textContent = val;
                 }
             });
         }
