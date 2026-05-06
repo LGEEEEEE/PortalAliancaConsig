@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gerador de Pedidos - MARIAS</title>
+    
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    
+    <style>
+        body {
+            background-color: #f4f6f9; /* Fundo mais suave para destacar o painel e o PDF */
+        }
+
+        /* ÁREA DO PDF (A folha A4) */
+        #pdf-content {
+            background: white;
+            width: 210mm; /* Largura A4 */
+            min-height: 297mm; /* Altura A4 */
+            padding: 15mm;
+            box-sizing: border-box;
+            box-shadow: 0 0 15px rgba(0,0,0,0.15);
+            margin: 0 auto; /* Centraliza a folha */
+            font-family: Arial, sans-serif;
+            position: relative;
+        }
+
+        /* Isolando os estilos do talão para o Bootstrap não interferir na impressão */
+        #pdf-content .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 2px solid #ccc;
+            padding-bottom: 10px;
+            margin-bottom: 15px;
+        }
+        #pdf-content .header img {
+            border-radius: 25%;
+        }
+        #pdf-content .company-info { 
+            text-align: right; 
+            font-size: 12px; 
+            color: #444; 
+            line-height: 1.4;
+        }
+        #pdf-content .company-info i {
+            font-size: 13px;
+            color: #000;
+        }
+
+        #pdf-content .customer-info p { 
+            margin: 6px 0; 
+            font-size: 14px; 
+            border-bottom: 1px solid #aaa; 
+            padding-bottom: 2px;
+        }
+        #pdf-content .customer-info span { 
+            font-family: 'Courier New', Courier, monospace; 
+            color: #000; 
+            font-weight: bold;
+        }
+        
+        #tabela-produtos {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+            border: 1px solid #000;
+        }
+        #tabela-produtos th, #tabela-produtos td {
+            border: 1px solid #000;
+            padding: 8px;
+            text-align: center;
+            font-size: 14px;
+        }
+        #tabela-produtos th {
+            background-color: #d9d9d9;
+            font-weight: bold;
+        }
+        #tabela-produtos td.desc-col { text-align: left; }
+        
+        .check-box {
+            display: inline-block;
+            width: 14px;
+            height: 14px;
+            border: 1.5px solid #000;
+            border-radius: 2px;
+        }
+
+        #pdf-content .footer-total {
+            margin-top: 20px;
+            text-align: right;
+            font-size: 18px;
+            font-weight: bold;
+        }
+        #pdf-content .signature {
+            margin-top: 50px;
+            display: flex;
+            justify-content: flex-start;
+        }
+        #pdf-content .signature div {
+            border-top: 1px solid #000;
+            width: 300px;
+            text-align: center;
+            font-size: 12px;
+            padding-top: 5px;
+        }
+        
+        /* Ajuste para telas menores rolarem o PDF horizontalmente */
+        .pdf-wrapper {
+            overflow-x: auto;
+            padding-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container-fluid py-4">
+        <div class="row gy-4">
+            
+            <div class="col-xl-3 col-lg-4">
+                <div class="card shadow-sm border-0 sticky-top" style="top: 20px;">
+                    <div class="card-header bg-dark text-white py-3">
+                        <h5 class="mb-0"><i class="bi bi-ui-checks"></i> Gerador de Pedidos</h5>
+                    </div>
+                    <div class="card-body">
+                        
+                        <h6 class="text-secondary fw-bold mb-3">1. Dados do Cliente</h6>
+                        <div class="mb-2">
+                            <label class="form-label small fw-bold mb-1">Data de Entrega</label>
+                            <input type="text" class="form-control form-control-sm" id="in-data" placeholder="Ex: 10/05/2026" onkeyup="updateHeader()">
+                        </div>
+                        <div class="mb-2">
+                            <label class="form-label small fw-bold mb-1">Nome</label>
+                            <input type="text" class="form-control form-control-sm" id="in-nome" onkeyup="updateHeader()">
+                        </div>
+                        <div class="mb-2">
+                            <label class="form-label small fw-bold mb-1">Endereço</label>
+                            <input type="text" class="form-control form-control-sm" id="in-end" onkeyup="updateHeader()">
+                        </div>
+                        <div class="row g-2 mb-3">
+                            <div class="col-6">
+                                <label class="form-label small fw-bold mb-1">Fone</label>
+                                <input type="text" class="form-control form-control-sm" id="in-fone" onkeyup="updateHeader()">
+                            </div>
+                            <div class="col-6">
+                                <label class="form-label small fw-bold mb-1">Cel</label>
+                                <input type="text" class="form-control form-control-sm" id="in-cel" onkeyup="updateHeader()">
+                            </div>
+                        </div>
+
+                        <hr>
+
+                        <h6 class="text-secondary fw-bold mb-3">2. Adicionar Produto</h6>
+                        <div class="row g-2 mb-2">
+                            <div class="col-4">
+                                <label class="form-label small fw-bold mb-1">Qtde</label>
+                                <input type="number" class="form-control form-control-sm" id="in-qtde" value="1">
+                            </div>
+                            <div class="col-8">
+                                <label class="form-label small fw-bold mb-1">Un</label>
+                                <input type="text" class="form-control form-control-sm" id="in-un" placeholder="Ex: Peça, Par">
+                            </div>
+                        </div>
+                        <div class="mb-2">
+                            <label class="form-label small fw-bold mb-1">Descrição</label>
+                            <input type="text" class="form-control form-control-sm" id="in-desc">
+                        </div>
+                        <div class="mb-4">
+                            <label class="form-label small fw-bold mb-1">Total (R$)</label>
+                            <input type="number" step="0.01" class="form-control form-control-sm" id="in-valor" placeholder="0.00">
+                        </div>
+                        
+                        <button class="btn btn-success w-100 mb-2 fw-bold" onclick="addProduct()">
+                            <i class="bi bi-plus-lg"></i> Adicionar à Lista
+                        </button>
+                        <button class="btn btn-primary w-100 fw-bold" onclick="generatePDF()">
+                            <i class="bi bi-printer"></i> Gerar PDF
+                        </button>
+
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-xl-9 col-lg-8 pdf-wrapper d-flex justify-content-center">
+                <div id="pdf-content">
+                    
+                    <div class="header">
+                        <div class="logo">
+                            <img src="images/marias.jpg" height="70" alt="Logo MARIAS">
+                        </div>
+                        <div class="company-info">
+                            <strong>MARIAS Joias, Semijoias e Acessórios</strong><br>
+                            RUA 13 NORTE LT 01/03 E RUA 14 LT 02/04, Loja 157<br>
+                            CNPJ: 63.052.446/0001-80<br>
+                            <i class="bi bi-whatsapp"></i> (61) 99242-1500 &nbsp;|&nbsp; 
+                            <i class="bi bi-instagram"></i> @mariasjoiasstore
+                        </div>
+                    </div>
+
+                    <div class="customer-info">
+                        <p>Data de Entrega: <span id="out-data"></span></p>
+                        <p>Nome: <span id="out-nome"></span></p>
+                        <p>Endereço: <span id="out-end"></span></p>
+                        <div style="display: flex; gap: 40px;">
+                            <p style="flex: 1;">Fone: <span id="out-fone"></span></p>
+                            <p style="flex: 1;">Cel: <span id="out-cel"></span></p>
+                        </div>
+                    </div>
+
+                    <table id="tabela-produtos">
+                        <thead>
+                            <tr>
+                                <th style="width: 5%;">Check</th>
+                                <th style="width: 10%;">Qtde</th>
+                                <th style="width: 10%;">Un</th>
+                                <th style="width: 55%; text-align: left;">Descrição</th>
+                                <th style="width: 20%;">Total</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            </tbody>
+                    </table>
+
+                    <div class="footer-total">
+                        Total R$ <span id="out-total">0,00</span>
+                    </div>
+
+                    <div class="signature">
+                        <div>Assinatura Cliente</div>
+                    </div>
+
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script>
+        let totalGeral = 0;
+
+        // Atualiza o cabeçalho em tempo real
+        function updateHeader() {
+            document.getElementById('out-data').innerText = document.getElementById('in-data').value;
+            document.getElementById('out-nome').innerText = document.getElementById('in-nome').value;
+            document.getElementById('out-end').innerText = document.getElementById('in-end').value;
+            document.getElementById('out-fone').innerText = document.getElementById('in-fone').value;
+            document.getElementById('out-cel').innerText = document.getElementById('in-cel').value;
+        }
+
+        // Adiciona um produto na tabela do layout
+        function addProduct() {
+            const qtde = document.getElementById('in-qtde').value;
+            const un = document.getElementById('in-un').value;
+            const desc = document.getElementById('in-desc').value;
+            const valor = parseFloat(document.getElementById('in-valor').value);
+
+            if(!desc || isNaN(valor)) {
+                alert("Preencha a descrição e o valor!");
+                return;
+            }
+
+            const tbody = document.querySelector('#tabela-produtos tbody');
+            const tr = document.createElement('tr');
+
+            tr.innerHTML = `
+                <td><span class="check-box"></span></td>
+                <td>${qtde}</td>
+                <td>${un}</td>
+                <td class="desc-col">${desc}</td>
+                <td>${valor.toFixed(2).replace('.', ',')}</td>
+            `;
+
+            tbody.appendChild(tr);
+
+            // Atualiza o total
+            totalGeral += valor;
+            document.getElementById('out-total').innerText = totalGeral.toFixed(2).replace('.', ',');
+
+            // Limpa os campos de produto
+            document.getElementById('in-qtde').value = '1';
+            document.getElementById('in-un').value = '';
+            document.getElementById('in-desc').value = '';
+            document.getElementById('in-valor').value = '';
+            document.getElementById('in-desc').focus(); // Volta o cursor para a descrição
+        }
+
+        // Gera o PDF usando jsPDF + html2canvas
+        function generatePDF() {
+            window.jsPDF = window.jspdf.jsPDF;
+            const element = document.getElementById('pdf-content');
+
+            // html2canvas tira um "print" da div #pdf-content
+            // scale: 2 melhora a resolução da imagem no PDF
+            html2canvas(element, { scale: 2, useCORS: true }).then(canvas => {
+                const imgData = canvas.toDataURL('image/png');
+                const pdf = new jsPDF('p', 'mm', 'a4'); // Retrato, milímetros, A4
+
+                const pdfWidth = pdf.internal.pageSize.getWidth();
+                const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
+
+                pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
+                pdf.save('pedido_marias.pdf');
+            });
+        }
+    </script>
+</body>
+</html>
