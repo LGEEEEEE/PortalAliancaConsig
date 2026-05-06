@@ -1,30 +1,27 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Gerador de Pedidos - MARIAS</title>
-    
-    <!-- Bootstrap 5 CSS -->
+
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <!-- Bootstrap Icons -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
-    
-    <!-- html2pdf.js (Já inclui jsPDF e html2canvas internamente com suporte a quebra de página) -->
+
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
-    
+
     <style>
         body {
-            background-color: #f4f6f9; 
+            background-color: #f4f6f9;
         }
 
         #pdf-content {
             background: white;
-            width: 210mm; 
-            /* Mudei o padding para: 5mm em cima, 8mm nas laterais, 10mm embaixo */
-            padding: 0mm 8mm 10mm 8mm; 
+            width: 180mm;
+            /* CORREÇÃO: 210mm (A4) - 20mm (Margens laterais) = 190mm */
             box-sizing: border-box;
-            box-shadow: 0 0 15px rgba(0,0,0,0.15);
+            box-shadow: 0 0 15px rgba(0, 0, 0, 0.15);
             margin: 0 auto;
             font-family: Arial, sans-serif;
             color: #000;
@@ -38,47 +35,68 @@
             padding-bottom: 10px;
             margin-bottom: 15px;
         }
+
         #pdf-content .header img {
             border-radius: 25%;
+            max-height: 70px;
+            /* Garante que a imagem não exploda o layout */
+            object-fit: contain;
         }
-        #pdf-content .company-info { 
-            text-align: right; 
-            font-size: 12px; 
-            color: #444; 
+
+        #pdf-content .company-info {
+            text-align: right;
+            font-size: 12px;
+            color: #444;
             line-height: 1.4;
         }
-        #pdf-content .company-info i { font-size: 13px; color: #000; }
 
-        #pdf-content .customer-info p { 
-            margin: 6px 0; 
-            font-size: 14px; 
-            border-bottom: 1px solid #aaa; 
+        #pdf-content .company-info i {
+            font-size: 13px;
+            color: #000;
+        }
+
+        #pdf-content .customer-info p {
+            margin: 6px 0;
+            font-size: 14px;
+            border-bottom: 1px solid #aaa;
             padding-bottom: 2px;
         }
-        #pdf-content .customer-info span { 
-            font-family: 'Courier New', Courier, monospace; 
-            color: #000; 
+
+        #pdf-content .customer-info span {
+            font-family: 'Courier New', Courier, monospace;
+            color: #000;
             font-weight: bold;
         }
-        
+
         #tabela-produtos {
             width: 100%;
             border-collapse: collapse;
             margin-top: 20px;
             border: 1px solid #000;
         }
-        #tabela-produtos th, #tabela-produtos td {
+
+        /* MAGIA DA QUEBRA DE PÁGINA */
+        #tabela-produtos tr {
+            page-break-inside: avoid !important;
+        }
+
+        #tabela-produtos th,
+        #tabela-produtos td {
             border: 1px solid #000;
-            padding: 6px; /* Reduzi um pouco o padding para caber mais itens por folha */
+            padding: 6px;
             text-align: center;
             font-size: 14px;
         }
+
         #tabela-produtos th {
             background-color: #d9d9d9;
             font-weight: bold;
         }
-        #tabela-produtos td.desc-col { text-align: left; }
-        
+
+        #tabela-produtos td.desc-col {
+            text-align: left;
+        }
+
         .check-box {
             display: inline-block;
             width: 14px;
@@ -87,10 +105,8 @@
             border-radius: 2px;
         }
 
-        /* Usamos page-break-inside: avoid no footer e na assinatura 
-           para garantir que eles não sejam cortados pela metade */
         .footer-section {
-            page-break-inside: avoid; 
+            page-break-inside: avoid !important;
         }
 
         #pdf-content .footer-total {
@@ -99,12 +115,14 @@
             font-size: 18px;
             font-weight: bold;
         }
+
         #pdf-content .signature {
             margin-top: 50px;
             display: flex;
             justify-content: flex-start;
             padding-bottom: 20px;
         }
+
         #pdf-content .signature div {
             border-top: 1px solid #000;
             width: 300px;
@@ -112,47 +130,55 @@
             font-size: 12px;
             padding-top: 5px;
         }
-        
+
         .pdf-wrapper {
             overflow-x: auto;
             padding-bottom: 20px;
         }
     </style>
 </head>
+
 <body>
 
     <div class="container-fluid py-4">
         <div class="row gy-4">
-            
-            <!-- PAINEL DE CONTROLE (Esquerda) -->
+
             <div class="col-xl-3 col-lg-4">
                 <div class="card shadow-sm border-0 sticky-top" style="top: 20px;">
-                    <div class="card-header bg-dark text-white py-3">
+                    <div class="card-header bg-dark text-white py-3 d-flex justify-content-between align-items-center">
                         <h5 class="mb-0"><i class="bi bi-ui-checks"></i> Gerador de Pedidos</h5>
+                        <button class="btn btn-sm btn-outline-light" onclick="clearData()" title="Limpar tudo">
+                            <i class="bi bi-trash"></i>
+                        </button>
                     </div>
                     <div class="card-body">
-                        
+
                         <h6 class="text-secondary fw-bold mb-3">1. Dados do Cliente</h6>
                         <div class="mb-2">
                             <label class="form-label small fw-bold mb-1">Data de Entrega</label>
-                            <input type="text" class="form-control form-control-sm" id="in-data" placeholder="Ex: 10/05/2026" onkeyup="updateHeader()">
+                            <input type="text" class="form-control form-control-sm" id="in-data"
+                                placeholder="Ex: 10/05/2026" oninput="updateHeader()">
                         </div>
                         <div class="mb-2">
                             <label class="form-label small fw-bold mb-1">Nome</label>
-                            <input type="text" class="form-control form-control-sm" id="in-nome" onkeyup="updateHeader()">
+                            <input type="text" class="form-control form-control-sm" id="in-nome"
+                                oninput="updateHeader()">
                         </div>
                         <div class="mb-2">
                             <label class="form-label small fw-bold mb-1">Endereço</label>
-                            <input type="text" class="form-control form-control-sm" id="in-end" onkeyup="updateHeader()">
+                            <input type="text" class="form-control form-control-sm" id="in-end"
+                                oninput="updateHeader()">
                         </div>
                         <div class="row g-2 mb-3">
                             <div class="col-6">
                                 <label class="form-label small fw-bold mb-1">Fone</label>
-                                <input type="text" class="form-control form-control-sm" id="in-fone" onkeyup="updateHeader()">
+                                <input type="text" class="form-control form-control-sm" id="in-fone"
+                                    oninput="updateHeader()">
                             </div>
                             <div class="col-6">
                                 <label class="form-label small fw-bold mb-1">Cel</label>
-                                <input type="text" class="form-control form-control-sm" id="in-cel" onkeyup="updateHeader()">
+                                <input type="text" class="form-control form-control-sm" id="in-cel"
+                                    oninput="updateHeader()">
                             </div>
                         </div>
 
@@ -166,19 +192,21 @@
                             </div>
                             <div class="col-8">
                                 <label class="form-label small fw-bold mb-1">Un</label>
-                                <input type="text" class="form-control form-control-sm" id="in-un" placeholder="Ex: Peça, Par">
+                                <input type="text" class="form-control form-control-sm" id="in-un"
+                                    placeholder="Ex: Peça, Par">
                             </div>
                         </div>
                         <div class="mb-2">
                             <label class="form-label small fw-bold mb-1">Descrição</label>
-                            <!-- Adicionei evento para adicionar com o Enter -->
-                            <input type="text" class="form-control form-control-sm" id="in-desc" onkeypress="handleEnter(event)">
+                            <input type="text" class="form-control form-control-sm" id="in-desc"
+                                onkeypress="handleEnter(event)">
                         </div>
                         <div class="mb-4">
                             <label class="form-label small fw-bold mb-1">Total (R$)</label>
-                            <input type="number" step="0.01" class="form-control form-control-sm" id="in-valor" placeholder="0.00" onkeypress="handleEnter(event)">
+                            <input type="number" step="0.01" class="form-control form-control-sm" id="in-valor"
+                                placeholder="0.00" onkeypress="handleEnter(event)">
                         </div>
-                        
+
                         <button class="btn btn-success w-100 mb-2 fw-bold" onclick="addProduct()">
                             <i class="bi bi-plus-lg"></i> Adicionar à Lista
                         </button>
@@ -190,20 +218,18 @@
                 </div>
             </div>
 
-            <!-- ÁREA DO PDF (Direita) -->
             <div class="col-xl-9 col-lg-8 pdf-wrapper d-flex justify-content-center">
-                <!-- O conteúdo vai crescer infinitamente para baixo no HTML -->
                 <div id="pdf-content">
-                    
+
                     <div class="header">
                         <div class="logo">
-                            <img src="images/marias.jpg" height="70" alt="Logo MARIAS">
+                            <img src="images/marias.jpg" height="70" alt="Logo MARIAS" crossorigin="anonymous">
                         </div>
                         <div class="company-info">
                             <strong>MARIAS Joias, Semijoias e Acessórios</strong><br>
                             RUA 13 NORTE LT 01/03 E RUA 14 LT 02/04, Loja 157<br>
                             CNPJ: 63.052.446/0001-80<br>
-                            <i class="bi bi-whatsapp"></i> (61) 99242-1500 &nbsp;|&nbsp; 
+                            <i class="bi bi-whatsapp"></i> (61) 99242-1500 &nbsp;|&nbsp;
                             <i class="bi bi-instagram"></i> @mariasjoiasstore
                         </div>
                     </div>
@@ -229,11 +255,9 @@
                             </tr>
                         </thead>
                         <tbody>
-                            <!-- Os itens aparecerão aqui -->
                         </tbody>
                     </table>
 
-                    <!-- Agrupado em uma div para evitar que a assinatura separe do total na quebra -->
                     <div class="footer-section">
                         <div class="footer-total">
                             Total R$ <span id="out-total">0,00</span>
@@ -252,7 +276,11 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 
     <script>
-        let totalGeral = 0;
+        let listaProdutos = [];
+
+        window.onload = function () {
+            loadProgress();
+        };
 
         function updateHeader() {
             document.getElementById('out-data').innerText = document.getElementById('in-data').value;
@@ -260,9 +288,9 @@
             document.getElementById('out-end').innerText = document.getElementById('in-end').value;
             document.getElementById('out-fone').innerText = document.getElementById('in-fone').value;
             document.getElementById('out-cel').innerText = document.getElementById('in-cel').value;
+            saveProgress();
         }
 
-        // Adiciona facilidade para apertar Enter nos campos Descrição e Valor e já registrar o item
         function handleEnter(e) {
             if (e.key === 'Enter') {
                 addProduct();
@@ -275,49 +303,107 @@
             const desc = document.getElementById('in-desc').value;
             const valor = parseFloat(document.getElementById('in-valor').value);
 
-            if(!desc || isNaN(valor)) {
+            if (!desc || isNaN(valor)) {
                 alert("Preencha a descrição e o valor!");
                 return;
             }
 
-            const tbody = document.querySelector('#tabela-produtos tbody');
-            const tr = document.createElement('tr');
-
-            tr.innerHTML = `
-                <td><span class="check-box"></span></td>
-                <td>${qtde}</td>
-                <td>${un}</td>
-                <td class="desc-col">${desc}</td>
-                <td>${valor.toFixed(2).replace('.', ',')}</td>
-            `;
-
-            tbody.appendChild(tr);
-
-            totalGeral += valor;
-            document.getElementById('out-total').innerText = totalGeral.toFixed(2).replace('.', ',');
+            listaProdutos.push({ qtde, un, desc, valor });
 
             document.getElementById('in-qtde').value = '1';
             document.getElementById('in-un').value = '';
             document.getElementById('in-desc').value = '';
             document.getElementById('in-valor').value = '';
             document.getElementById('in-desc').focus();
+
+            renderTable();
+            saveProgress();
+        }
+
+        function renderTable() {
+            const tbody = document.querySelector('#tabela-produtos tbody');
+            tbody.innerHTML = '';
+            let totalGeral = 0;
+
+            listaProdutos.forEach((prod) => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td><span class="check-box"></span></td>
+                    <td>${prod.qtde}</td>
+                    <td>${prod.un}</td>
+                    <td class="desc-col">${prod.desc}</td>
+                    <td>${prod.valor.toFixed(2).replace('.', ',')}</td>
+                `;
+                tbody.appendChild(tr);
+                totalGeral += prod.valor;
+            });
+
+            document.getElementById('out-total').innerText = totalGeral.toFixed(2).replace('.', ',');
+        }
+
+        function saveProgress() {
+            const pedidoAtual = {
+                cliente: {
+                    data: document.getElementById('in-data').value,
+                    nome: document.getElementById('in-nome').value,
+                    end: document.getElementById('in-end').value,
+                    fone: document.getElementById('in-fone').value,
+                    cel: document.getElementById('in-cel').value
+                },
+                produtos: listaProdutos
+            };
+            localStorage.setItem('marias_pedido_draft', JSON.stringify(pedidoAtual));
+        }
+
+        function loadProgress() {
+            const savedData = localStorage.getItem('marias_pedido_draft');
+            if (savedData) {
+                const pedidoAtual = JSON.parse(savedData);
+                document.getElementById('in-data').value = pedidoAtual.cliente.data || '';
+                document.getElementById('in-nome').value = pedidoAtual.cliente.nome || '';
+                document.getElementById('in-end').value = pedidoAtual.cliente.end || '';
+                document.getElementById('in-fone').value = pedidoAtual.cliente.fone || '';
+                document.getElementById('in-cel').value = pedidoAtual.cliente.cel || '';
+
+                updateHeader();
+
+                if (pedidoAtual.produtos && pedidoAtual.produtos.length > 0) {
+                    listaProdutos = pedidoAtual.produtos;
+                    renderTable();
+                }
+            }
+        }
+
+        function clearData() {
+            if (confirm("Tem certeza que deseja limpar todo o pedido atual?")) {
+                localStorage.removeItem('marias_pedido_draft');
+                listaProdutos = [];
+                document.getElementById('in-data').value = '';
+                document.getElementById('in-nome').value = '';
+                document.getElementById('in-end').value = '';
+                document.getElementById('in-fone').value = '';
+                document.getElementById('in-cel').value = '';
+                updateHeader();
+                renderTable();
+            }
         }
 
         function generatePDF() {
             const element = document.getElementById('pdf-content');
 
             const opt = {
-                // Margens [topo, esquerda, fundo, direita] - Ajustado para diminuir o topo
-                margin:       [0, 0, 10, 0], 
-                filename:     'pedido_marias.pdf',
-                image:        { type: 'jpeg', quality: 0.98 },
-                html2canvas:  { scale: 2, useCORS: true },
-                jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' },
-                pagebreak:    { mode: 'css', avoid: ['tr', '.footer-section'] } 
+                margin: 10,
+                filename: 'pedido_marias.pdf',
+                image: { type: 'jpeg', quality: 0.98 },
+                // O SEGREDO ESTÁ AQUI: scrollY: 0
+                html2canvas: { scale: 2, useCORS: true, allowTaint: true, scrollY: 0 },
+                jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
+                pagebreak: { mode: ['css', 'legacy'], avoid: ['tr', '.footer-section'] }
             };
 
             html2pdf().set(opt).from(element).save();
         }
     </script>
 </body>
+
 </html>
