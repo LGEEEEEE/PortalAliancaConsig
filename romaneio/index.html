@@ -18,11 +18,11 @@
             background-color: #f4f6f9; 
         }
 
-        /* ÁREA DO PDF - Removemos a altura fixa para ele crescer o quanto precisar */
         #pdf-content {
             background: white;
-            width: 210mm; /* Largura A4 */
-            padding: 10mm;
+            width: 210mm; 
+            /* Mudei o padding para: 5mm em cima, 8mm nas laterais, 10mm embaixo */
+            padding: 0mm 8mm 10mm 8mm; 
             box-sizing: border-box;
             box-shadow: 0 0 15px rgba(0,0,0,0.15);
             margin: 0 auto;
@@ -306,19 +306,16 @@
         function generatePDF() {
             const element = document.getElementById('pdf-content');
 
-            // Configurações da mágica de quebra de página
             const opt = {
-                margin:       [10, 0, 10, 0], // Margens [topo, direita, fundo, esquerda] em mm
+                // Margens [topo, esquerda, fundo, direita] - Ajustado para diminuir o topo
+                margin:       [0, 0, 10, 0], 
                 filename:     'pedido_marias.pdf',
                 image:        { type: 'jpeg', quality: 0.98 },
                 html2canvas:  { scale: 2, useCORS: true },
                 jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' },
                 pagebreak:    { mode: 'css', avoid: ['tr', '.footer-section'] } 
-                // avoid 'tr': Impede cortar linhas da tabela no meio
-                // avoid '.footer-section': Tenta manter o Total e a Assinatura sempre juntos
             };
 
-            // Gera e baixa o PDF
             html2pdf().set(opt).from(element).save();
         }
     </script>
