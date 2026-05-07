@@ -286,8 +286,10 @@
         <!-- NOVA SEÇÃO: Assessoria / Empresa Credora -->
         <div class="form-section">
             <h2>Dados da Assessoria (Credora)</h2>
-            <div class="form-group"><label>Razão Social / Nome:</label><input type="text" id="razao-social" value="POLLO PROMOTORA LTDA"></div>
-            <div class="form-group"><label>CNPJ / CPF:</label><input type="text" id="cnpj-credora" value="44.906.703/0001-59"></div>
+            <div class="form-group"><label>Razão Social / Nome:</label><input type="text" id="razao-social"
+                    value="POLLO PROMOTORA LTDA"></div>
+            <div class="form-group"><label>CNPJ / CPF:</label><input type="text" id="cnpj-credora"
+                    value="44.906.703/0001-59"></div>
         </div>
 
         <div class="form-section">
@@ -305,7 +307,8 @@
                     class="moeda-input"></div>
             <div class="form-group"><label>Valor Líquido Cliente:</label><input type="text" id="liquido"
                     class="moeda-input"></div>
-            <div class="form-group"><label>Valor Total do Contrato:</label><input type="text" id="total-contrato" class="moeda-input"></div>
+            <div class="form-group"><label>Valor Total do Contrato:</label><input type="text" id="total-contrato"
+                    class="moeda-input"></div>
 
             <div class="form-group"><label>Valor de Repasse:</label><input type="text" id="repasse" class="moeda-input">
             </div>
@@ -324,14 +327,17 @@
                 <p class="dado-linha">NOME: <span id="doc-nome-cliente" class="variavel">---</span></p>
                 <p class="dado-linha">CPF: <span id="doc-cpf-cliente" class="variavel">---</span></p>
                 <p class="dado-linha" style="border:none;">ÓRGÃO: <span id="doc-orgao" class="variavel">---</span></p>
-                <p class="dado-linha" style="border:none;">ENDEREÇO: <span id="doc-endereco" class="variavel">---</span></p>
-                
+                <p class="dado-linha" style="border:none;">ENDEREÇO: <span id="doc-endereco" class="variavel">---</span>
+                </p>
+
             </div>
 
             <div class="bloco-dados">
                 <h3 class="bloco-titulo">INTERMEDIADOR (CREDORA)</h3>
-                <p class="dado-linha">RAZÃO SOCIAL / NOME: <strong id="doc-razao-social">POLLO PROMOTORA LTDA</strong></p>
-                <p class="dado-linha" style="border:none;">CNPJ / CPF: <strong id="doc-cnpj-credora">44.906.703/0001-59</strong></p>
+                <p class="dado-linha">RAZÃO SOCIAL / NOME: <strong id="doc-razao-social">POLLO PROMOTORA LTDA</strong>
+                </p>
+                <p class="dado-linha" style="border:none;">CNPJ / CPF: <strong
+                        id="doc-cnpj-credora">44.906.703/0001-59</strong></p>
             </div>
 
             <span class="clausula">CLÁUSULA PRIMEIRA - DA OPERAÇÃO DE MARGEM</span>
@@ -350,11 +356,17 @@
             <span class="clausula">CLÁUSULA SEGUNDA - DA CONSULTORIA E REPASSE</span>
             <p>2.1 - Tendo em vista o baixo comissionamento bancário (cerca de 0,5%), o proponente concorda em realizar
                 o repasse de <span id="doc-repasse" class="variavel" style="text-decoration: underline;">---</span> em
-                favor da <span id="doc-razao-social-corpo" class="variavel">POLLO PROMOTORA LTDA</span>, após a liberação
+                favor da <span id="doc-razao-social-corpo" class="variavel">POLLO PROMOTORA LTDA</span>, após a
+                liberação
                 do crédito.</p>
 
-            <p style="font-size: 9pt; font-style: italic;">Nota: Repasse facultativo destinado à viabilidade da
-                assessoria técnica.</p>
+            <p style="font-size: 9pt; font-style: italic; text-align: justify;">
+                <strong>Nota:</strong> O repasse, de caráter opcional, destina-se exclusivamente a cobrir os custos
+                operacionais do contrato e o comissionamento da assessoria. Fica o proponente ciente de que, embora a
+                devolução não seja obrigatória, a Contratada reserva-se o direito de realizar o estorno da operação e
+                solicitar o cancelamento do contrato no prazo de até 24 (vinte e quatro) horas após a liberação, caso a
+                viabilidade financeira da prestação do serviço não seja atendida.
+            </p>
 
             <span class="clausula">CLÁUSULA TERCEIRA - DADOS PARA TRANSFERÊNCIA</span>
             <p>3.1 - O pagamento deverá ser feito via PIX conforme dados abaixo:</p>
@@ -368,7 +380,8 @@
 
             <div class="assinatura-bloco">
                 <div class="assinatura-linha"><span id="doc-nome-ass">---</span><br>CLIENTE</div>
-                <div class="assinatura-linha"><span id="doc-razao-social-ass">POLLO PROMOTORA LTDA</span><br>ASSESSORIA</div>
+                <div class="assinatura-linha"><span id="doc-razao-social-ass">POLLO PROMOTORA LTDA</span><br>ASSESSORIA
+                </div>
             </div>
         </div>
     </div>
@@ -388,7 +401,7 @@
                 //declara a variável data para pegar os dados de dentro da resposta do json
                 const data = await response.json();
                 //Se der erro retorna essa mensagem em vermelho
-                if(data.erro) {
+                if (data.erro) {
                     showToast("CEP não localizado", "danger");
                 }
 
@@ -399,9 +412,9 @@
 
                 //Dispara o evento de input para atualizar o preview do contrato
                 document.getElementById('endereco').dispatchEvent(new Event('input'));
-                
+
                 showToast("Endereço preenchido", "success");
-            
+
 
             }
             catch (error) {
@@ -525,19 +538,19 @@
 
         function atualizar() {
             // Adicionados 'razao-social' e 'cnpj-credora' no array
-            const ids = ['nome-cliente', 'cpf-cliente', 'orgao', 'endereco', 'banco', 'total-contrato',  'parcela', 'liquido', 'repasse', 'prazo', 'chave-pix', 'favorecido-pix', 'razao-social', 'cnpj-credora'];
-            
+            const ids = ['nome-cliente', 'cpf-cliente', 'orgao', 'endereco', 'banco', 'total-contrato', 'parcela', 'liquido', 'repasse', 'prazo', 'chave-pix', 'favorecido-pix', 'razao-social', 'cnpj-credora'];
+
             ids.forEach(id => {
                 const val = document.getElementById(id).value || "---";
                 const doc = document.getElementById('doc-' + id);
                 if (doc) doc.textContent = val;
 
                 if (id === 'nome-cliente') document.getElementById('doc-nome-ass').textContent = val;
-                
+
                 // Liga o nome da assessoria/empresa com a cláusula e com a assinatura
                 if (id === 'razao-social') {
-                    if(document.getElementById('doc-razao-social-corpo')) document.getElementById('doc-razao-social-corpo').textContent = val;
-                    if(document.getElementById('doc-razao-social-ass')) document.getElementById('doc-razao-social-ass').textContent = val;
+                    if (document.getElementById('doc-razao-social-corpo')) document.getElementById('doc-razao-social-corpo').textContent = val;
+                    if (document.getElementById('doc-razao-social-ass')) document.getElementById('doc-razao-social-ass').textContent = val;
                 }
             });
         }
