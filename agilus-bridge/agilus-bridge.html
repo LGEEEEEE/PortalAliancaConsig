@@ -551,6 +551,31 @@ Liberado: 15.000,00</pre>
             const formData = new FormData(form);
             const data = Object.fromEntries(formData.entries());
 
+            // --- NOVA TRAVA DE SEGURANÇA: VALIDAÇÃO DO VENDEDOR ---
+            const inputVendedor = document.querySelector('input[name="vendedor"]');
+
+            if (!data.vendedor || data.vendedor.trim() === "") {
+                alert('⚠️ Operação bloqueada: O nome do Vendedor é obrigatório!');
+
+                // Foca no campo para facilitar a vida do usuário
+                inputVendedor.focus();
+
+                // Adiciona classes do Tailwind para piscar a borda em vermelho
+                inputVendedor.classList.remove('border-slate-200', 'focus:ring-indigo-500');
+                inputVendedor.classList.add('border-red-500', 'ring-2', 'ring-red-500', 'bg-red-50');
+
+                // Remove o visual de erro assim que a pessoa começar a digitar
+                inputVendedor.addEventListener('input', function removerErro() {
+                    inputVendedor.classList.remove('border-red-500', 'ring-2', 'ring-red-500', 'bg-red-50');
+                    inputVendedor.classList.add('border-slate-200', 'focus:ring-indigo-500');
+                    inputVendedor.removeEventListener('input', removerErro);
+                });
+
+                // Interrompe a execução do script aqui (não copia pro clipboard)
+                return;
+            }
+            // --------------------------------------------------------
+
             navigator.clipboard.writeText(JSON.stringify(data)).then(() => {
                 alert('🚀 Tudo copiado! Vá para a aba do Agilus e clique no Bookmarklet.');
             }).catch(err => {
