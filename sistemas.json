@@ -1,0 +1,274 @@
+{
+                titulo: "Gestão de Diretoria",
+                imagem: "", // COLOQUE AQUI O NOME DA IMAGEM. Ex: "logo_diretoria.png"
+                icone: "fa-user-shield", // Fallback (aparece se não tiver imagem)
+                link: "https://controle-alianca-consig-4pvw.onrender.com/",
+                resumo: "Controle financeiro e operacional exclusivo.",
+                detalhes: "Painel administrativo de alto nível para a diretoria. Cadastro de operações, cálculo de comissões e líquido da empresa.",
+                restrito: true,
+                features: [
+                    "Cadastro de Operações e Vendas.",
+                    "Cálculo de Líquido da Empresa.",
+                    "Relatórios Financeiros em PDF.",
+                    "Gestão de Vendedores e Supervisores."
+                ]
+            },
+            {
+                titulo: "Consultor de CNPJ",
+                imagem: "", // Sugestão: "print_cnpj_search.jpg"
+                icone: "fa-building",
+                link: "consultacnpj/index.html",
+                resumo: "Consulta em tempo real de dados da Receita Federal.",
+                detalhes: "Interface intuitiva para extração de dados públicos de empresas brasileiras via BrasilAPI. Ideal para análise de crédito e prospecção B2B.",
+                features: [
+                    "Extração completa de QSA (Sócios e Administradores).",
+                    "Visualização de Capital Social e CNAE principal.",
+                    "Status cadastral dinâmico (Ativa/Baixada).",
+                    "Tratamento de erros e limpeza automática de máscaras."
+                ]
+            },
+            {
+                "titulo": "Agilus Bridge Pro Max",
+                "imagem": "",
+                "icone": "fa-robot",
+                "link": "agilus-bridge/agilus-bridge.html",
+                "resumo": "Injetor inteligente de dados para o CRM Agilus.",
+                "detalhes": "Ferramenta avançada para automação de cadastro de vendas, integrando leitura de extratos PDF e scripts de WhatsApp diretamente no CRM.",
+                "features": [
+                    "Leitor híbrido: PDF (Consignação) e Texto (Margem Livre).",
+                    "Injeção automática de dados pessoais, contratos e portabilidade.",
+                    "Abertura e preenchimento automático de modais (Telefone, Email e Vendedor).",
+                    "Criação automática de Ocorrências com histórico do script.",
+                    "Cálculo inteligente de prazos e filtros automáticos de bancos."
+                ]
+            },
+            {
+                titulo: "Validador de Situação CPF",
+                imagem: "",
+                icone: "fa-user-shield",
+                link: "https://servicos.receita.fazenda.gov.br/servicos/cpf/consultasituacao/consultapublica.asp",
+                resumo: "Atalho inteligente para verificação de regularidade fiscal.",
+                detalhes: "Devido às restrições da LGPD e proteções de Captcha da Receita Federal, esta ferramenta atua como um facilitador de acesso direto à base oficial.",
+                features: [
+                    "Link direto para o portal da Receita.",
+                    "Orientações sobre tipos de pendências.",
+                    "Interface limpa e explicativa."
+                ]
+            },
+            {
+                titulo: "Saneamento de CPF",
+                imagem: "",
+                icone: "fa-filter",
+                link: "saneamento-cpf/index.html",
+                resumo: "Filtra bases CSV de clientes pelo final do CPF.",
+                detalhes: "Ferramenta para processamento de milhares de leads localmente. Isola rapidamente clientes por região (como o Centro-Oeste) com base em um intervalo dos dígitos finais do CPF.",
+                features: [
+                    "Processamento ultrarrápido de arquivos CSV no navegador.",
+                    "Filtro dinâmico por intervalo de dígitos (ex: 100 a 199).",
+                    "Limpeza automática de caracteres e aspas indesejados.",
+                    "Exportação da lista filtrada tratada e pronta para o Excel."
+                ]
+            },
+            {
+                titulo: "Calculadora Pro",
+                imagem: "", // Ex: "print_calculadora.jpg"
+                icone: "fa-calculator",
+                link: "https://calculadora-consignado.vercel.app/calculadora-unificada.html",
+                resumo: "Simulação completa para SIAPE e Exército.",
+                detalhes: "Realiza cálculos de Compra, Portabilidade, Margem Nova e Refinanciamento. Integração direta com Polo/Corban.",
+                features: [
+                    "Cálculo Unificado (Portabilidade, Compra).",
+                    "Integração com CRM (Polo/Corban).",
+                    "Script de Vendas WhatsApp.",
+                    "Leitura de PDF do Exército e SIAPE."
+                ]
+            },
+            {
+                titulo: "Conversor Imagem para PDF",
+                imagem: "",
+                icone: "fa-file-pdf",
+                link: "conversor-imagem-pdf/index.html",
+                resumo: "Conversor de imagens (JPG/PNG) para formato PDF.",
+                detalhes: "Solução prática para padronizar documentos. Ideal para quando o cliente envia fotos ou arquivos em extensões diferentes e é necessário transformá-los em PDF de forma rápida e segura.",
+                features: [
+                    "Conversão de formatos JPG, JPEG e PNG.",
+                    "Processamento local no navegador (privacidade total).",
+                    "Conversão em lote de múltiplos arquivos simultaneamente.",
+                    "Ajuste automático do PDF para a proporção real da imagem."
+                ]
+            },
+            {
+                titulo: "Notas Promissórias",
+                imagem: "",
+                icone: "fa-file-invoice-dollar",
+                link: "nota-promissoria-alianca/index.html",
+                resumo: "Gerador automático de notas promissórias.",
+                detalhes: "Ferramenta rápida para emissão de Notas Promissórias com layout padrão Aliança Consig.",
+                features: [
+                    "Geração de PDF para impressão.",
+                    "Leitura automática de dados (PDF).",
+                    "Busca de endereço por CEP.",
+                    "Cálculo automático de datas."
+                ]
+            },
+            {
+                titulo: "Termo de Responsabilidade",
+                imagem: "",
+                icone: "fa-money-bill-transfer",
+                link: "https://termo-de-ciencia.netlify.app/",
+                resumo: "Formalização de restituição e repasses (Usada pela equipe da Andressa).",
+                detalhes: "Sistema para gerar o termo de responsabilidade e confissão de repasse (Troco).",
+                features: [
+                    "Cálculo automático de restituição.",
+                    "Busca automática de endereço.",
+                    "Geração de PDF Jurídico formatado."
+                ]
+            },
+            {
+                titulo: "Termo Margem Nova",
+                imagem: "",
+                icone: "fa-file-invoice-dollar",
+                link: "contrato_margem_nova/termo.html",
+                resumo: "Geração de contrato focado em Margem Livre (SIAPE).",
+                detalhes: "Sistema otimizado para gerar o Termo de Ciência e Responsabilidade para operações exclusivas de Margem Nova, com texto jurídico para repasse de consultoria.",
+                features: [
+                    "Focado 100% em operações de Margem Nova.",
+                    "Cláusula de transparência para repasse facultativo (taxa 0,5%).",
+                    "Geração de PDF perfeitamente centralizado em página única.",
+                    "Formatação automática de máscaras monetárias."
+                ]
+            },
+            {
+                titulo: "Contrato de Prestação",
+                imagem: "",
+                icone: "fa-file-signature",
+                link: "https://prestacaodeservico.netlify.app/",
+                resumo: "Geração de contratos de consultoria. (Contrato de Portabilidade, Equipe Michele)",
+                detalhes: "Sistema jurídico para formalização de consultoria. Gera o contrato da Pollo Promotora.",
+                features: [
+                    "Leitura automática de Holerites e OCR.",
+                    "Cálculo automático de honorários.",
+                    "Geração de PDF pronto."
+                ]
+            },
+            {
+                titulo: "Confissão de Dívida",
+                imagem: "",
+                icone: "fa-file-shield",
+                link: "https://confissao-de-divida.netlify.app/",
+                resumo: "Emissão de termos de confissão (Login). (Contrato Geral de toda a empresa)",
+                detalhes: "Sistema para formalização de dívidas. Exige login para acesso.",
+                features: [
+                    "Acesso restrito (Login/Senha).",
+                    "Leitura de PDF Multiconvênio.",
+                    "Geração de contrato jurídico."
+                ]
+            },
+            {
+                titulo: "Concessão Sou Gov",
+                imagem: "",
+                icone: "fa-file-contract",
+                link: "concessaosougov/index.html", // Caminho para a pasta que criamos acima
+                resumo: "Termo de restrições e concessão de acesso ao SouGov.",
+                detalhes: "Gera o Termo Definitivo de Concessão de Acesso para Monitoramento de Informações Sougov.br. Inclui busca automática de CEP e geração de PDF vetorial com preenchimento em tempo real.",
+                restrito: false, // Mude para true se quiser a bordinha vermelha de acesso restrito
+                features: [
+                    "Visualização do contrato em tempo real.",
+                    "Busca automática de endereço via CEP.",
+                    "Geração nativa de PDF sem perda de qualidade.",
+                    "Definição de Responsáveis Solidários."
+                ]
+            },
+            {
+                titulo: "Otimizador de PDF",
+                imagem: "",
+                icone: "fa-file-pdf",
+                link: "otimizador-de-pdf/index.html",
+                resumo: "Reduza o tamanho dos seus arquivos.",
+                detalhes: "Compressor de PDF simples e eficiente. Reduza o tamanho dos seus arquivos PDF diretamente no navegador.",
+                features: [
+                    "Compressor 100% no navegador.",
+                    "Suporte a múltiplas páginas.",
+                    "Preserva qualidade do conteúdo.",
+                    "Download imediato do arquivo otimizado."
+                ]
+            },
+            {
+                titulo: "Declaração de Residência",
+                imagem: "",
+                icone: "fa-house-user",
+                link: "https://declaracao-residencia.vercel.app/",
+                resumo: "Gerador automático de declaração de residência.",
+                detalhes: "Ferramenta para emissão de declarações de residência com busca automática de CEP e preenchimento dinâmico de dados.",
+                features: [
+                    "Busca automática de endereço por CEP.",
+                    "Geração de PDF em página única.",
+                    "Layout jurídico completo e atualizado.",
+                    "Preenchimento dinâmico de testemunhas."
+                ]
+            },
+            {
+                titulo: "Filtro Base Lemit",
+                imagem: "",
+                icone: "fa-file-csv", // Ícone de arquivo CSV do FontAwesome
+                link: "formata-lemit/index.html", // Lembre de alterar para o link ou arquivo local correto
+                resumo: "Filtro e formatação automática de planilhas do Lemit.",
+                detalhes: "Ferramenta ETL para extração, limpeza de colunas e formatação de telefones em bases CSV de forma local.",
+                features: [
+                    "Processamento de múltiplos arquivos simultaneamente.",
+                    "Filtragem automática do layout (Nome, CPF, UF e Telefones).",
+                    "Concatenação inteligente de DDD e Telefones.",
+                    "Processamento 100% no navegador (garante a privacidade dos dados).",
+                    "Exportação nativa para CSV compatível com Excel (UTF-8)."
+                ]
+            },
+            {
+                titulo: "Avaliação Bradesco",
+                imagem: "",
+                icone: "fa-university",
+                link: "https://avaliacao-bradesco-kwem.vercel.app/",
+                resumo: "Automação de propostas Bradesco.",
+                detalhes: "Ferramenta para processamento rápido de extratos e geração de links para envio de proposta.",
+                features: [
+                    "Extração de margem consignável.",
+                    "Identificação automática bancária.",
+                    "Foco em operações Bradesco."
+                ]
+            },
+            {
+                titulo: "Calculadora Cidadão",
+                imagem: "",
+                icone: "fa-scale-balanced",
+                link: "https://calculadora-consignado.vercel.app/calculadora-cidadao.html",
+                resumo: "Conferência de taxas de juros (Price).",
+                detalhes: "Baseada na calculadora do Banco Central. Ideal para descobrir a taxa de juros real ou saldo devedor.",
+                features: [
+                    "Cálculo reverso de taxa de juros.",
+                    "Projeção de saldo devedor.",
+                    "Histórico de taxas de mercado."
+                ]
+            },
+            {
+                titulo: "Aviso de Débito",
+                imagem: "",
+                icone: "fa-triangle-exclamation",
+                link: "https://calculadora-consignado.vercel.app/aviso.html",
+                resumo: "Cálculo rápido de aviso de débito.",
+                detalhes: "Calculadora utilitária para gerar valores de aviso de débito com acréscimo de 10%.",
+                features: [
+                    "Cálculo automático de multa (10%).",
+                    "Adição de taxas administrativas."
+                ]
+            },
+            {
+                titulo: "Depurador OCR/PDF",
+                imagem: "",
+                icone: "fa-bug",
+                link: "https://calculadora-consignado.vercel.app/depurador.html",
+                resumo: "Ferramenta técnica para ler PDFs.",
+                detalhes: "Utilitário para quando um PDF não está sendo lido corretamente. Extrai o texto cru.",
+                features: [
+                    "Visualização de texto extraído.",
+                    "Suporte a Tesseract (OCR) para imagens."
+                ]
+            }
