@@ -160,21 +160,28 @@
         }
 
         .bloco-dados {
-            margin-bottom: 15px;
+            margin-bottom: 10px;
+            /* Reduzimos um pouco a margem entre os blocos */
             border: 1.5px solid #000;
         }
 
         .bloco-titulo {
+            margin: 0;
+            /* ISSO AQUI RESOLVE A SOBRA: zera a margem padrão do <h3> */
             text-align: center;
             font-weight: bold;
             background: #f2f2f2;
-            padding: 4px;
+            padding: 3px;
+            /* Preenchimento um pouco mais fino */
             border-bottom: 1.5px solid #000;
+            font-size: 11pt;
+            /* Fonte levemente menor no título do bloco */
         }
 
         .dado-linha {
             margin: 0;
-            padding: 4px 8px;
+            padding: 2px 8px;
+            /* Reduzimos o espaço acima e abaixo do texto na linha */
             border-bottom: 1px solid #eee;
         }
 
@@ -361,11 +368,8 @@
                 do crédito.</p>
 
             <p style="font-size: 9pt; font-style: italic; text-align: justify;">
-                <strong>Nota:</strong> O repasse, de caráter opcional, destina-se exclusivamente a cobrir os custos
-                operacionais do contrato e o comissionamento da assessoria. Fica o proponente ciente de que, embora a
-                devolução não seja obrigatória, a Contratada reserva-se o direito de realizar o estorno da operação e
-                solicitar o cancelamento do contrato no prazo de até 24 (vinte e quatro) horas após a liberação, caso a
-                viabilidade financeira da prestação do serviço não seja atendida.
+                <strong>Nota:</strong> O repasse opcional paga os custos e comissões do serviço. O não pagamento permite
+                à Contratada cancelar o contrato e estornar a operação dentro de 24 horas por inviabilidade financeira.
             </p>
 
             <span class="clausula">CLÁUSULA TERCEIRA - DADOS PARA TRANSFERÊNCIA</span>
@@ -381,7 +385,10 @@
             <div class="assinatura-bloco">
                 <div class="assinatura-linha"><span id="doc-nome-ass">---</span><br>CLIENTE</div>
                 <div class="assinatura-linha"><span id="doc-razao-social-ass">POLLO PROMOTORA LTDA</span><br>ASSESSORIA
-                </div>
+                </div> <br> <br>
+            </div>
+            <div class="assinatura-bloco" style="justify-content: center;">
+                <div class="assinatura-linha"><span style="text-align: start;">TESTEMUNHA CPF:</span><br></div>
             </div>
         </div>
     </div>
