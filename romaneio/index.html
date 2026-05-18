@@ -277,9 +277,12 @@
 
     <script>
         let listaProdutos = [];
+        let editIndex = -1;
+        let editModalInstance = null;
 
         window.onload = function () {
             loadProgress();
+            editModalInstance = new bootstrap.Modal(document.getElementById('editModal'));
         };
 
         function updateHeader() {
@@ -325,20 +328,76 @@
             tbody.innerHTML = '';
             let totalGeral = 0;
 
-            listaProdutos.forEach((prod) => {
+            const theadTr = document.querySelector('#tabela-produtos thead tr');
+            if (!theadTr.querySelector('.col-acoes')) {
+                const th = document.createElement('th');
+                th.className = 'no-print col-acoes';
+                th.style.width = '12%'; // Aumentei um pouquinho a largura para caberem os dois botões
+                th.innerText = 'Ações';
+                theadTr.appendChild(th);
+            }
+
+            listaProdutos.forEach((prod, index) => {
                 const tr = document.createElement('tr');
                 tr.innerHTML = `
-                    <td><span class="check-box"></span></td>
-                    <td>${prod.qtde}</td>
-                    <td>${prod.un}</td>
-                    <td class="desc-col">${prod.desc}</td>
-                    <td>${prod.valor.toFixed(2).replace('.', ',')}</td>
-                `;
+            <td><span class="check-box"></span></td>
+            <td>${prod.qtde}</td>
+            <td>${prod.un}</td>
+            <td class="desc-col">${prod.desc}</td>
+            <td>${prod.valor.toFixed(2).replace('.', ',')}</td>
+            <td class="no-print" style="text-align: center; white-space: nowrap;">
+                <button class="btn btn-sm btn-warning py-0 px-2 me-1" onclick="openEditModal(${index})" title="Editar">
+                    <i class="bi bi-pencil"></i>
+                </button>
+                <button class="btn btn-sm btn-danger py-0 px-2" onclick="deleteProduct(${index})" title="Excluir">
+                    <i class="bi bi-trash"></i>
+                </button>
+            </td>
+        `;
                 tbody.appendChild(tr);
                 totalGeral += prod.valor;
             });
 
             document.getElementById('out-total').innerText = totalGeral.toFixed(2).replace('.', ',');
+        }
+
+        // NOVA FUNÇÃO: Deletar produto
+        function deleteProduct(index) {
+            if (confirm("Tem certeza que deseja remover este produto da lista?")) {
+                listaProdutos.splice(index, 1); // Remove o item do array
+                renderTable(); // Atualiza a tabela na tela
+                saveProgress(); // Salva a alteração no cache
+            }
+        }
+
+        function openEditModal(index) {
+            editIndex = index;
+            const prod = listaProdutos[index];
+
+            document.getElementById('edit-qtde').value = prod.qtde;
+            document.getElementById('edit-un').value = prod.un;
+            document.getElementById('edit-desc').value = prod.desc;
+            document.getElementById('edit-valor').value = prod.valor;
+
+            editModalInstance.show();
+        }
+
+        function saveEdit() {
+            const qtde = document.getElementById('edit-qtde').value;
+            const un = document.getElementById('edit-un').value;
+            const desc = document.getElementById('edit-desc').value;
+            const valor = parseFloat(document.getElementById('edit-valor').value);
+
+            if (!desc || isNaN(valor)) {
+                alert("Preencha a descrição e o valor!");
+                return;
+            }
+
+            listaProdutos[editIndex] = { qtde, un, desc, valor };
+
+            editModalInstance.hide();
+            renderTable();
+            saveProgress();
         }
 
         function saveProgress() {
@@ -390,13 +449,24 @@
 
         function generatePDF() {
             const element = document.getElementById('pdf-content');
+            const nomeCliente = document.getElementById('in-nome').value.trim() || 'cliente';
 
             const opt = {
                 margin: 10,
-                filename: 'pedido_marias.pdf',
+                filename: `pedido-${nomeCliente}-marias.pdf`,
                 image: { type: 'jpeg', quality: 0.98 },
-                // O SEGREDO ESTÁ AQUI: scrollY: 0
-                html2canvas: { scale: 2, useCORS: true, allowTaint: true, scrollY: 0 },
+                html2canvas: {
+                    scale: 2,
+                    useCORS: true,
+                    allowTaint: true,
+                    scrollY: 0,
+                    onclone: function (clonedDoc) {
+                        const elementosNoPrint = clonedDoc.querySelectorAll('.no-print');
+                        elementosNoPrint.forEach(el => {
+                            el.style.setProperty('display', 'none', 'important');
+                        });
+                    }
+                },
                 jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
                 pagebreak: { mode: ['css', 'legacy'], avoid: ['tr', '.footer-section'] }
             };
@@ -404,6 +474,44 @@
             html2pdf().set(opt).from(element).save();
         }
     </script>
+
+    <div class="modal fade" id="editModal" tabindex="-1" aria-labelledby="editModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content shadow">
+                <div class="modal-header bg-warning">
+                    <h5 class="modal-title fw-bold" id="editModalLabel">
+                        <i class="bi bi-pencil-square"></i> Editar Produto
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="row g-2 mb-2">
+                        <div class="col-4">
+                            <label class="form-label small fw-bold mb-1">Qtde</label>
+                            <input type="number" class="form-control form-control-sm" id="edit-qtde">
+                        </div>
+                        <div class="col-8">
+                            <label class="form-label small fw-bold mb-1">Un</label>
+                            <input type="text" class="form-control form-control-sm" id="edit-un">
+                        </div>
+                    </div>
+                    <div class="mb-2">
+                        <label class="form-label small fw-bold mb-1">Descrição</label>
+                        <input type="text" class="form-control form-control-sm" id="edit-desc">
+                    </div>
+                    <div class="mb-2">
+                        <label class="form-label small fw-bold mb-1">Total (R$)</label>
+                        <input type="number" step="0.01" class="form-control form-control-sm" id="edit-valor">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-success fw-bold" onclick="saveEdit()">Salvar
+                        Alterações</button>
+                </div>
+            </div>
+        </div>
+    </div>
 </body>
 
 </html>
