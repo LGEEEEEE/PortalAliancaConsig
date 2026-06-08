@@ -8,6 +8,13 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 
 <style>
+
+    /* Evita que parágrafos e blocos quebrem no meio da página no PDF */
+    #document-preview p, 
+    #document-preview h3,
+    #document-preview div {
+        page-break-inside: avoid;
+    }
     :root {
         --bg-color: #f0f2f5;
         --panel-bg: #ffffff;
@@ -381,7 +388,9 @@
             filename: 'contrato_locacao_pf.pdf',
             image: { type: 'jpeg', quality: 0.98 },
             html2canvas: { scale: 2, useCORS: true, letterRendering: true, logging: false },
-            jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+            jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
+            // ADICIONE ESTA LINHA ABAIXO:
+            pagebreak: { mode: ['avoid-all', 'css', 'legacy'] } 
         };
 
         html2pdf().set(opt).from(element).save().then(() => {
