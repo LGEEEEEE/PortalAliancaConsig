@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Gerador de Contrato com ViaCEP</title>
+<title>Gerador de Contrato de Locação PF</title>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 
@@ -13,6 +13,7 @@
         --panel-bg: #ffffff;
         --border-color: #dcdde1;
         --primary-blue: #0984e3;
+        --section-title: #2d3436;
     }
     body {
         font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -30,17 +31,67 @@
         height: 100%;
     }
     
+    /* Painel Esquerdo - Formulário */
     .left-panel {
         width: 35%;
-        min-width: 300px;
+        min-width: 350px;
         background-color: var(--panel-bg);
-        padding: 30px 20px;
+        padding: 20px 25px;
         box-shadow: 2px 0 10px rgba(0,0,0,0.05);
         overflow-y: auto;
         border-right: 1px solid var(--border-color);
         z-index: 2;
     }
     
+    .left-panel h2 {
+        color: var(--primary-blue);
+        margin-top: 0;
+        font-size: 1.4rem;
+        margin-bottom: 20px;
+        text-align: center;
+    }
+
+    .form-section {
+        color: var(--section-title);
+        font-size: 1.1rem;
+        border-bottom: 2px solid #eee;
+        padding-bottom: 5px;
+        margin-top: 25px;
+        margin-bottom: 15px;
+    }
+    
+    .form-group {
+        margin-bottom: 15px;
+    }
+    .form-group label {
+        display: block;
+        margin-bottom: 5px;
+        font-weight: 600;
+        font-size: 0.85rem;
+        color: #636e72;
+    }
+    .form-group input, .form-group select {
+        width: 100%;
+        padding: 9px;
+        border: 1px solid #b2bec3;
+        border-radius: 6px;
+        box-sizing: border-box;
+        font-size: 0.9rem;
+        transition: border-color 0.3s;
+    }
+    .form-group input:focus, .form-group select:focus {
+        outline: none;
+        border-color: var(--primary-blue);
+    }
+    
+    .loading-cep {
+        font-size: 0.75rem;
+        color: var(--primary-blue);
+        display: none;
+        margin-top: 4px;
+    }
+
+    /* Painel Direito - Preview e Botão */
     .right-panel {
         width: 65%;
         padding: 30px;
@@ -50,56 +101,18 @@
         align-items: center;
     }
 
-    h2 {
-        color: #2d3436;
-        margin-top: 0;
-        font-size: 1.4rem;
-        margin-bottom: 25px;
-    }
-    .form-group {
-        margin-bottom: 18px;
-    }
-    .form-group label {
-        display: block;
-        margin-bottom: 6px;
-        font-weight: 600;
-        font-size: 0.85rem;
-        color: #636e72;
-    }
-    .form-group input, .form-group select {
-        width: 100%;
-        padding: 10px;
-        border: 1px solid #b2bec3;
-        border-radius: 6px;
-        box-sizing: border-box;
-        font-size: 0.95rem;
-        transition: border-color 0.3s;
-    }
-    .form-group input:focus, .form-group select:focus {
-        outline: none;
-        border-color: var(--primary-blue);
-    }
-    
-    /* Indicador de carregamento do CEP */
-    .loading-cep {
-        font-size: 0.75rem;
-        color: var(--primary-blue);
-        display: none;
-        margin-top: 4px;
-    }
-
     .btn-gerar {
         background-color: var(--primary-blue);
         color: white;
         border: none;
-        padding: 12px 25px;
-        font-size: 1rem;
+        padding: 15px 25px;
+        font-size: 1.1rem;
         font-weight: bold;
         border-radius: 6px;
         cursor: pointer;
         margin-bottom: 25px;
         width: 100%;
-        max-width: 700px;
+        max-width: 800px;
         box-shadow: 0 4px 6px rgba(9, 132, 227, 0.2);
         transition: background-color 0.3s;
     }
@@ -107,32 +120,33 @@
         background-color: #074a80;
     }
 
-    /* Estilos da Folha de Preview */
+    /* Documento A4 */
     #document-preview {
         background-color: white;
-        padding: 50px;
+        padding: 60px;
         width: 100%;
-        max-width: 700px;
+        max-width: 800px;
         box-shadow: 0 10px 20px rgba(0,0,0,0.08);
-        line-height: 1.7;
-        color: #2d3436;
+        line-height: 1.6;
+        color: #000;
         box-sizing: border-box;
-        font-family: Arial, sans-serif;
+        font-family: 'Times New Roman', Times, serif;
+        font-size: 11pt;
+        text-align: justify;
     }
     #document-preview h3 {
         text-align: center;
         margin-bottom: 30px;
-        font-size: 1.2rem;
+        font-size: 14pt;
     }
     #document-preview p {
-        margin-bottom: 15px;
-        text-align: justify;
+        margin-bottom: 12px;
     }
     
-    /* Destaques visuais */
+    /* Destaques */
     .highlight {
         background-color: #ffeaa7;
-        padding: 2px 5px;
+        padding: 1px 3px;
         border-radius: 3px;
         font-weight: bold;
         color: #d63031;
@@ -141,13 +155,15 @@
     .filled {
         background-color: transparent;
         color: inherit;
-        font-weight: normal;
+        font-weight: bold;
     }
 
-    /* Regra para limpar os destaques amarelos apenas na hora de gerar o PDF */
     #document-preview.is-printing .highlight {
         background-color: transparent !important;
         color: inherit !important;
+        font-weight: normal !important;
+    }
+    #document-preview.is-printing .filled {
         font-weight: normal !important;
     }
 </style>
@@ -156,86 +172,137 @@
 
 <div class="container">
     <div class="left-panel">
-        <h2>Dados do Contrato</h2>
+        <h2>Gerador de Contrato PF</h2>
         
+        <h3 class="form-section">1. Dados do Imóvel</h3>
         <div class="form-group">
-            <label>Nome do Locador</label>
-            <input type="text" id="in-locador" placeholder="Ex: João da Silva" oninput="updatePreview()">
-        </div>
-        <div class="form-group">
-            <label>CPF do Locador</label>
-            <input type="text" id="in-cpf-locador" placeholder="000.000.000-00" oninput="updatePreview()">
-        </div>
-        
-        <div class="form-group">
-            <label>Nome do Locatário</label>
-            <input type="text" id="in-locatario" placeholder="Ex: Maria Souza" oninput="updatePreview()">
-        </div>
-        <div class="form-group">
-            <label>CPF do Locatário</label>
-            <input type="text" id="in-cpf-locatario" placeholder="111.111.111-11" oninput="updatePreview()">
-        </div>
-
-        <div class="form-group">
-            <label>CEP do Imóvel</label>
+            <label>CEP (Busca ViaCEP e Comarca)</label>
             <input type="text" id="in-cep" placeholder="00000-000" maxlength="9" oninput="buscarCEP(this.value)">
             <span id="cep-loading" class="loading-cep">Buscando endereço...</span>
         </div>
-
         <div class="form-group">
             <label>Endereço do Imóvel</label>
-            <input type="text" id="in-endereco" placeholder="Rua X, nº 123 - Bairro Y" oninput="updatePreview()">
+            <input type="text" id="in-imovel-end" placeholder="Rua, nº, Bairro, Cidade-UF" oninput="updatePreview()">
         </div>
-
         <div class="form-group">
-            <label>Valor do Aluguel Mensal (R$)</label>
-            <input type="text" id="in-valor" placeholder="1.500,00" oninput="updatePreview()">
+            <label>Comarca / Cidade</label>
+            <input type="text" id="in-comarca" value="Brasília - DF" placeholder="São Paulo / SP" oninput="updatePreview()">
+            <small style="font-size: 0.75rem; color: #888;">Preenchido automaticamente pelo CEP.</small>
         </div>
-
         <div class="form-group">
-            <label>Prazo de Locação (Meses)</label>
-            <input type="number" id="in-prazo" placeholder="12" oninput="updatePreview()">
-        </div>
-        
-        <div class="form-group">
-            <label>Modalidade de Garantia</label>
-            <select id="in-garantia" onchange="updatePreview()">
-                <option value="Caução de 3 meses de aluguel">Caução (3 meses)</option>
-                <option value="Apresentação de Fiador idôneo">Fiador</option>
-                <option value="Seguro Fiança Locatícia">Seguro Fiança</option>
+            <label>Uso Exclusivo Para</label>
+            <select id="in-imovel-uso" onchange="updatePreview()">
+                <option value="fins residenciais" selected>Residencial</option>
+                <option value="fins comerciais">Comercial</option>
             </select>
         </div>
+
+        <h3 class="form-section">2. Dados do Locador</h3>
+        <div class="form-group"><label>Nome Completo</label><input type="text" id="in-locador-nome" value="" placeholder="Ex: João da Silva" oninput="updatePreview()"></div>
+        <div class="form-group"><label>Nacionalidade</label><input type="text" id="in-locador-nac" value="Brasileiro" placeholder="Brasileiro(a)" oninput="updatePreview()"></div>
+        <div class="form-group"><label>Estado Civil</label><input type="text" id="in-locador-est" value="Solteiro" placeholder="Solteiro(a)" oninput="updatePreview()"></div>
+        <div class="form-group"><label>Profissão</label><input type="text" id="in-locador-prof" value="" placeholder="Engenheiro(a)" oninput="updatePreview()"></div>
+        <div class="form-group"><label>RG</label><input type="text" id="in-locador-rg" placeholder="00.000.000-0" oninput="updatePreview()"></div>
+        <div class="form-group"><label>CPF</label><input type="text" id="in-locador-cpf" placeholder="000.000.000-00" oninput="updatePreview()"></div>
+        <div class="form-group"><label>Endereço (Residência)</label><input type="text" id="in-locador-end" placeholder="Endereço completo" oninput="updatePreview()"></div>
+
+        <h3 class="form-section">3. Dados do Locatário</h3>
+        <div class="form-group"><label>Nome Completo</label><input type="text" id="in-locatario-nome" placeholder="Ex: Maria Souza" oninput="updatePreview()"></div>
+        <div class="form-group"><label>Nacionalidade</label><input type="text" id="in-locatario-nac" value="Brasileiro(a)" placeholder="Brasileiro(a)" oninput="updatePreview()"></div>
+        <div class="form-group"><label>Estado Civil</label><input type="text" id="in-locatario-est" placeholder="Casado(a) / Solteiro(a)" oninput="updatePreview()"></div>
+        <div class="form-group"><label>Profissão</label><input type="text" id="in-locatario-prof" placeholder="Professora" oninput="updatePreview()"></div>
+        <div class="form-group"><label>RG</label><input type="text" id="in-locatario-rg" placeholder="11.111.111-1" oninput="updatePreview()"></div>
+        <div class="form-group"><label>CPF</label><input type="text" id="in-locatario-cpf" placeholder="111.111.111-11" oninput="updatePreview()"></div>
+        <div class="form-group"><label>Endereço Atual</label><input type="text" id="in-locatario-end" placeholder="Endereço completo" oninput="updatePreview()"></div>
+
+        <h3 class="form-section">4. Valores e Prazos</h3>
+        <div class="form-group"><label>Prazo de Locação (Meses)</label><input type="number" id="in-prazo" value="12" placeholder="12" oninput="updatePreview()"></div>
+        <div class="form-group"><label>Valor Mensal (R$)</label><input type="text" id="in-valor" placeholder="1.500,00" oninput="updatePreview()"></div>
+        <div class="form-group"><label>Forma de Pagamento</label><input type="text" id="in-forma-pag" value="Transferência via PIX" placeholder="PIX para a chave CPF do Locador" oninput="updatePreview()"></div>
+        <div class="form-group"><label>Dia do Vencimento</label><input type="number" id="in-dia-venc" value="10" placeholder="10" oninput="updatePreview()"></div>
+        <div class="form-group"><label>Multa por Atraso (%)</label><input type="number" id="in-multa-atraso" value="10" placeholder="10" oninput="updatePreview()"></div>
+        <div class="form-group"><label>Multa Diária Desocupação (R$)</label><input type="text" id="in-multa-diaria" value="100,00" placeholder="100,00" oninput="updatePreview()"></div>
+        <div class="form-group"><label>Multa Contratual (Qtd Aluguéis)</label><input type="number" id="in-rescisao" value="3" placeholder="3" oninput="updatePreview()"></div>
+        <div class="form-group"><label>Juros Rescisão (% ao mês)</label><input type="number" id="in-juros" value="1" placeholder="1" oninput="updatePreview()"></div>
+
+        <h3 class="form-section">5. Fiador (Garantia)</h3>
+        <div class="form-group"><label>Nome Completo do Fiador</label><input type="text" id="in-fiador-nome" placeholder="Ex: Carlos Mendes" oninput="updatePreview()"></div>
+        <div class="form-group"><label>Nacionalidade</label><input type="text" id="in-fiador-nac" value="Brasileiro(a)" placeholder="Brasileiro(a)" oninput="updatePreview()"></div>
+        <div class="form-group"><label>Estado Civil</label><input type="text" id="in-fiador-est" placeholder="Divorciado(a)" oninput="updatePreview()"></div>
+        <div class="form-group"><label>Profissão</label><input type="text" id="in-fiador-prof" placeholder="Médico" oninput="updatePreview()"></div>
+        <div class="form-group"><label>RG</label><input type="text" id="in-fiador-rg" placeholder="22.222.222-2" oninput="updatePreview()"></div>
+        <div class="form-group"><label>CPF</label><input type="text" id="in-fiador-cpf" placeholder="222.222.222-22" oninput="updatePreview()"></div>
+        <div class="form-group"><label>Endereço</label><input type="text" id="in-fiador-end" placeholder="Endereço completo" oninput="updatePreview()"></div>
+
     </div>
 
     <div class="right-panel">
-        <button class="btn-gerar" onclick="gerarPDF()">Gerar PDF do Contrato</button>
+        <button class="btn-gerar" onclick="gerarPDF()">Gerar e Baixar PDF</button>
         
         <div id="document-preview">
-            <h3>CONTRATO DE LOCAÇÃO DE IMÓVEL RESIDENCIAL</h3>
+            <h3>CONTRATO DE LOCAÇÃO</h3>
             
-            <p><strong>1. DAS PARTES</strong></p>
-            <p><strong>LOCADOR:</strong> <span class="highlight" id="out-locador">[Nome do Locador]</span>, portador do CPF nº <span class="highlight" id="out-cpf-locador">[CPF do Locador]</span>.</p>
-            <p><strong>LOCATÁRIO:</strong> <span class="highlight" id="out-locatario">[Nome do Locatário]</span>, portador do CPF nº <span class="highlight" id="out-cpf-locatario">[CPF do Locatário]</span>.</p>
-            
-            <p><strong>2. DO OBJETO</strong></p>
-            <p>O objeto deste contrato é a locação do imóvel situado à <span class="highlight" id="out-endereco">[Endereço do Imóvel]</span>, em perfeitas condições de habitabilidade e conservação.</p>
-            
-            <p><strong>3. DO PRAZO E DO VALOR</strong></p>
-            <p>O prazo total de locação é de <span class="highlight" id="out-prazo">[Prazo]</span> meses. O aluguel mensal fica acordado no valor de R$ <span class="highlight" id="out-valor">[Valor]</span>, devendo ser pago todo dia 10 de cada mês.</p>
-            
-            <p><strong>4. DA GARANTIA LOCATÍCIA</strong></p>
-            <p>Fica estabelecida como garantia deste contrato a seguinte modalidade: <span class="highlight" id="out-garantia">[Caução de 3 meses de aluguel]</span>.</p>
+            <p>As partes abaixo discriminadas contratam entre si a presente locação não residencial, conforme as seguintes condições:</p>
 
-            <br><br><br>
-            <p style="text-align: right;">Brasília - DF, <span id="data-atual"></span>.</p>
-            <br><br><br>
+            <p><strong>LOCADOR:</strong> <span class="highlight out-locador-nome">[Nome do Locador]</span>, <span class="highlight out-locador-nac">[Nacionalidade]</span>, <span class="highlight out-locador-est">[Estado Civil]</span>, <span class="highlight out-locador-prof">[Profissão]</span>, portador do RG nº <span class="highlight out-locador-rg">[RG]</span> e inscrito no CPF sob o nº <span class="highlight out-locador-cpf">[CPF]</span>, residente e domiciliado na <span class="highlight out-locador-end">[Endereço do Locador]</span>, doravante denominado simplesmente como LOCADOR.</p>
+
+            <p><strong>LOCATÁRIO:</strong> <span class="highlight out-locatario-nome">[Nome do Locatário]</span>, <span class="highlight out-locatario-nac">[Nacionalidade]</span>, <span class="highlight out-locatario-est">[Estado Civil]</span>, <span class="highlight out-locatario-prof">[Profissão]</span>, portador do RG nº <span class="highlight out-locatario-rg">[RG]</span> e inscrito no CPF sob o nº <span class="highlight out-locatario-cpf">[CPF]</span>, residente e domiciliado na <span class="highlight out-locatario-end">[Endereço do Locatário]</span>, doravante denominado simplesmente por LOCATÁRIO.</p>
+
+            <p><strong>DO OBJETO DA LOCAÇÃO:</strong> Imóvel para uso exclusivo para <span class="highlight out-imovel-uso">[fins residenciais]</span>, situado à <span class="highlight out-imovel-end">[Endereço do Imóvel]</span>.</p>
+
+            <p><strong>PRAZO DE LOCAÇÃO:</strong> O prazo de locação é de <span class="highlight out-prazo">[12]</span> meses contados da data deste contrato.</p>
+
+            <p><strong>VALOR DA LOCAÇÃO:</strong> O valor mensal da locação será de R$ <span class="highlight out-valor">[Valor]</span>.</p>
+
+            <p><strong>Cláusula Primeira:</strong> O aluguel deverá ser pago diretamente ao LOCADOR, através de <span class="highlight out-forma-pag">[Forma de Pagamento]</span>, até o dia <span class="highlight out-dia-venc">[10]</span> ao vencimento, sob pena de multa de <span class="highlight out-multa-atraso">[10]</span>% sobre o montante vencido.</p>
+
+            <p><strong>Cláusula Segunda:</strong> No término da locação, o LOCATÁRIO se obriga a restituir o imóvel locado completamente desocupado e nas mesmas condições que o encontrou.</p>
+
+            <p><strong>Cláusula Terceira:</strong> A não desocupação do imóvel, no término deste contrato, acarretará no pagamento de multa diária de R$ <span class="highlight out-multa-diaria">[100,00]</span>.</p>
+
+            <p><strong>Cláusula Quarta:</strong> Todos os encargos, impostos, taxas e demais tributos que recaiam sobre o imóvel ficarão por conta exclusiva do LOCATÁRIO que se obriga a pagá-los, comprovando-os juntamente com o aluguel mensal.</p>
+
+            <p><strong>Cláusula Quinta:</strong> Não é permitida a cessão ou transferência deste contrato, no todo ou em parte, sem autorização escrita do LOCADOR, bem como, a sublocação ou empréstimo do imóvel. O LOCATÁRIO destinará a utilização do imóvel objeto deste contrato exclusivamente para <span class="highlight out-imovel-uso">[fins residenciais]</span> até a devolução das chaves.</p>
+
+            <p><strong>Cláusula Sexta:</strong> O LOCATÁRIO assume a obrigação de manter o imóvel em perfeito estado de conservação, bem como, todas as instalações em perfeito estado de funcionamento, restituindo-o, quando terminado este contrato, nas mesmas condições de quando recebido.</p>
+
+            <p><strong>Cláusula Sétima:</strong> O LOCATÁRIO é responsável pelo consumo e pagamento das contas de água, luz, telefone etc., qualquer que seja a modalidade da sua cobrança.</p>
+
+            <p><strong>Cláusula Oitava:</strong> Fica o LOCADOR desde já autorizado a examinar ou vistoriar o imóvel locado mediante prévio aviso.</p>
+
+            <p><strong>Cláusula Nona:</strong> Fica estipulada a multa não indenizatória de <span class="highlight out-rescisao">[3]</span> aluguéis, além dos juros de <span class="highlight out-juros">[1]</span>% ao mês e correção monetária, à parte que infringir qualquer cláusula do presente contrato, com a faculdade da parte inocente de considerar rescindida a locação.</p>
+
+            <p><strong>Cláusula Décima:</strong> Fica pactuada a vigência deste contrato até seu término, mesmo ocorrendo a venda do referido imóvel, garantindo-se ainda o direito de preferência ao LOCATÁRIO para sua aquisição.</p>
+
+            <p><strong>Cláusula Décima Primeira:</strong> Como fiador e principal pagador, assina o presente contrato o Sr(a). <span class="highlight out-fiador-nome">[Nome do Fiador]</span>, <span class="highlight out-fiador-nac">[Nacionalidade]</span>, <span class="highlight out-fiador-est">[Estado Civil]</span>, <span class="highlight out-fiador-prof">[Profissão]</span>, portador do RG nº <span class="highlight out-fiador-rg">[RG]</span> e CPF nº <span class="highlight out-fiador-cpf">[CPF]</span>, residente na <span class="highlight out-fiador-end">[Endereço do Fiador]</span>, que assume responsabilidade com o LOCATÁRIO pelo cumprimento de todas obrigações decorrentes deste contrato.</p>
+
+            <p><strong>Cláusula Décima Segunda:</strong> Os contratantes elegem o Foro da Comarca de <span class="highlight out-comarca">[Cidade / UF]</span>, com renúncia a qualquer outro, por mais privilegiado que seja, correndo por conta do vencido, além do principal, honorários de advogado no valor de 20% e demais despesas processuais.</p>
+
+            <p>E por estarem justos e contratados assinam ambas partes este contrato em 03 vias de igual teor e forma.</p>
+
+            <p style="text-align: center; margin-top: 40px; font-weight: bold;">
+                <span class="highlight out-comarca">[Cidade / UF]</span>, <span id="data-atual"></span>.
+            </p>
+
+            <br><br>
+            <div style="text-align: center; width: 60%; margin: 0 auto 30px auto; border-top: 1px solid #000; padding-top: 5px;">
+                <strong><span class="highlight out-locador-nome">[Nome do Locador]</span></strong><br>LOCADOR
+            </div>
             
-            <div style="display: flex; justify-content: space-between; text-align: center;">
+            <div style="text-align: center; width: 60%; margin: 0 auto 30px auto; border-top: 1px solid #000; padding-top: 5px;">
+                <strong><span class="highlight out-locatario-nome">[Nome do Locatário]</span></strong><br>LOCATÁRIO
+            </div>
+
+            <div style="text-align: center; width: 60%; margin: 0 auto 30px auto; border-top: 1px solid #000; padding-top: 5px;">
+                <strong><span class="highlight out-fiador-nome">[Nome do Fiador]</span></strong><br>FIADOR
+            </div>
+
+            <div style="display: flex; justify-content: space-between; text-align: center; margin-top: 40px;">
                 <div style="width: 45%; border-top: 1px solid #000; padding-top: 5px;">
-                    Assinatura do Locador
+                    Testemunha 1 (Nome e CPF)
                 </div>
                 <div style="width: 45%; border-top: 1px solid #000; padding-top: 5px;">
-                    Assinatura do Locatário
+                    Testemunha 2 (Nome e CPF)
                 </div>
             </div>
         </div>
@@ -243,109 +310,88 @@
 </div>
 
 <script>
-    // Configura a data do dia automaticamente
     const dataOptions = { year: 'numeric', month: 'long', day: 'numeric' };
     document.getElementById('data-atual').textContent = new Date().toLocaleDateString('pt-BR', dataOptions);
 
-    // Função de Integração com ViaCEP
     function buscarCEP(cep) {
-        // Remove tudo que não for número
         const cepLimpo = cep.replace(/\D/g, '');
-        
-        // Verifica se tem 8 dígitos exatos
         if (cepLimpo.length === 8) {
             const loadingText = document.getElementById('cep-loading');
-            loadingText.style.display = 'block'; // Mostra "Buscando..."
+            loadingText.style.display = 'block';
 
             fetch(`https://viacep.com.br/ws/${cepLimpo}/json/`)
                 .then(response => response.json())
                 .then(data => {
-                    loadingText.style.display = 'none'; // Esconde "Buscando..."
-                    
+                    loadingText.style.display = 'none';
                     if (!data.erro) {
-                        // Monta o endereço com os dados recebidos e um espaço para o número
                         const enderecoFormatado = `${data.logradouro}, nº ___ - ${data.bairro}, ${data.localidade} - ${data.uf}, CEP: ${data.cep}`;
+                        document.getElementById('in-imovel-end').value = enderecoFormatado;
                         
-                        // Joga pro input e dispara a atualização visual
-                        const inputEndereco = document.getElementById('in-endereco');
-                        inputEndereco.value = enderecoFormatado;
+                        const comarcaFormatada = `${data.localidade} - ${data.uf}`;
+                        document.getElementById('in-comarca').value = comarcaFormatada;
+
                         updatePreview();
-                        
-                        // Foca no input de endereço pra facilitar a digitação do número
-                        inputEndereco.focus();
+                        document.getElementById('in-imovel-end').focus();
                     } else {
-                        alert('CEP não encontrado. Verifique e tente novamente.');
+                        alert('CEP não encontrado.');
                     }
                 })
                 .catch(error => {
                     loadingText.style.display = 'none';
-                    console.error('Erro ao buscar o CEP:', error);
+                    console.error('Erro ViaCEP:', error);
                 });
         }
     }
 
-    // Função que atualiza o preview em tempo real
     function updatePreview() {
-        const fields = ['locador', 'cpf-locador', 'locatario', 'cpf-locatario', 'endereco', 'valor', 'prazo', 'garantia'];
+        const inputs = document.querySelectorAll('[id^="in-"]');
         
-        fields.forEach(field => {
-            const inputEl = document.getElementById('in-' + field);
-            const outputEl = document.getElementById('out-' + field);
+        inputs.forEach(inputEl => {
+            const fieldName = inputEl.id.replace('in-', ''); 
+            const outputEls = document.querySelectorAll('.out-' + fieldName);
             
-            if (!inputEl || !outputEl) return;
-            
-            const inputVal = inputEl.value;
-            
-            if (inputVal.trim() !== '') {
-                // Se o campo tiver texto, atualiza o span e tira o destaque amarelo
-                outputEl.textContent = inputVal;
-                outputEl.classList.add('filled');
-                outputEl.classList.remove('highlight');
-            } else {
-                // Se o usuário apagar, volta o texto padrão e a cor de alerta
-                let fallback = field === 'garantia' ? 'Caução de 3 meses de aluguel' : '[' + inputEl.getAttribute('placeholder') + ']';
-                outputEl.textContent = fallback;
-                outputEl.classList.add('highlight');
-                outputEl.classList.remove('filled');
-            }
+            outputEls.forEach(outputEl => {
+                const inputVal = inputEl.value;
+                if (inputVal.trim() !== '') {
+                    outputEl.textContent = inputVal;
+                    outputEl.classList.add('filled');
+                    outputEl.classList.remove('highlight');
+                } else {
+                    let placeholder = inputEl.getAttribute('placeholder') || 'Preencher';
+                    
+                    if (inputEl.tagName === 'SELECT') {
+                        placeholder = inputEl.options[inputEl.selectedIndex].text;
+                    }
+
+                    outputEl.textContent = '[' + placeholder + ']';
+                    outputEl.classList.add('highlight');
+                    outputEl.classList.remove('filled');
+                }
+            });
         });
     }
 
-    // Função de geração do PDF corrigida
     function gerarPDF() {
-        // 1. Força uma última atualização dos dados
         updatePreview();
-
         const element = document.getElementById('document-preview');
-
-        // 2. Adiciona classe de impressão para limpar o layout (remover amarelos) no PDF
         element.classList.add('is-printing');
 
-        // 3. Configurações otimizadas para capturar o conteúdo dinâmico
         const opt = {
             margin: [15, 15, 15, 15],
-            filename: 'contrato_locacao.pdf',
+            filename: 'contrato_locacao_pf.pdf',
             image: { type: 'jpeg', quality: 0.98 },
-            html2canvas: { 
-                scale: 2, 
-                useCORS: true, 
-                letterRendering: true,
-                logging: false // desativa logs para performance
-            },
+            html2canvas: { scale: 2, useCORS: true, letterRendering: true, logging: false },
             jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
         };
 
-        // 4. Executa a conversão
         html2pdf().set(opt).from(element).save().then(() => {
-            // 5. Remove a classe para os destaques voltarem no preview da tela
             element.classList.remove('is-printing');
         }).catch(err => {
-            console.error("Erro ao gerar PDF:", err);
+            console.error("Erro PDF:", err);
             element.classList.remove('is-printing');
         });
     }
 
-    // Roda a função uma vez no início para popular selects e placeholders
     updatePreview();
 </script>
 
