@@ -19,7 +19,7 @@
             --primary-dark: #081a30;
             --accent: #0056b3;
             --restricted: #851e3e;
-            
+
             /* Estrutura e Superfícies (Modo Claro) */
             --bg: #f4f6f8;
             --card-bg: #ffffff;
@@ -471,6 +471,7 @@
                 transform: translateY(20px);
                 opacity: 0;
             }
+
             to {
                 transform: translateY(0);
                 opacity: 1;
@@ -742,6 +743,19 @@
                 ]
             },
             {
+                "titulo": "Contrato Compra Banese",
+                "imagem": "",
+                "icone": "fa-file-signature",
+                "link": "contratocomprabanese/index.html",
+                "resumo": "Emissão de termos específicos para a operação Banese.",
+                "detalhes": "Sistema para geração do Termo de Ciência, de Responsabilidade e Confissão de Dívida adaptado para portabilidade e compra Banese.",
+                "features": [
+                    "Cálculo automático de parcelas unificadas.",
+                    "Leitura inteligente de extratos e contracheques em PDF.",
+                    "Geração direta de documento formatado para assinatura."
+                ]
+            },
+            {
                 titulo: "Confissão de Dívida",
                 imagem: "",
                 icone: "fa-file-shield",
@@ -1000,9 +1014,9 @@
             const body = document.body;
             const icon = document.getElementById('theme-icon');
             const text = document.getElementById('theme-text');
-            
+
             body.classList.toggle('dark-theme');
-            
+
             if (body.classList.contains('dark-theme')) {
                 localStorage.setItem('theme', 'dark');
                 icon.className = 'fa-solid fa-sun';
@@ -1023,11 +1037,11 @@
                 document.getElementById('theme-icon').className = 'fa-solid fa-sun';
                 document.getElementById('theme-text').textContent = 'Claro';
             }
-            
+
             // Setar data
             const options = { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' };
             document.getElementById('data-topo').textContent = new Date().toLocaleDateString('pt-BR', options);
-            
+
             // Renderizar cards
             renderizarCartoes();
         };
