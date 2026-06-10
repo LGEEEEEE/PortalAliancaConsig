@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <title>Gerador de Hash SHA-256</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        input { padding: 8px; font-size: 1rem; width: 300px; }
+        button { padding: 8px 12px; font-size: 1rem; cursor: pointer; }
+        pre { 
+            background: #eee; 
+            padding: 15px; 
+            border-radius: 5px; 
+            word-wrap: break-word; /* Garante que o hash não estoure a tela */
+            font-size: 1.1rem;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>Gerador de Hash para Login</h1>
+    <p>Digite a senha que você quer usar no seu sistema e clique em "Gerar".</p>
+
+    <div style="margin-bottom: 20px;">
+        <label for="senha">Senha Mestra:</label><br>
+        <input type="text" id="senhaInput" placeholder="Digite sua senha (ex: admin123)">
+        <button id="gerarBtn">Gerar Hash</button>
+    </div>
+
+    <h3>Hash Gerado (SHA-256):</h3>
+    <pre id="resultadoHash">(O hash aparecerá aqui)</pre>
+    <p><small>Copie este valor e cole no seu arquivo JavaScript.</small></p>
+
+    <script>
+        // Função para gerar um hash SHA-256 de uma string
+        // É A MESMA FUNÇÃO do seu arquivo de login, para garantir compatibilidade
+        async function hashPassword(password) {
+            const encoder = new TextEncoder();
+            const data = encoder.encode(password);
+            const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+            const hashArray = Array.from(new Uint8Array(hashBuffer));
+            const hashHex = hashArray.map(byte => byte.toString(16).padStart(2, '0')).join('');
+            return hashHex;
+        }
+
+        // Evento do botão
+        document.getElementById('gerarBtn').addEventListener('click', async () => {
+            const senha = document.getElementById('senhaInput').value;
+            if (!senha) {
+                alert("Por favor, digite uma senha.");
+                return;
+            }
+
+            // Gera o hash
+            const hashGerado = await hashPassword(senha);
+            
+            // Exibe o hash
+            document.getElementById('resultadoHash').textContent = hashGerado;
+        });
+    </script>
+
+</body>
+</html>
