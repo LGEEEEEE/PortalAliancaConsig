@@ -652,6 +652,25 @@
             </div>
 
             <div class="form-group">
+                <label for="tirou-negativo">Tirou o negativo?</label>
+                <select id="tirou-negativo">
+                    <option value="Não">Não</option>
+                    <option value="Sim">Sim</option>
+                </select>
+            </div>
+            <div id="negativo-container"
+                style="display: none; padding-left: 15px; border-left: 3px solid #007bff; margin-bottom: 15px;">
+                <div class="form-group">
+                    <label for="valor-negativo">Valor do Negativo:</label>
+                    <input type="text" id="valor-negativo" placeholder="R$ 0,00" class="campo-moeda">
+                </div>
+                <div class="form-group">
+                    <label for="parcela-com-abatimento">Nova Parcela (Retirando Negativo):</label>
+                    <input type="text" id="parcela-com-abatimento" placeholder="R$ 0,00" class="campo-moeda" disabled>
+                </div>
+            </div>
+
+            <div class="form-group">
                 <label for="prazo">Prazo (em vezes):</label>
                 <input type="text" id="prazo" value="96x">
             </div>
@@ -726,6 +745,14 @@
                 Valor final das parcelas unificadas: <span id="doc-valor-parcelas-unificadas" class="variavel">[Valor
                     Parcelas Unificadas]</span>
             </p>
+
+            <p class="paragrafo" id="preview-valor-negativo" style="display: none;">
+                Valor do Negativo: <span id="doc-valor-negativo" class="variavel">R$ 0,00</span>
+            </p>
+            <p class="paragrafo" id="preview-parcela-abatimento" style="display: none;">
+                Nova Parcela (Retirando Negativo) <span id="doc-parcela-com-abatimento" class="variavel">R$ 0,00</span>
+            </p>
+
             <p class="paragrafo">
                 Prazo: <span id="doc-prazo" class="variavel">[Prazo]</span>
             </p>
@@ -864,34 +891,50 @@
             document.getElementById('loading-overlay').style.display = 'none';
         }
 
+        // --- NOVA FUNÇÃO DE CÁLCULO DE ABATIMENTO ---
+        function calcularAbatimento() {
+            const tirouNegativo = document.getElementById('tirou-negativo').value;
+            const vpuInput = document.getElementById('valor-parcelas-unificadas');
+            const vnInput = document.getElementById('valor-negativo');
+            const vpaInput = document.getElementById('parcela-com-abatimento');
+
+            if (tirouNegativo === 'Sim') {
+                const valorUnificado = moedaParaFloat(vpuInput.value);
+                const valorNegativo = moedaParaFloat(vnInput.value);
+
+                const valorFinal = valorUnificado - valorNegativo;
+
+                vpaInput.value = formatarMoeda(valorFinal);
+            } else {
+                if(vnInput) vnInput.value = "";
+                if(vpaInput) vpaInput.value = "";
+            }
+
+            atualizarPreview();
+        }
+
         // --- NOVA FUNÇÃO DE CÁLCULO TOTAL DE PARCELAS ---
         function calcularTotalParcelasUnificadas() {
             let total = 0;
-            // Seleciona todos os inputs de parcela que estão dentro da div de contratos dinâmicos
             const parcelas = document.querySelectorAll('.campo-parcela');
 
             parcelas.forEach(input => {
-                // Usa a sua função utilitária para converter a string R$ para número
                 const valor = moedaParaFloat(input.value);
                 if (!isNaN(valor) && valor > 0) {
                     total += valor;
                 }
             });
 
-            // Pega o input onde o resultado final deve aparecer
             const inputTotal = document.getElementById('valor-parcelas-unificadas');
             if (inputTotal) {
                 if (total > 0) {
                     inputTotal.value = formatarMoeda(total);
                 } else {
-                    inputTotal.value = ''; // Limpa se não tiver nenhuma parcela
+                    inputTotal.value = ''; 
                 }
 
-                // Se você estiver usando aquela função de abater negativo da versão anterior, 
-                // descomente a linha abaixo para recalcular o abatimento automaticamente também:
-                // if (typeof calcularAbatimento === 'function') calcularAbatimento();
+                if (typeof calcularAbatimento === 'function') calcularAbatimento();
 
-                // Atualiza o documento ao lado
                 atualizarPreview();
             }
         }
@@ -907,6 +950,9 @@
                 'margem-utilizada': ['doc-margem-utilizada'],
                 'valor-margem': ['doc-valor-margem'],
                 'valor-parcelas-unificadas': ['doc-valor-parcelas-unificadas'],
+                'tirou-negativo': ['doc-tirou-negativo'],
+                'valor-negativo': ['doc-valor-negativo'],
+                'parcela-com-abatimento': ['doc-parcela-com-abatimento'],
                 'prazo': ['doc-prazo'],
                 'valor-liquido': ['doc-valor-liquido'],
                 'valor-repassado': ['doc-valor-repassado'],
@@ -916,6 +962,7 @@
             };
             const camposMoeda = [
                 'valor-margem', 'valor-parcelas-unificadas',
+                'valor-negativo', 'parcela-com-abatimento',
                 'valor-liquido', 'valor-repassado',
                 'saldo-devedor-quitado', 'valor-total-nova-instituicao'
             ];
@@ -947,6 +994,20 @@
                     }
                     el.textContent = valorFinal;
                 });
+            }
+
+            const tirouNegativoValor = document.getElementById('tirou-negativo')?.value || 'Não';
+            const previewValorNegativo = document.getElementById('preview-valor-negativo');
+            const previewParcelaAbatimento = document.getElementById('preview-parcela-abatimento');
+
+            if (previewValorNegativo && previewParcelaAbatimento) {
+                if (tirouNegativoValor === 'Sim') {
+                    previewValorNegativo.style.display = 'block';
+                    previewParcelaAbatimento.style.display = 'block';
+                } else {
+                    previewValorNegativo.style.display = 'none';
+                    previewParcelaAbatimento.style.display = 'none';
+                }
             }
 
             const tbody = document.getElementById('doc-contratos-tbody');
@@ -1011,13 +1072,10 @@
                     const valorNumerico = moedaParaFloat(this.value);
                     this.value = formatarMoeda(valorNumerico);
 
-                    // --> ADICIONE ESTA LINHA AQUI: <--
                     calcularTotalParcelasUnificadas();
                 }
             });
 
-            // --> ADICIONE ESTA LINHA NO FINAL DA FUNÇÃO <--
-            // Para garantir que calcule se a linha for adicionada pelo PDF já preenchida
             calcularTotalParcelasUnificadas();
         }
 
@@ -1108,6 +1166,8 @@
             if (totalSomaParcelas > 0) {
                 document.getElementById('valor-parcelas-unificadas').value = formatarMoeda(totalSomaParcelas);
             }
+            
+            calcularAbatimento();
 
             checkedBoxes.forEach(cb => {
                 adicionarLinhaContrato(cb.dataset.banco, parseFloat(cb.dataset.parcela));
@@ -1400,6 +1460,26 @@
                 }
             });
             document.getElementById('cep').addEventListener('blur', buscarCep);
+
+            // --- LISTENERS DO CÁLCULO DE NEGATIVO ---
+            const negativoSelect = document.getElementById('tirou-negativo');
+            const negativoContainer = document.getElementById('negativo-container');
+            const valorNegativoInput = document.getElementById('valor-negativo');
+            const valorUnificadoInput = document.getElementById('valor-parcelas-unificadas');
+
+            if (negativoSelect) {
+                negativoSelect.addEventListener('change', () => {
+                    if (negativoSelect.value === 'Sim') {
+                        negativoContainer.style.display = 'block';
+                    } else {
+                        negativoContainer.style.display = 'none';
+                    }
+                    calcularAbatimento();
+                });
+            }
+
+            if (valorNegativoInput) valorNegativoInput.addEventListener('blur', calcularAbatimento);
+            if (valorUnificadoInput) valorUnificadoInput.addEventListener('blur', calcularAbatimento);
 
             document.getElementById('gerar-pdf').addEventListener('click', gerarPdf);
         });

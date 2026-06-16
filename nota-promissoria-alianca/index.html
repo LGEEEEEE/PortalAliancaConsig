@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="pt-BR">
 
@@ -100,7 +99,7 @@
             grid-template-columns: 1fr 1fr;
             gap: 10px;
         }
-        
+
         /* --- NOVO: Grid-3 para o CEP --- */
         .grid-3 {
             display: grid;
@@ -330,6 +329,7 @@
                 transform: rotate(360deg);
             }
         }
+
         /* --- FIM DOS NOVOS ESTILOS --- */
 
 
@@ -363,6 +363,22 @@
                 border: none;
             }
         }
+
+        #doc-observacoes {
+            white-space: pre-wrap;
+            /* Mantém as quebras de linha feitas no textarea */
+            word-break: break-word;
+            /* Quebra o texto se a palavra passar da margem */
+            overflow-wrap: break-word;
+            display: block;
+            margin-top: 5px;
+            padding: 5px;
+            background-color: #fcfcfc;
+            /* Opcional: dá um leve destaque na área de obs */
+            border: 1px dashed #ccc;
+            /* Opcional: caixa em volta para delimitar o espaço */
+            min-height: 20px;
+        }
     </style>
 </head>
 
@@ -381,7 +397,7 @@
         <div class="form-section">
             <h2>Preenchimento Rápido (Opcional)</h2>
             <input type="file" id="pdf-upload" accept=".pdf">
-            
+
             <label for="pdf-upload" class="upload-area" id="upload-label">
                 <span>Clique ou arraste o PDF aqui</span>
                 <br><small>Para preencher Nome e CPF automaticamente</small>
@@ -389,7 +405,7 @@
         </div>
         <div class="form-section">
             <h2>Dados do Emitente (Devedor)</h2>
-            
+
             <div class="form-group">
                 <label for="emitente-nome">Nome do Emitente:</label>
                 <input type="text" id="emitente-nome" placeholder="VILMA DE SOUZA SANTOS">
@@ -414,7 +430,7 @@
                 <div class="form-group"><label for="estado">Estado:</label><input type="text" id="estado"
                         placeholder="MG"></div>
             </div>
-            </div>
+        </div>
 
         <div class="form-section">
             <h2>Dados do Credor (Empresa)</h2>
@@ -455,6 +471,11 @@
                     <input type="text" id="local-pagamento" value="BRASILIA-DF">
                 </div>
                 <div class="form-group">
+                    <label for="observacoes">Observações:</label>
+                    <textarea id="observacoes" rows="3" placeholder="Escreva observações aqui"
+                        style="resize: vertical;">Sem observações</textarea>
+                </div>
+                <div class="form-group">
                     <label for="data-emissao">Data de Emissão:</label>
                     <input type="date" id="data-emissao">
                 </div>
@@ -489,6 +510,9 @@
 
             <div class="np-local-pagamento">
                 Local de pagamento: <span id="doc-local-pagamento" class="variavel">BRASILIA-DF</span>
+                <br><br>
+                Observações:
+                <div id="doc-observacoes" class="variavel">SEM OBSERVAÇÕES</div>
             </div>
 
             <div class="np-emitente">
@@ -501,13 +525,6 @@
 
             <div style="margin-top: 40px; border-top: 1px solid #000; width: 60%;">
                 <strong>Assinatura do Emitente</strong>
-            </div>
-
-            <div style="margin-top: 40px; border-top: 1px solid #000; width: 60%;">
-                <strong>Testemunha</strong> <br>
-                <strong>Nome:</strong> <br>
-                <strong>CPF:</strong>
-
             </div>
 
             <div class="np-data-emissao">
@@ -645,7 +662,8 @@
                 // 'emitente-endereco': ['doc-emitente-endereco'], // REMOVIDO DAQUI
                 'credor-nome': ['doc-credor-nome'],
                 'credor-cnpj': ['doc-credor-cnpj'],
-                'local-pagamento': ['doc-local-pagamento']
+                'local-pagamento': ['doc-local-pagamento'],
+                'observacoes': ['doc-observacoes']
             };
 
             for (const formId in camposTexto) {
@@ -702,11 +720,11 @@
             if (cep) partesEndereco.push(`CEP: ${cep}`);
 
             let enderecoCompleto = partesEndereco.join(', ').replace("BAIRRO:", "Bairro:");
-            
+
             if (enderecoCompleto.trim() === "") {
                 enderecoCompleto = '[Endereço Emitente]';
             }
-            
+
             document.getElementById('doc-emitente-endereco').textContent = enderecoCompleto;
         }
 
@@ -725,18 +743,18 @@
             documento.classList.add('generating-pdf'); // Prepara para impressão
 
             try {
-                const pdf = new jsPDF('p', 'mm', 'a4'); 
-                const docWidth = pdf.internal.pageSize.getWidth(); 
+                const pdf = new jsPDF('p', 'mm', 'a4');
+                const docWidth = pdf.internal.pageSize.getWidth();
 
                 await pdf.html(documento, {
                     callback: function (doc) {
                         doc.save(filename);
                         showToast("PDF gerado com sucesso!");
                     },
-                    x: 0, 
-                    y: 0, 
+                    x: 0,
+                    y: 0,
                     autoPaging: 'text',
-                    width: docWidth, 
+                    width: docWidth,
                     windowWidth: documento.scrollWidth
                 });
 
@@ -1032,7 +1050,7 @@
                         console.log("Detectado: Extrato Exército (Padrão)");
                         result = await processarPdfExercicio(extractedText);
                     }
-                    
+
                     showToast("Documento lido e convênio detectado!", "success");
 
                     // **** MODIFICAÇÃO PRINCIPAL: Preenche o formulário ****
@@ -1049,7 +1067,7 @@
                             document.getElementById('estado').value = result.cliente.estado;
                         }
                         // Atualiza o preview com os novos dados
-                        atualizarPreview(); 
+                        atualizarPreview();
                     }
                     // **** FIM DA MODIFICAÇÃO ****
 
@@ -1079,16 +1097,17 @@
             const dataAtualFormatada = `${ano}-${mes}-${dia}`;
             document.getElementById('data-emissao').value = dataAtualFormatada;
 
-            // Listeners do formulário (Original)
-            document.querySelectorAll('#form-container input').forEach(input => {
+            // Listeners do formulário (Corrigido para aceitar Textarea)
+            document.querySelectorAll('#form-container input, #form-container textarea').forEach(input => {
                 input.addEventListener('input', atualizarPreview);
-                if (input.type === 'text') {
-                    input.addEventListener('blur', () => { 
+                // Verifica se é texto normal ou textarea para forçar maiúsculas
+                if (input.type === 'text' || input.tagName.toLowerCase() === 'textarea') {
+                    input.addEventListener('blur', () => {
                         // Impede que o campo CEP seja forçado para maiúsculas
                         if (input.id !== 'cep') {
-                            input.value = input.value.toUpperCase(); 
+                            input.value = input.value.toUpperCase();
                         }
-                        atualizarPreview(); 
+                        atualizarPreview();
                     });
                 }
             });
