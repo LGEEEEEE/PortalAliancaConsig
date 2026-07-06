@@ -3,9 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Refatorador e Corretor de PDF</title>
+    <title>Recuperador Definitivo de PDF</title>
     
-    <script src="https://unpkg.com/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
     <style>
         :root {
@@ -113,8 +114,8 @@
 <body>
 
     <div class="container">
-        <h1>Refatorador de PDF</h1>
-        <p>Selecione um PDF corrompido ou com bloqueio de impressão. O sistema tentará reconstruir o arquivo para você.</p>
+        <h1>Recuperador Definitivo</h1>
+        <p>Este sistema usa renderização avançada para "fotografar" o PDF corrompido e gerar um arquivo 100% novo, preservando a orientação e tamanho originais.</p>
 
         <div class="file-upload-wrapper">
             <input type="file" id="pdfInput" accept="application/pdf">
@@ -123,72 +124,88 @@
             </label>
         </div>
 
-        <button id="processBtn" disabled>Refatorar PDF</button>
+        <button id="processBtn" disabled>Recuperar PDF Original</button>
 
         <div id="status"></div>
     </div>
 
     <script>
+        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js';
+        const { jsPDF } = window.jspdf;
+
         const pdfInput = document.getElementById('pdfInput');
         const fileLabel = document.getElementById('fileLabel');
         const processBtn = document.getElementById('processBtn');
         const statusDiv = document.getElementById('status');
 
-        // Atualiza o visual quando o usuário escolhe um arquivo
         pdfInput.addEventListener('change', (e) => {
             if (e.target.files.length > 0) {
                 fileLabel.textContent = `📄 ${e.target.files[0].name}`;
                 processBtn.disabled = false;
-                statusDiv.textContent = ""; // Limpa mensagens anteriores
+                statusDiv.textContent = ""; 
             } else {
                 fileLabel.textContent = "📂 Clique para selecionar o arquivo PDF";
                 processBtn.disabled = true;
             }
         });
 
-        // Lógica de refatoração ao clicar no botão
         processBtn.addEventListener('click', async () => {
             const file = pdfInput.files[0];
             if (!file) return;
 
-            statusDiv.textContent = "⏳ Processando arquivo... Aguarde.";
+            statusDiv.textContent = "⏳ Renderizando e reconstruindo PDF... Aguarde.";
             statusDiv.className = "loading";
             processBtn.disabled = true;
 
             try {
-                // 1. Lê o arquivo como um ArrayBuffer
                 const arrayBuffer = await file.arrayBuffer();
-
-                // 2. Carrega o PDF na biblioteca pdf-lib
-                // A opção ignoreEncryption permite abrir arquivos com bloqueios de permissão (não ignora senhas reais de abertura)
-                const pdfDoc = await PDFLib.PDFDocument.load(arrayBuffer, { 
-                    ignoreEncryption: true,
-                    updateMetadata: false 
-                });
-
-                // 3. Salva o PDF. Isso força a reconstrução de toda a estrutura do arquivo.
-                const pdfBytes = await pdfDoc.save();
-
-                // 4. Cria um link de download para o novo arquivo gerado
-                const blob = new Blob([pdfBytes], { type: 'application/pdf' });
-                const url = URL.createObjectURL(blob);
+                const loadingTask = pdfjsLib.getDocument({ data: arrayBuffer });
+                const pdf = await loadingTask.promise;
                 
-                const a = document.createElement('a');
-                a.href = url;
-                a.download = `refatorado_${file.name}`;
-                document.body.appendChild(a);
-                a.click();
-                
-                // Limpa o link da memória
-                document.body.removeChild(a);
-                URL.revokeObjectURL(url);
+                let doc; // Tiramos a inicialização daqui para criar dinamicamente
 
-                statusDiv.textContent = "✅ Sucesso! O download do PDF arrumado deve começar em instantes.";
+                for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
+                    const page = await pdf.getPage(pageNum);
+                    
+                    // 1. Pega as dimensões exatas do arquivo original
+                    const originalViewport = page.getViewport({ scale: 1.0 });
+                    const isLandscape = originalViewport.width > originalViewport.height;
+                    
+                    // 2. Aumenta a escala apenas na hora de desenhar a imagem para alta qualidade
+                    const renderViewport = page.getViewport({ scale: 2.5 });
+                    
+                    const canvas = document.createElement('canvas');
+                    const ctx = canvas.getContext('2d');
+                    canvas.width = renderViewport.width;
+                    canvas.height = renderViewport.height;
+                    
+                    await page.render({ canvasContext: ctx, viewport: renderViewport }).promise;
+                    const imgData = canvas.toDataURL('image/jpeg', 1.0);
+                    
+                    // 3. Se for a primeira página, cria o arquivo com as dimensões dela
+                    if (pageNum === 1) {
+                        doc = new jsPDF({
+                            orientation: isLandscape ? 'landscape' : 'portrait',
+                            unit: 'pt', // Pontos, que é o padrão nativo do formato PDF
+                            format: [originalViewport.width, originalViewport.height]
+                        });
+                    } else {
+                        // Se houverem outras páginas, adiciona com o tamanho correspondente
+                        doc.addPage([originalViewport.width, originalViewport.height], isLandscape ? 'landscape' : 'portrait');
+                    }
+                    
+                    // 4. Cola a imagem preenchendo toda a página corretamente
+                    doc.addImage(imgData, 'JPEG', 0, 0, originalViewport.width, originalViewport.height);
+                }
+
+                doc.save(`recuperado_${file.name}`);
+
+                statusDiv.textContent = "✅ Pronto! PDF reconstruído com o formato e aparência originais.";
                 statusDiv.className = "success";
 
             } catch (error) {
                 console.error(error);
-                statusDiv.textContent = "❌ Erro: O arquivo está muito corrompido ou protegido por senha forte.";
+                statusDiv.textContent = "❌ Erro: Falha ao renderizar. O arquivo pode estar protegido.";
                 statusDiv.className = "error";
             } finally {
                 processBtn.disabled = false;
