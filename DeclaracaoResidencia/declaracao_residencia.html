@@ -76,7 +76,6 @@
 
         p { text-align: justify; margin-bottom: 20px; }
 
-        /* AJUSTE 1: Removido border-bottom para não sublinhar o texto */
         .variavel {
             font-weight: bold;
             text-transform: uppercase;
@@ -104,10 +103,9 @@
         .testemunha-box { text-align: center; font-size: 10pt; line-height: 1.4; }
         .testemunha-box .linha { border-top: 1px solid #000; margin-bottom: 5px; width: 100%; }
         
-        /* AJUSTE 2: Estilo para os campos das testemunhas ficarem um sobre o outro */
         .campo-testemunha {
             margin-top: 5px;
-            display: block; /* Força quebra de linha */
+            display: block;
         }
 
         #gerar-pdf {
@@ -171,7 +169,7 @@
             </p>
 
             <p style="text-align: right; margin-top: 30px;">
-                Brasília, <span class="variavel" id="view_data">________________________</span>.
+                <span class="variavel" id="view_cidade_data">________________</span>, <span class="variavel" id="view_data">________________________</span>.
             </p>
 
             <div class="assinatura-area">
@@ -224,6 +222,12 @@
                 const view = document.getElementById('view_' + id);
                 if (view) view.textContent = val || (id === 'data' ? "________________________" : "________________");
                 if (id === 'nome') document.getElementById('view_ass_nome').textContent = val;
+                
+                // AJUSTE: Atualiza também a cidade na linha da data final
+                if (id === 'cidade') {
+                    const viewCidadeData = document.getElementById('view_cidade_data');
+                    if (viewCidadeData) viewCidadeData.textContent = val || "________________";
+                }
             });
         }
 
@@ -252,11 +256,10 @@
 
         document.getElementById('gerar-pdf').addEventListener('click', baixarPDF);
 
-        // --- ADIÇÃO: Captura e define a data atual do sistema como padrão ---
+        // Captura e define a data atual do sistema como padrão
         const opcoesData = { day: '2-digit', month: 'long', year: 'numeric' };
         document.getElementById('data').value = new Date().toLocaleDateString('pt-BR', opcoesData);
 
-        // Roda a primeira atualização de tela para aplicar a data padrão na folha
         atualizar();
     </script>
 </body>
