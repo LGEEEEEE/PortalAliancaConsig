@@ -37,7 +37,6 @@
 <body class="bg-slate-100 min-h-screen flex items-center justify-center p-4 font-sans text-slate-900">
     <a href="/index.html" class="btn btn-secondary btn-voltar"><i class="bi bi-arrow-left"></i> Voltar</a>
 
-
     <div class="bg-white p-6 md:p-10 rounded-2xl shadow-xl w-full max-w-3xl border border-slate-200">
 
         <div class="text-center mb-8">
@@ -60,9 +59,9 @@
         </div>
 
         <div id="resultado" class="hidden space-y-6 animate-fade-in">
-            <div class="flex items-center justify-between border-b pb-4">
+            <!-- Cabeçalho simplificado (sem a badge aqui) -->
+            <div class="border-b pb-4">
                 <h2 class="text-xl font-bold text-slate-700">Dados da Empresa</h2>
-                <span id="statusBadge" class="px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider"></span>
             </div>
 
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -79,6 +78,29 @@
                 <div>
                     <p class="text-xs font-bold text-slate-400 uppercase mb-1">Capital Social</p>
                     <p id="capital" class="text-green-600 font-bold">-</p>
+                </div>
+
+                <div>
+                    <p class="text-xs font-bold text-slate-400 uppercase mb-1">Porte</p>
+                    <p id="porte" class="text-slate-700 font-medium">-</p>
+                </div>
+
+                <div>
+                    <p class="text-xs font-bold text-slate-400 uppercase mb-1">Início da Atividade</p>
+                    <p id="dataInicio" class="text-slate-700 font-medium">-</p>
+                </div>
+                
+                <!-- Situação Cadastral movida para cá -->
+                <div>
+                    <p class="text-xs font-bold text-slate-400 uppercase mb-1">Situação Cadastral</p>
+                    <div class="mt-1">
+                        <span id="statusBadge" class="inline-block px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider"></span>
+                    </div>
+                </div>
+
+                <div>
+                    <p class="text-xs font-bold text-slate-400 uppercase mb-1">Motivo da Situação Cadastral</p>
+                    <p id="motivoSituacao" class="text-slate-700 font-medium mt-1">-</p>
                 </div>
 
                 <div class="md:col-span-2 bg-slate-50 p-4 rounded-xl border-l-4 border-blue-500">
@@ -148,10 +170,26 @@
                 document.getElementById('razao').innerText = data.razao_social;
                 document.getElementById('fantasia').innerText = data.nome_fantasia || "Não informado";
                 document.getElementById('cnae').innerText = `${data.cnae_fiscal} - ${data.cnae_fiscal_descricao}`;
+                
+                // Preenchendo os campos novos
+                document.getElementById('porte').innerText = data.porte || "Não informado";
+                document.getElementById('motivoSituacao').innerText = data.descricao_motivo_situacao_cadastral || "Não informado";
+                
+                // Formatando a data de início de atividade
+                let dataInicioFormatada = "Não informada";
+                if (data.data_inicio_atividade) {
+                    const partes = data.data_inicio_atividade.split('-');
+                    if (partes.length === 3) {
+                        dataInicioFormatada = `${partes[2]}/${partes[1]}/${partes[0]}`;
+                    } else {
+                        dataInicioFormatada = data.data_inicio_atividade;
+                    }
+                }
+                document.getElementById('dataInicio').innerText = dataInicioFormatada;
 
                 // 2. Endereço formatado
                 document.getElementById('endereco').innerText =
-                    `${data.descricao_tipo_de_logradouro} ${data.logradouro}, ${data.numero}. ${data.bairro} - ${data.municipio}/${data.uf}`;
+                    `${data.descricao_tipo_de_logradouro} ${data.logradouro}, ${data.numero}. ${data.complemento} ${data.bairro} - ${data.municipio}/${data.uf}`;
 
                 // 3. Formatação de Moeda (Capital Social)
                 document.getElementById('capital').innerText = new Intl.NumberFormat('pt-BR', {
@@ -159,15 +197,15 @@
                     currency: 'BRL'
                 }).format(data.capital_social);
 
-                // 4. Status da Empresa (Cores dinâmicas)
+                // 4. Status da Empresa (Cores dinâmicas atualizadas para o novo layout)
                 statusBadge.innerText = data.descricao_situacao_cadastral;
                 if (data.situacao_cadastral === 2) { // Ativa
-                    statusBadge.className = "px-3 py-1 rounded-full text-xs font-bold uppercase bg-green-100 text-green-700";
+                    statusBadge.className = "inline-block px-3 py-1 rounded-full text-xs font-bold uppercase bg-green-100 text-green-700";
                 } else {
-                    statusBadge.className = "px-3 py-1 rounded-full text-xs font-bold uppercase bg-red-100 text-red-700";
+                    statusBadge.className = "inline-block px-3 py-1 rounded-full text-xs font-bold uppercase bg-red-100 text-red-700";
                 }
 
-                // 5. Mapeando a lista de Sócios (O QSA do seu print)
+                // 5. Mapeando a lista de Sócios
                 if (data.qsa && data.qsa.length > 0) {
                     data.qsa.forEach(socio => {
                         const row = `
@@ -193,15 +231,11 @@
         }
 
         // Adiciona suporte ao "Enter" no teclado
-        // Captura o campo de input
         const inputCNPJ = document.getElementById('cnpjInput');
-
-        // Adiciona o "ouvinte" de eventos para teclas
         inputCNPJ.addEventListener('keydown', function (e) {
-            // Verifica se a tecla apertada foi o Enter (código 13)
             if (e.key === 'Enter') {
-                e.preventDefault(); // Impede que a página recarregue ou dê erro
-                buscarCNPJ();       // Chama a sua função de busca
+                e.preventDefault(); 
+                buscarCNPJ();       
             }
         });
     </script>
