@@ -589,6 +589,47 @@
             <button id="btn-logout" title="Sair do sistema">Sair</button>
         </h1>
 
+        <!-- Bloco Integração GConsig -->
+        <div style="background-color: #f8f9fa; border: 1px solid #cce5ff; border-left: 4px solid #007bff; border-radius: 6px; padding: 15px; margin-bottom: 25px;">
+            <h2 style="font-size: 1.1rem; color: #0056b3; margin-top: 0; margin-bottom: 10px; border: none;">
+                🤖 Integração GConsig (Robô)
+            </h2>
+            <p style="font-size: 0.85rem; color: #555; margin-bottom: 10px; line-height: 1.4;">
+                <strong>Passo 1:</strong> Arraste o botão verde para sua barra de favoritos (só precisa fazer isso uma vez).<br>
+                <strong>Passo 2:</strong> Digite o CPF abaixo e clique no botão azul para abrir o GConsig.<br>
+                <strong>Passo 3:</strong> Na tela do cliente, clique no favorito "ENVIAR CONFISSÃO" para importar os dados!
+            </p>
+            
+            <div style="display: flex; gap: 10px; margin-bottom: 15px;">
+                <input type="text" id="integracaoCpfBusca" placeholder="Apenas números ou com pontos" style="flex: 1; padding: 8px; border: 1px solid #ccc; border-radius: 4px; font-size: 0.9rem;" oninput="this.value = this.value.replace(/\\D/g, '')">
+                <button type="button" onclick="const c = document.getElementById('integracaoCpfBusca').value; if(c.length >= 11) { window.open(`https://sistema.gconsig.com/admin/consultor/${c}/procurarcliente.html?tipo=cpf`, 'IntegracaoTarget'); } else { alert('Digite um CPF válido!'); }" style="background-color: #007bff; color: white; padding: 8px 16px; border: none; border-radius: 4px; font-weight: bold; cursor: pointer; font-size: 0.9rem; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                    🔍 Abrir GConsig
+                </button>
+            </div>
+
+            <div style="display: flex; align-items: center; gap: 15px; margin-bottom: 15px;">
+                <a href='javascript:(function(){const moeda=(v)=>parseFloat(String(v).replace("R$","").replace(/\./g,"").replace(",","."))||0;let orgao="";try{const tds=document.querySelectorAll("td");for(let td of tds){if(td.innerText.includes("Órgão")){let span=td.querySelector("span");if(span){orgao=span.innerText.trim();break;}}}}catch(e){}if(document.getElementById("tbodyContratos")||document.querySelector("span[data-info=\"Nome\"]")){try{const nome=document.querySelector("span[data-info=\"Nome\"]")?.innerText?.trim()||"Cliente";const cpf=document.querySelector("span[data-info=\"CPF\"]")?.innerText?.replace(/\D/g,"")||"";const margem=moeda(document.getElementById("margem_consignavel_livre")?.value||"0");let contratos=[];const tbody=document.getElementById("tbodyContratos");if(tbody){const rows=tbody.querySelectorAll("tr");rows.forEach(row=>{try{const inputs=row.querySelectorAll("input");let parcela=0,saldo=0;inputs.forEach(i=>{if(i.id.includes("vl_parcela_"))parcela=moeda(i.value);if(i.id.includes("vl_quitacao_"))saldo=moeda(i.value);});let banco="Banco";const copyIcon=row.querySelector(".copy");if(copyIcon)banco=copyIcon.getAttribute("val-banco")||"Banco";const checkbox=row.querySelector("input[type=\"checkbox\"]");if(parcela>0&&checkbox&&checkbox.checked){contratos.push({banco:banco,parcela:parcela,saldoDevedorExato:saldo,origem:"GCONSIG"})}}catch(err){}})}if(window.opener){window.opener.postMessage({tipo:"DADOS_CONSIG_COMPLETO",nome:nome,cpf:cpf,contratos:contratos,sistema:"GCONSIG",margem:margem,orgao:orgao},"*");alert(`✅ Enviado para a Confissão!\nCliente: ${nome}\nContratos: ${contratos.length}\nÓrgão: ${orgao}`);}else{alert("⚠️ Página alvo não encontrada! Você precisa abrir o GConsig a partir do botão \"Buscar no Sistema\" lá na ferramenta.");}}catch(e){console.error("Erro",e)}}})();' 
+                   style="background-color: #28a745; color: #fff; padding: 8px 16px; border-radius: 4px; text-decoration: none; font-weight: bold; font-size: 0.9rem; cursor: move; box-shadow: 0 2px 4px rgba(0,0,0,0.1); display: inline-block;">
+                    📥 ENVIAR CONFISSÃO
+                </a>
+                <span style="font-size: 0.8rem; color: #6c757d; font-style: italic;">
+                    &larr; Arraste para os favoritos
+                </span>
+            </div>
+    
+            <details style="background: #fff; border: 1px solid #ddd; border-radius: 4px; padding: 10px;">
+                <summary style="cursor: pointer; font-size: 0.8rem; font-weight: bold; color: #007bff; outline: none; user-select: none;">
+                    Mostrar código manual (Cópia)
+                </summary>
+                <div style="display: flex; gap: 10px; margin-top: 10px;">
+                    <input type="text" id="codigoBookmarklet" readonly value='javascript:(function(){const moeda=(v)=>parseFloat(String(v).replace("R$","").replace(/\./g,"").replace(",","."))||0;let orgao="";try{const tds=document.querySelectorAll("td");for(let td of tds){if(td.innerText.includes("Órgão")){let span=td.querySelector("span");if(span){orgao=span.innerText.trim();break;}}}}catch(e){}if(document.getElementById("tbodyContratos")||document.querySelector("span[data-info=\"Nome\"]")){try{const nome=document.querySelector("span[data-info=\"Nome\"]")?.innerText?.trim()||"Cliente";const cpf=document.querySelector("span[data-info=\"CPF\"]")?.innerText?.replace(/\D/g,"")||"";const margem=moeda(document.getElementById("margem_consignavel_livre")?.value||"0");let contratos=[];const tbody=document.getElementById("tbodyContratos");if(tbody){const rows=tbody.querySelectorAll("tr");rows.forEach(row=>{try{const inputs=row.querySelectorAll("input");let parcela=0,saldo=0;inputs.forEach(i=>{if(i.id.includes("vl_parcela_"))parcela=moeda(i.value);if(i.id.includes("vl_quitacao_"))saldo=moeda(i.value);});let banco="Banco";const copyIcon=row.querySelector(".copy");if(copyIcon)banco=copyIcon.getAttribute("val-banco")||"Banco";const checkbox=row.querySelector("input[type=\"checkbox\"]");if(parcela>0&&checkbox&&checkbox.checked){contratos.push({banco:banco,parcela:parcela,saldoDevedorExato:saldo,origem:"GCONSIG"})}}catch(err){}})}if(window.opener){window.opener.postMessage({tipo:"DADOS_CONSIG_COMPLETO",nome:nome,cpf:cpf,contratos:contratos,sistema:"GCONSIG",margem:margem,orgao:orgao},"*");alert(`✅ Enviado para a Confissão!\nCliente: ${nome}\nContratos: ${contratos.length}\nÓrgão: ${orgao}`);}else{alert("⚠️ Página alvo não encontrada! Você precisa abrir o GConsig a partir do botão \"Buscar no Sistema\" lá na ferramenta.");}}catch(e){console.error("Erro",e)}}})();' style="flex: 1; padding: 6px; border: 1px solid #ccc; border-radius: 4px; font-size: 0.8rem; color: #555;">
+                    <button type="button" onclick="navigator.clipboard.writeText(document.getElementById('codigoBookmarklet').value); alert('Código copiado!');" style="padding: 6px 12px; background: #6c757d; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 0.8rem; font-weight: bold;">
+                        Copiar
+                    </button>
+                </div>
+            </details>
+        </div>
+
         <div class="form-section">
             <h2>Dados do Cliente</h2>
             <div class="form-group">
