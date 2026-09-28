@@ -1084,6 +1084,56 @@
             }
         }
 
+        // --- INTEGRAÇÃO GCONSIG ---
+window.addEventListener("message", (event) => {
+    const dados = event.data;
+
+    // Escuta o mesmo evento que a calculadora unificada usa
+    if (dados && dados.tipo === 'DADOS_CONSIG_COMPLETO') {
+        console.log("Integração GConsig -> Confissão de Dívida:", dados);
+
+        // 1. Dados Pessoais
+        if (dados.nome) document.getElementById('nome').value = dados.nome;
+        if (dados.cpf) document.getElementById('cpf').value = dados.cpf;
+        
+        // Se o bookmarklet enviar o órgão, ele já preenche também
+        if (dados.orgao) document.getElementById('orgao').value = dados.orgao;
+
+        // 2. Preencher Contratos a Quitar
+        if (dados.contratos && dados.contratos.length > 0) {
+            limparCamposContrato(); // Limpa os contratos placeholder
+            let somaParcelas = 0;
+
+            dados.contratos.forEach(c => {
+                let parcelaNum = parseFloat(c.parcela) || 0;
+                somaParcelas += parcelaNum;
+
+                // Dá uma limpada no nome do banco (ex: tira "029 - " da frente)
+                let nomeBanco = c.banco ? c.banco.replace(/^\d+\s*-\s*/, '').trim() : 'Banco';
+
+                // Reutiliza a sua própria função de adicionar a div na tela
+                adicionarLinhaContrato(nomeBanco, parcelaNum);
+            });
+
+            // 3. Preencher Valor Unificado e Atualizar "Negativo"
+            if (somaParcelas > 0) {
+                const campoUnificado = document.getElementById('valor-parcelas-unificadas');
+                campoUnificado.value = formatarMoeda(somaParcelas);
+                
+                // Dispara a lógica de cálculo do negativo que você já configurou
+                calcularAbatimento();
+            }
+
+            showToast(`Sucesso! ${dados.contratos.length} contrato(s) importados do GConsig!`, "success");
+        } else if (dados.nome) {
+            showToast("Dados do cliente importados, mas nenhum contrato encontrado.", "warning");
+        }
+
+        // 4. Atualiza o documento visual (Preview)
+        atualizarPreview();
+    }
+});
+
         // --- FUNÇÕES DE LEITURA DE PDF ---
         function adicionarLinhaContrato(banco = '', parcela = '') {
             const container = document.getElementById('contratos-dinamicos-container');
