@@ -112,6 +112,12 @@
             color: #fff;
         }
 
+
+        /* Esconde elementos quando a opção estiver desmarcada */
+        .ocultar-contrato {
+            display: none !important;
+        }
+
         .form-group {
             margin-bottom: 15px;
         }
@@ -290,7 +296,7 @@
 
         .grid-contrato-dinamico {
             display: grid;
-            grid-template-columns: 1fr 1fr 30px;
+            grid-template-columns: 1fr 1fr 1fr 30px;
             gap: 10px;
             align-items: flex-end;
         }
@@ -666,6 +672,15 @@
             <label for="pdf-upload" class="upload-area" id="upload-label">
                 <span>Clique ou arraste o Extrato/Contracheque PDF</span>
             </label>
+            
+            <!-- NOVO: Checkbox para exibir ou ocultar a coluna de contrato -->
+            <div class="form-group" style="margin-top: 15px; display: flex; align-items: center; gap: 8px;">
+                <input type="checkbox" id="exibir-coluna-contrato" style="width: auto; cursor: pointer;">
+                <label for="exibir-coluna-contrato" style="margin-bottom: 0; cursor: pointer; font-weight: normal;">
+                    Exibir número do contrato no documento
+                </label>
+            </div>
+
             <div id="contratos-dinamicos-container"
                 style="display: flex; flex-direction: column; gap: 15px; margin-top:15px;">
             </div>
@@ -767,12 +782,13 @@
                 <thead>
                     <tr>
                         <th>BANCO A QUITAR</th>
+                        <th>Nº DO CONTRATO</th>
                         <th>VALOR PARCELA</th>
                     </tr>
                 </thead>
                 <tbody id="doc-contratos-tbody">
                     <tr class="placeholder-row">
-                        <td colspan="2">Nenhum contrato adicionado</td>
+                        <td colspan="3">Nenhum contrato adicionado</td>
                     </tr>
                 </tbody>
             </table>
@@ -822,17 +838,11 @@
                 acordo com os juros e coeficientes do dia, mediante aprovação da operação.
             </p>
 
-            <p class="clausula">CLÁUSULA TERCEIRA – DA ABERTURA DE CONTAS</p>
-            <p class="paragrafo">
-                3.1. Caixa Econômica Federal: A abertura de conta será realizada para fins de averbação da margem
-                consignável, conforme liberação das parcelas pelos bancos. Esta conta será utilizada também para TED dos
-                valores, garantindo segurança para a empresa intermediadora e para o cliente. O cliente deverá, ainda,
-                assinar e reconhecer firma do documento da TED, que será emitido com os valores das transferências.
-            </p>
+            <p class="clausula">CLÁUSULA TERCEIRA</p>
             <p class="paragrafo">
                 Parágrafo Único: Tenho ciência de que o banco pode levar de 7 (sete) a 10 (dez) dias para liberar a
                 margem para averbação da proposta. Passado esse prazo, será feita cobrança ao banco. Autorizo o uso da
-                minha senha do SOUGOV e do e-mail, exclusivamente para fins de consulta da margem consignável e
+                minha senha do SOUGOV, exclusivamente para fins de consulta da margem consignável e
                 eventuais autorizações, com a minha ciência.
             </p>
 
@@ -1052,20 +1062,48 @@
             }
 
             const tbody = document.getElementById('doc-contratos-tbody');
+            const theadTr = document.querySelector('#tabela-quitar thead tr');
             const itemsContrato = document.querySelectorAll('.contrato-dinamico-item');
+            const exibirContrato = document.getElementById('exibir-coluna-contrato').checked;
+
+            // Ajusta o cabeçalho da tabela dinamicamente
+            if (exibirContrato) {
+                theadTr.innerHTML = `
+                    <th>BANCO A QUITAR</th>
+                    <th>Nº DO CONTRATO</th>
+                    <th>VALOR PARCELA</th>
+                `;
+            } else {
+                theadTr.innerHTML = `
+                    <th>BANCO A QUITAR</th>
+                    <th>VALOR PARCELA</th>
+                `;
+            }
+
             tbody.innerHTML = '';
             if (itemsContrato.length === 0) {
-                tbody.innerHTML = '<tr class="placeholder-row"><td colspan="2">Nenhum contrato adicionado</td></tr>';
+                const colspanVal = exibirContrato ? '3' : '2';
+                tbody.innerHTML = `<tr class="placeholder-row"><td colspan="${colspanVal}">Nenhum contrato adicionado</td></tr>`;
             } else {
                 itemsContrato.forEach(item => {
                     const banco = item.querySelector('.campo-banco').value || '[Banco]';
+                    const contrato = item.querySelector('.campo-contrato').value || '[Contrato]';
                     let parcela = item.querySelector('.campo-parcela').value;
                     const parcelaFormatada = (parcela.trim() === "") ? '[Parcela]' : formatarMoeda(parcela);
+                    
                     const tr = document.createElement('tr');
-                    tr.innerHTML = `
-                        <td><span class="variavel">${banco}</span></td>
-                        <td><span class="variavel">${parcelaFormatada}</span></td>
-                    `;
+                    if (exibirContrato) {
+                        tr.innerHTML = `
+                            <td><span class="variavel">${banco}</span></td>
+                            <td><span class="variavel">${contrato}</span></td>
+                            <td><span class="variavel">${parcelaFormatada}</span></td>
+                        `;
+                    } else {
+                        tr.innerHTML = `
+                            <td><span class="variavel">${banco}</span></td>
+                            <td><span class="variavel">${parcelaFormatada}</span></td>
+                        `;
+                    }
                     tbody.appendChild(tr);
                 });
             }
@@ -1112,7 +1150,7 @@ window.addEventListener("message", (event) => {
                 let nomeBanco = c.banco ? c.banco.replace(/^\d+\s*-\s*/, '').trim() : 'Banco';
 
                 // Reutiliza a sua própria função de adicionar a div na tela
-                adicionarLinhaContrato(nomeBanco, parcelaNum);
+                adicionarLinhaContrato(nomeBanco, c.contrato || '', parcelaNum);
             });
 
             // 3. Preencher Valor Unificado e Atualizar "Negativo"
@@ -1134,17 +1172,26 @@ window.addEventListener("message", (event) => {
     }
 });
 
-        // --- FUNÇÕES DE LEITURA DE PDF ---
-        function adicionarLinhaContrato(banco = '', parcela = '') {
+        function adicionarLinhaContrato(banco = '', contrato = '', parcela = '') {
             const container = document.getElementById('contratos-dinamicos-container');
             const novoContratoDiv = document.createElement('div');
-            novoContratoDiv.className = 'grid-contrato-dinamico contrato-dinamico-item';
+            
+            // Verifica se o checkbox está marcado para aplicar a classe de ocultar
+            const exibirContrato = document.getElementById('exibir-coluna-contrato').checked;
+            const classeOcultar = exibirContrato ? '' : 'ocultar-contrato';
+
+            // Ajusta o grid dinâmico dependendo se a coluna está ativa ou não
+            novoContratoDiv.className = `grid-contrato-dinamico contrato-dinamico-item ${exibirContrato ? 'com-contrato' : ''}`;
             const parcelaFormatada = (parcela === '' || parcela === 0) ? '' : formatarMoeda(parcela);
 
             novoContratoDiv.innerHTML = `
                 <div class="form-group">
                     <label>Banco:</label>
                     <input type="text" class="campo-banco" placeholder="BCO" value="${banco}">
+                </div>
+                <div class="form-group grupo-contrato-input ${classeOcultar}">
+                    <label>Contrato:</label>
+                    <input type="text" class="campo-contrato" placeholder="Nº Contrato" value="${contrato}">
                 </div>
                 <div class="form-group">
                     <label>Parcela:</label>
@@ -1162,7 +1209,6 @@ window.addEventListener("message", (event) => {
                 if (this.value.trim() !== "") {
                     const valorNumerico = moedaParaFloat(this.value);
                     this.value = formatarMoeda(valorNumerico);
-
                     calcularTotalParcelasUnificadas();
                 }
             });
@@ -1215,6 +1261,7 @@ window.addEventListener("message", (event) => {
                     <input class="form-check-input loan-checkbox" type="checkbox" 
                             id="loan-${index}"
                             data-banco="${loan.banco}"
+                            data-contrato="${loan.contrato !== 'N/A' ? loan.contrato : ''}"
                             data-parcela="${loan.parcelaNum}">
                     <label class="form-check-label" for="loan-${index}">
                         <strong>${loan.banco}</strong>
@@ -1261,7 +1308,7 @@ window.addEventListener("message", (event) => {
             calcularAbatimento();
 
             checkedBoxes.forEach(cb => {
-                adicionarLinhaContrato(cb.dataset.banco, parseFloat(cb.dataset.parcela));
+                adicionarLinhaContrato(cb.dataset.banco, cb.dataset.contrato, parseFloat(cb.dataset.parcela));
             });
 
             showToast("Dados importados com sucesso!", "success");
@@ -1502,6 +1549,20 @@ window.addEventListener("message", (event) => {
 
         // --- INICIALIZAÇÃO E EVENT LISTENERS ---
         document.addEventListener('DOMContentLoaded', () => {
+
+            // Oculta/Exibe a coluna de contrato em tempo real ao marcar o checkbox
+            document.getElementById('exibir-coluna-contrato').addEventListener('change', function() {
+                const estaMarcado = this.checked;
+                document.querySelectorAll('.contrato-dinamico-item').forEach(item => {
+                    const inputContratoGroup = item.querySelector('.grupo-contrato-input');
+                    if (estaMarcado) {
+                        inputContratoGroup.classList.remove('ocultar-contrato');
+                    } else {
+                        inputContratoGroup.classList.add('ocultar-contrato');
+                    }
+                });
+                atualizarPreview();
+            });
             setarDataAtual();
             atualizarPreview();
 

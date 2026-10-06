@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet"
+        integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous">
+</head>
+<style>
+    body {
+        text-align: center;
+        align-items: center;
+    }
+
+    .container {
+        max-width: 300px;
+        padding: auto;
+        border: 100px;
+        border-color: black;
+
+    }
+
+    .resultado {
+        display: flex;
+    }
+
+    .hidden {
+        display: none !important;
+        /* O !important garante que ele obedeça essa regra acima das outras */
+    }
+</style>
+
+<body>
+    <div class="container">
+        <div class="mb-3">
+            <label for="exampleFormControlInput1" class="form-label">Digite o CEP a ser encontrado:</label>
+            <input type="cep" class="form-control" id="input-cep" placeholder="00000-000">
+        </div>
+
+        <button onclick="pesquisarCep()">Pesquisar CEP</button>
+
+        <div id="resultado" class="hidden">
+            <h3 class="text-center">Resultado da pesquisa</h3>
+
+            <div class="card" style="width: 18rem;">
+                <div class="card-body">
+                    <h5 class="card-title">CEP</h5>
+
+                    <p id="cep"></p>
+                </div>
+            </div>
+
+            <div class="card" style="width: 18rem;">
+                <div class="card-body">
+                    <h5 class="card-title">Endereço Completo</h5>
+
+                    <p id="enderecoCompleto"></p>
+                </div>
+            </div>
+
+            <div class="card" style="width: 18rem;">
+                <div class="card-body">
+                    <h5 class="">UF/Estado</h5>
+
+                    <p id="UF"></p>
+                </div>
+            </div>
+
+
+            <div class="card" style="width: 18rem;">
+                <div class="card-body">
+                    <h5 class="CEP">Bairro</h5>
+
+                    <p id="bairro"></p>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <script>
+        async function pesquisarCep() {
+            const cep = document.getElementById('input-cep');
+            const cepLimpo = cep.value.replace(/\D/g, '');
+            const divResultado = document.getElementById('resultado');
+
+            divResultado.classList.add('hidden');
+
+            try {
+                const response = await fetch(`https://viacep.com.br//ws/${cepLimpo}/json/`);
+
+                if (!response.ok) {
+                    throw new Error('CEP não localizado ou erro na API');
+                }
+                const dados = await response.json();
+
+                // Verifica se a API retornou o status de erro
+                if (dados.erro) {
+                    document.getElementById('cep').innerText = "Não localizado";
+                    document.getElementById('enderecoCompleto').innerText = "Não localizado";
+                    document.getElementById('UF').innerText = "Não localizado";
+                    document.getElementById('bairro').innerText = "Não localizado";
+
+                    divResultado.classList.remove('hidden');
+                    alert("Confira se o CEP está correto e tente novamente")
+                    return; // O return faz a função parar aqui para não executar o código abaixo
+                }
+
+                document.getElementById('cep').innerText = dados.cep;
+
+                document.getElementById('enderecoCompleto').innerText = dados.logradouro;
+
+                document.getElementById('UF').innerText = `${dados.localidade} - ${dados.uf}`;
+
+                document.getElementById('bairro').innerText = dados.bairro;
+
+                divResultado.classList.remove('hidden');
+
+            } catch (error) {
+                alert("erro ao consultar" + error.message)
+            }
+
+
+        }
+
+
+
+
+    </script>
+</body>
+
+</html>
