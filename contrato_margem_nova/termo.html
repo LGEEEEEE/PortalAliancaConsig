@@ -145,8 +145,10 @@
         }
 
         .generating-pdf #documento-completo {
-            width: 100% !important;
-            padding: 0 3mm !important;
+            width: 210mm !important;
+            /* Mantém a largura exata do A4 */
+            padding: 15mm 20mm !important;
+            /* Mantém o espaçamento interno original */
             margin: 0 !important;
             box-shadow: none !important;
         }
@@ -571,18 +573,16 @@
             const doc = document.getElementById('documento-completo');
             window.scrollTo(0, 0);
 
-            // DESLIGA O ZOOM TEMPORARIAMENTE PARA A FOTO SAIR PERFEITA
             document.body.style.zoom = "1";
             document.body.classList.add('generating-pdf');
 
             html2pdf().from(doc).set({
-                margin: [15, 15, 15, 15],
+                margin: 0, // Zera para o padding interno do CSS agir sem duplicar
                 filename: `Termo_Margem_${document.getElementById('nome-cliente').value || 'Cliente'}.pdf`,
                 html2canvas: { scale: 2, useCORS: true, scrollY: 0 },
                 jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
             }).save().then(() => {
                 document.body.classList.remove('generating-pdf');
-                // LIGA O ZOOM DE NOVO
                 document.body.style.zoom = "0.9";
             });
         });
