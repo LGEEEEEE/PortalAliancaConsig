@@ -144,9 +144,24 @@
             letter-spacing: normal;
         }
 
+        /* Remove a centralização temporariamente para evitar o corte na margem esquerda */
+        body.generating-pdf {
+            justify-content: flex-start !important;
+            align-items: flex-start !important;
+            padding: 0 !important;
+        }
+
+        /* Esconde o menu esquerdo (formulário) na hora de gerar o PDF, deixando o eixo 0 livre */
+        body.generating-pdf #form-container {
+            display: none !important;
+        }
+
+        /* Mantém o documento em proporção A4 e aumenta o espaço de respiro interno */
         .generating-pdf #documento-completo {
-            width: 100% !important;
-            padding: 0 3mm !important;
+            width: 210mm !important;
+            max-width: 100% !important;
+            padding: 10mm 15mm !important;
+            /* Aumentado em relação ao 0 3mm anterior */
             margin: 0 !important;
             box-shadow: none !important;
         }
@@ -188,7 +203,7 @@
         .clausula {
             font-weight: bold;
             text-transform: uppercase;
-            margin-top: 20px;
+            margin-top: 10px;
             display: block;
         }
 
@@ -326,7 +341,7 @@
     </div>
 
     <div id="preview-container">
-        <div id="documento-completo">
+        <div id="documento-completo" style="margin-top: -25px;">
             <div class="titulo">TERMO DE CIÊNCIA E RESPONSABILIDADE OPERACIONAL</div>
 
             <div class="bloco-dados">
@@ -379,7 +394,7 @@
                 FAVORECIDO: <span id="doc-favorecido-pix" class="variavel">---</span>
             </div>
 
-            <p style="text-align: center; margin-top: 50px; font-weight: bold;">Brasília/DF, <span
+            <p style="text-align: center; margin-top: 20px; font-weight: bold;">Brasília/DF, <span
                     id="doc-data">---</span></p>
 
             <div class="assinatura-bloco">
@@ -575,16 +590,20 @@
             document.body.style.zoom = "1";
             document.body.classList.add('generating-pdf');
 
-            html2pdf().from(doc).set({
-                margin: [15, 15, 15, 15],
-                filename: `Termo_Margem_${document.getElementById('nome-cliente').value || 'Cliente'}.pdf`,
-                html2canvas: { scale: 2, useCORS: true, scrollY: 0 },
-                jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
-            }).save().then(() => {
-                document.body.classList.remove('generating-pdf');
-                // LIGA O ZOOM DE NOVO
-                document.body.style.zoom = "0.9";
-            });
+            // Timeout de 100ms: Garante que o navegador alinhe o documento à esquerda antes do print
+            setTimeout(() => {
+                html2pdf().from(doc).set({
+                    margin: [15, 15, 15, 15],
+                    filename: `Termo_Margem_${document.getElementById('nome-cliente').value || 'Cliente'}.pdf`,
+                    // scrollX: 0 adicionado para forçar a captura a iniciar do canto absoluto da tela
+                    html2canvas: { scale: 2, useCORS: true, scrollX: 0, scrollY: 0 },
+                    jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+                }).save().then(() => {
+                    document.body.classList.remove('generating-pdf');
+                    // LIGA O ZOOM DE NOVO
+                    document.body.style.zoom = "0.9";
+                });
+            }, 100);
         });
 
         const d = new Date();
