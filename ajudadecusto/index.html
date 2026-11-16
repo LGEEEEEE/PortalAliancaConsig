@@ -1,0 +1,521 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fechamento de Equipes - Folha & Descontos</title>
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+
+    <style>
+        body {
+            background-color: #f0f2f5;
+            font-family: Arial, sans-serif;
+            color: #000;
+        }
+
+        /* Estilo estilo Romaneio para impressão/PDF e visualização */
+        .folha-container {
+            background: #ffffff;
+            max-width: 1100px;
+            margin: 0 auto;
+            padding: 25px;
+            border-radius: 8px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+        }
+
+        .card-equipe {
+            border: 1.5px solid #000;
+            margin-bottom: 25px;
+            background: #fff;
+            page-break-inside: avoid;
+        }
+
+        .card-equipe-header {
+            background-color: #212529;
+            color: #fff;
+            padding: 8px 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .card-equipe-header input {
+            background: transparent;
+            border: none;
+            border-bottom: 1px dashed rgba(255, 255, 255, 0.5);
+            color: #fff;
+            font-weight: bold;
+            font-size: 1.1rem;
+            width: 280px;
+        }
+
+        .card-equipe-header input:focus {
+            outline: none;
+            border-bottom: 1px solid #fff;
+        }
+
+        /* Tabela estilo Romaneio Marias */
+        .tabela-romaneio {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 0;
+        }
+
+        .tabela-romaneio th,
+        .tabela-romaneio td {
+            border: 1px solid #000;
+            padding: 6px 8px;
+            text-align: center;
+            font-size: 14px;
+            vertical-align: middle;
+        }
+
+        .tabela-romaneio th {
+            background-color: #d9d9d9;
+            font-weight: bold;
+            text-transform: uppercase;
+            font-size: 12px;
+        }
+
+        .tabela-romaneio td.col-func {
+            text-align: left;
+            font-weight: 500;
+        }
+
+        /* Inputs embutidos na célula para parecer planilha limpa */
+        .cell-input {
+            width: 100%;
+            border: 1px solid transparent;
+            background: #f8f9fa;
+            padding: 4px 6px;
+            border-radius: 4px;
+            font-size: 14px;
+            color: #000;
+        }
+
+        .cell-input:focus {
+            outline: none;
+            border-color: #0d6efd;
+            background: #fff;
+        }
+
+        .cell-input-num {
+            text-align: right;
+        }
+
+        .cell-input-center {
+            text-align: center;
+        }
+
+        .card-equipe-footer {
+            background-color: #e9ecef;
+            border-top: 1.5px solid #000;
+            padding: 10px 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .total-equipe-box {
+            font-size: 16px;
+            font-weight: bold;
+        }
+
+        /* Caixa do Total Geral fora das equipes */
+        .total-geral-container {
+            border: 2px solid #000;
+            background-color: #d9d9d9;
+            padding: 15px 25px;
+            margin-top: 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-radius: 4px;
+        }
+
+        .total-geral-container span.label {
+            font-size: 18px;
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+
+        .total-geral-container span.valor {
+            font-size: 24px;
+            font-weight: bold;
+            color: #000;
+        }
+
+        .valor-desconto {
+            color: #dc3545;
+            font-weight: bold;
+        }
+
+        .valor-liquido {
+            color: #198754;
+            font-weight: bold;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="container-fluid py-4">
+        <!-- Barra de Ações Superior -->
+        <div class="folha-container mb-3 py-3 no-print">
+            <div class="d-flex flex-wrap justify-content-between align-items-center gap-2">
+                <div>
+                    <h4 class="mb-0 fw-bold"><i class="bi bi-people-fill"></i> Controle de Pagamento por Equipe</h4>
+                    <small class="text-muted">Os dados são salvos automaticamente no navegador.</small>
+                </div>
+                <div class="d-flex flex-wrap gap-2">
+                    <button class="btn btn-success fw-bold" onclick="adicionarEquipe()">
+                        <i class="bi bi-plus-circle"></i> Adicionar Equipe
+                    </button>
+                    <button class="btn btn-warning fw-bold" onclick="zerarValoresSemana()" title="Mantém equipes e nomes, mas zera valores, faltas e feriados">
+                        <i class="bi bi-arrow-counterclockwise"></i> Zerar Valores
+                    </button>
+                    <button class="btn btn-primary fw-bold" onclick="gerarPDF()">
+                        <i class="bi bi-file-earmark-pdf"></i> Gerar PDF
+                    </button>
+                    <button class="btn btn-outline-danger" onclick="limparTudo()" title="Apaga tudo">
+                        <i class="bi bi-trash"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Área Principal (Exportável para PDF) -->
+        <div id="area-impressao" class="folha-container">
+            
+            <div class="d-flex justify-content-between align-items-center border-bottom border-2 border-dark pb-2 mb-4">
+                <div>
+                    <h3 class="fw-bold mb-0">RELATÓRIO DE PAGAMENTO - EQUIPES</h3>
+                    
+                </div>
+                <div class="text-end">
+                    <strong>Data:</strong> <span id="data-atual"></span>
+                </div>
+            </div>
+
+            <!-- Container onde os cards das equipes serão renderizados -->
+            <div id="lista-equipes"></div>
+
+            <!-- TOTAL GERAL FORA DAS DIVS DE EQUIPE -->
+            <div class="total-geral-container">
+                <span class="label">Total Geral (Todas as Equipes):</span>
+                <span class="valor" id="total-geral-todas-equipes">R$ 0,00</span>
+            </div>
+
+        </div>
+    </div>
+
+    <script>
+        const STORAGE_KEY = 'sistema_pagamento_equipes_v1';
+
+        // Estado inicial da aplicação
+        let equipes = [];
+
+        // Inicialização
+        window.onload = function () {
+            document.getElementById('data-atual').innerText = new Date().toLocaleDateString('pt-BR');
+            carregarDados();
+            renderizar();
+        };
+
+        function carregarDados() {
+            const salvo = localStorage.getItem(STORAGE_KEY);
+            if (salvo) {
+                equipes = JSON.parse(salvo);
+            } else {
+                // Inicia com 1 equipe vazia e tudo zerado como solicitado
+                equipes = [
+                    {
+                        id: Date.now(),
+                        nome: 'Equipe 01',
+                        funcionarios: [
+                            { id: Date.now() + 1, nome: '', valor: 0, feriado: 0, falta: 0, lugarPagamento: '' }
+                        ]
+                    }
+                ];
+                salvarDados();
+            }
+        }
+
+        function salvarDados() {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(equipes));
+        }
+
+        function formatarMoeda(valor) {
+            return valor.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+        }
+
+        // Cálculos individuais
+        function calcularLinha(func) {
+            const valor = parseFloat(func.valor) || 0;
+            const feriado = parseFloat(func.feriado) || 0;
+            const falta = parseFloat(func.falta) || 0;
+
+            // Regra: (valor dividido por 5) x (faltas + feriado)
+            const desconto = (valor / 5) * (falta + feriado);
+            const total = valor - desconto;
+
+            return { desconto, total };
+        }
+
+        // Ações de Estrutura (CRUD)
+        function adicionarEquipe() {
+            const numeroEquipe = equipes.length + 1;
+            equipes.push({
+                id: Date.now(),
+                nome: `Equipe ${String(numeroEquipe).padStart(2, '0')}`,
+                funcionarios: [
+                    { id: Date.now() + 1, nome: '', valor: 0, feriado: 0, falta: 0, lugarPagamento: '' }
+                ]
+            });
+            salvarDados();
+            renderizar();
+        }
+
+        function removerEquipe(equipeIndex) {
+            if (confirm(`Deseja excluir a "${equipes[equipeIndex].nome}" inteira?`)) {
+                equipes.splice(equipeIndex, 1);
+                salvarDados();
+                renderizar();
+            }
+        }
+
+        function adicionarFuncionario(equipeIndex) {
+            equipes[equipeIndex].funcionarios.push({
+                id: Date.now(),
+                nome: '',
+                valor: 0,
+                feriado: 0,
+                falta: 0,
+                lugarPagamento: ''
+            });
+            salvarDados();
+            renderizar();
+        }
+
+        function removerFuncionario(equipeIndex, funcIndex) {
+            equipes[equipeIndex].funcionarios.splice(funcIndex, 1);
+            salvarDados();
+            renderizar();
+        }
+
+        // Atualizações em tempo real sem perder o foco do input
+        function atualizarNomeEquipe(equipeIndex, novoNome) {
+            equipes[equipeIndex].nome = novoNome;
+            salvarDados();
+        }
+
+        function atualizarCampoFuncionario(equipeIndex, funcIndex, campo, valorInput) {
+            const func = equipes[equipeIndex].funcionarios[funcIndex];
+
+            if (campo === 'nome' || campo === 'lugarPagamento') {
+                func[campo] = valorInput;
+            } else {
+                func[campo] = parseFloat(valorInput) || 0;
+            }
+
+            salvarDados();
+            recalcularTotaisNaTela();
+        }
+
+        // Atualiza apenas os números na tela sem reconstruir o HTML (mantém o cursor no input)
+        function recalcularTotaisNaTela() {
+            let totalGeralTodasEquipes = 0;
+
+            equipes.forEach((equipe, eqIdx) => {
+                let totalEquipe = 0;
+
+                equipe.funcionarios.forEach((func, fIdx) => {
+                    const { desconto, total } = calcularLinha(func);
+                    totalEquipe += total;
+
+                    const elDesconto = document.getElementById(`desc-${eqIdx}-${fIdx}`);
+                    const elTotal = document.getElementById(`tot-${eqIdx}-${fIdx}`);
+
+                    if (elDesconto) elDesconto.innerText = formatarMoeda(desconto);
+                    if (elTotal) elTotal.innerText = formatarMoeda(total);
+                });
+
+                totalGeralTodasEquipes += totalEquipe;
+
+                const elTotalEquipe = document.getElementById(`total-equipe-${eqIdx}`);
+                if (elTotalEquipe) elTotalEquipe.innerText = formatarMoeda(totalEquipe);
+            });
+
+            document.getElementById('total-geral-todas-equipes').innerText = formatarMoeda(totalGeralTodasEquipes);
+        }
+
+        // Renderiza todos os cards e tabelas
+        function renderizar() {
+            const container = document.getElementById('lista-equipes');
+            container.innerHTML = '';
+
+            if (equipes.length === 0) {
+                container.innerHTML = `
+                    <div class="alert alert-secondary text-center">
+                        Nenhuma equipe cadastrada. Clique em <strong>"Adicionar Equipe"</strong> para começar.
+                    </div>
+                `;
+                document.getElementById('total-geral-todas-equipes').innerText = formatarMoeda(0);
+                return;
+            }
+
+            equipes.forEach((equipe, eqIdx) => {
+                const card = document.createElement('div');
+                card.className = 'card-equipe';
+
+                let linhasHtml = '';
+                equipe.funcionarios.forEach((func, fIdx) => {
+                    const { desconto, total } = calcularLinha(func);
+
+                    linhasHtml += `
+                        <tr>
+                            <td class="col-func" style="width: 24%;">
+                                <input type="text" class="cell-input" placeholder="Nome do funcionário" 
+                                    value="${func.nome}" 
+                                    oninput="atualizarCampoFuncionario(${eqIdx}, ${fIdx}, 'nome', this.value)">
+                            </td>
+                            <td style="width: 13%;">
+                                <input type="number" step="0.01" min="0" class="cell-input cell-input-num" placeholder="0,00"
+                                    value="${func.valor === 0 ? '' : func.valor}" 
+                                    oninput="atualizarCampoFuncionario(${eqIdx}, ${fIdx}, 'valor', this.value)">
+                            </td>
+                            <td style="width: 9%;">
+                                <input type="number" step="1" min="0" class="cell-input cell-input-center" placeholder="0"
+                                    value="${func.feriado === 0 ? '' : func.feriado}" 
+                                    oninput="atualizarCampoFuncionario(${eqIdx}, ${fIdx}, 'feriado', this.value)">
+                            </td>
+                            <td style="width: 9%;">
+                                <input type="number" step="1" min="0" class="cell-input cell-input-center" placeholder="0"
+                                    value="${func.falta === 0 ? '' : func.falta}" 
+                                    oninput="atualizarCampoFuncionario(${eqIdx}, ${fIdx}, 'falta', this.value)">
+                            </td>
+                            <td style="width: 19%;">
+                                <input type="text" class="cell-input" placeholder="Ex: PIX / Dinheiro / Local" 
+                                    value="${func.lugarPagamento}" 
+                                    oninput="atualizarCampoFuncionario(${eqIdx}, ${fIdx}, 'lugarPagamento', this.value)">
+                            </td>
+                            <td style="width: 11%;" class="valor-desconto" id="desc-${eqIdx}-${fIdx}">
+                                ${formatarMoeda(desconto)}
+                            </td>
+                            <td style="width: 11%;" class="valor-liquido" id="tot-${eqIdx}-${fIdx}">
+                                ${formatarMoeda(total)}
+                            </td>
+                            <td style="width: 4%;" class="no-print">
+                                <button class="btn btn-sm btn-outline-danger py-0 px-1" onclick="removerFuncionario(${eqIdx}, ${fIdx})" title="Remover linha">
+                                    <i class="bi bi-x-lg"></i>
+                                </button>
+                            </td>
+                        </tr>
+                    `;
+                });
+
+                card.innerHTML = `
+                    <div class="card-equipe-header">
+                        <div class="d-flex align-items-center gap-2">
+                            <i class="bi bi-diagram-3-fill"></i>
+                            <input type="text" value="${equipe.nome}" oninput="atualizarNomeEquipe(${eqIdx}, this.value)" placeholder="Nome da Equipe">
+                        </div>
+                        <button class="btn btn-sm btn-outline-light no-print" onclick="removerEquipe(${eqIdx})" title="Excluir Equipe">
+                            <i class="bi bi-trash"></i> Excluir Equipe
+                        </button>
+                    </div>
+
+                    <div class="table-responsive">
+                        <table class="tabela-romaneio">
+                            <thead>
+                                <tr>
+                                    <th>Funcionário</th>
+                                    <th>Valor (R$)</th>
+                                    <th>Feriado</th>
+                                    <th>Falta</th>
+                                    <th>Lugar p/ Pagamento</th>
+                                    <th>Desconto</th>
+                                    <th>Total</th>
+                                    <th class="no-print"></th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${linhasHtml}
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div class="card-equipe-footer">
+                        <button class="btn btn-sm btn-dark fw-bold no-print" onclick="adicionarFuncionario(${eqIdx})">
+                            <i class="bi bi-person-plus"></i> Adicionar Funcionário
+                        </button>
+                        <div class="total-equipe-box ms-auto">
+                            Total da Equipe: <span id="total-equipe-${eqIdx}" class="text-primary">R$ 0,00</span>
+                        </div>
+                    </div>
+                `;
+
+                container.appendChild(card);
+            });
+
+            recalcularTotaisNaTela();
+        }
+
+        // Utilitários de limpeza
+        function zerarValoresSemana() {
+            if (confirm("Isso vai zerar Valor, Feriado e Falta de todos os funcionários, mantendo os nomes e equipes salvos. Continuar?")) {
+                equipes.forEach(eq => {
+                    eq.funcionarios.forEach(f => {
+                        f.valor = 0;
+                        f.feriado = 0;
+                        f.falta = 0;
+                    });
+                });
+                salvarDados();
+                renderizar();
+            }
+        }
+
+        function limparTudo() {
+            if (confirm("Tem certeza que deseja apagar TODAS as equipes e funcionários salvos?")) {
+                localStorage.removeItem(STORAGE_KEY);
+                carregarDados();
+                renderizar();
+            }
+        }
+
+        // Exportar PDF limpo (igual ao romaneio da Marias)
+        function gerarPDF() {
+            const element = document.getElementById('area-impressao');
+            const opt = {
+                margin: 10,
+                filename: `fechamento-equipes-${new Date().toLocaleDateString('pt-BR').replace(/\//g, '-')}.pdf`,
+                image: { type: 'jpeg', quality: 0.98 },
+                html2canvas: {
+                    scale: 2,
+                    scrollY: 0,
+                    onclone: function (clonedDoc) {
+                        // Esconde botões de edição no PDF
+                        clonedDoc.querySelectorAll('.no-print').forEach(el => {
+                            el.style.setProperty('display', 'none', 'important');
+                        });
+                        // Remove fundo cinza dos inputs para parecer texto impresso na tabela
+                        clonedDoc.querySelectorAll('.cell-input').forEach(inp => {
+                            inp.style.background = 'transparent';
+                            inp.style.border = 'none';
+                        });
+                    }
+                },
+                jsPDF: { unit: 'mm', format: 'a4', orientation: 'landscape' }
+            };
+
+            html2pdf().set(opt).from(element).save();
+        }
+    </script>
+</body>
+
+</html>

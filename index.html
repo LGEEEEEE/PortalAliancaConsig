@@ -540,10 +540,11 @@
             border-top: 1px solid var(--border-color);
             transition: background-color 0.3s ease, border-color 0.3s ease;
         }
-        #inputBusca{
+
+        #inputBusca {
             border: 2px;
             border-color: #000000;
-            
+
         }
     </style>
 </head>
@@ -719,6 +720,20 @@
                     "Remoção de bloqueios de impressão e senhas de proprietário.",
                     "Reconstrução da árvore de objetos (XREF) do arquivo.",
                     "Geração e download automático do documento corrigido."
+                ]
+            },
+            {
+                titulo: "Calculadora de Ajuda de Custo",
+                imagem: "",
+                icone: "fa-hand-holding-dollar",
+                link: "ajudadecusto/index.html",
+                resumo: "Controle semanal de ajuda de custo e descontos por equipe.",
+                detalhes: "Sistema para fechamento de ajuda de custo por equipes, descontando automaticamente faltas e feriados proporcionais aos dias úteis.",
+                features: [
+                    "Organização em cards separados por equipe com salvamento automático.",
+                    "Desconto proporcional automático de faltas e feriados (Valor ÷ 5).",
+                    "Cálculo de total líquido por funcionário, por equipe e geral.",
+                    "Geração de relatório em PDF pronto para fechamento."
                 ]
             },
             {
@@ -1100,10 +1115,10 @@
         // Função para filtrar os sistemas com base no termo de busca
         document.getElementById('inputBusca').addEventListener('keyup', function () {
             let termoBusca = this.value.toLowerCase();
-            
+
             // Seleciona todos os cartões gerados no DOM pela função renderizarCartoes
             let cartoes = document.querySelectorAll('.card');
-            
+
             let encontrouAlguma = false;
 
             cartoes.forEach(function (cartao) {
